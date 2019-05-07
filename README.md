@@ -1,3 +1,3 @@
 It is a Bounding Volume Hierarchy (BVH) Test by a simple ray tracer with UI.
 
-![](./image/screenshot.png)
+![screen shot](./image/screenshot.png)
