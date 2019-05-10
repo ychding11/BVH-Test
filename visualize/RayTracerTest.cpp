@@ -25,6 +25,8 @@
 #include "Renderer.h"
 #include "Stopwatch.h"
 
+#include "smallpt.h"
+
 std::vector<ProfilerEntry> CPUProfiler::ProfilerData(16);
 std::vector<ProfilerEntry> CPUProfiler::ProfilerDataA;
 
@@ -109,7 +111,9 @@ void main()
     std::ostringstream msgStream;
 
     BVHTracer bvhTracer(settings.objectNum, settings.screenSize.x, settings.screenSize.y, msgStream);
+    smallptTest smallpter(settings.screenSize.x, settings.screenSize.y, settings.samples);
     Observer *uiObserver = &bvhTracer;
+    Observer *uiObserverSmallpt = &smallpter;
 
 	double lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
@@ -127,13 +131,13 @@ void main()
 			ImGui::Begin("Settings");
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
-			if (ImGui::Combo("Scene", &settings.testIndex, "bvh\0noise\0"))
+			if (ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0"))
 			{
 				uiObserver->handleTestIndexChange(settings.testIndex);
 			}
-			if (ImGui::SliderInt("Objects number", &settings.objectNum, 0, 100))
+			if (ImGui::SliderInt("Samples", &settings.samples, 1, 1024))
 			{
-				uiObserver->handleObjectNumChange(settings.objectNum);
+				uiObserverSmallpt->handleSampleCountChange(settings.samples);
 			}
 			if (ImGui::SliderFloat2("focus offset", &settings.focusOffset.x, -0.5f, 0.5f))
 			{
@@ -155,12 +159,20 @@ void main()
 
         {
             CPUProfiler profiler("Run Test");
-            bvhTracer.run();
+            if (settings.testIndex == 0)
+            {
+                bvhTracer.run();
+                quadRender.handleNewRenderResult(bvhTracer._pixels, (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3));
+            }
+            else
+            {
+				smallpter.run();
+                quadRender.handleNewRenderResult(smallpter.renderResult(), (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3));
+            }
         }
 		
         {
             CPUProfiler profiler("Quad Render");
-            quadRender.handleNewRenderResult(bvhTracer._pixels, (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3));
             quadRender.render();
         }
 
@@ -169,9 +181,9 @@ void main()
         ImGui::Text("%s", CPUProfiler::end().c_str());
         ImGui::EndChild();
 
-        ImGui::Begin("Statistic");
-        //ImGui::Text("=============\n%s=============\n", msgStream.str().c_str());
-        ImGui::BulletText("Object Number %d \n", bvhTracer.objectNum());
+		std::string smallptLog = smallpter.renderProgress();
+        ImGui::Begin("smallpt log");
+        ImGui::Text("%s", smallptLog.c_str());
         ImGui::EndChild();
 
 		// ImGui Rendering

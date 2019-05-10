@@ -8,6 +8,7 @@ struct Setting
 {
     int testIndex;
     int objectNum;
+    int samples;
     glm::ivec2 screenSize;
     glm::fvec2 focusOffset;
     float positionOffset;
@@ -15,6 +16,7 @@ struct Setting
     Setting()
         : testIndex(0)
         , objectNum(10)
+		, samples(8)
         , screenSize(720, 720)
         , focusOffset(0.f, 0.f)
         , positionOffset(0.f)
@@ -42,6 +44,10 @@ public:
         assert(0 && "This function should NOT be called before override !!!");
     }
 	virtual void handleTestIndexChange(int newTestIndex)
+    {
+        assert(0 && "This function should NOT be called before override !!!");
+    }
+	virtual void handleSampleCountChange(int newTestIndex)
     {
         assert(0 && "This function should NOT be called before override !!!");
     }
