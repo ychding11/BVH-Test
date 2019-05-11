@@ -19,28 +19,31 @@ void BBox::expandToInclude(const BBox& b) {
  extent = max - min;
 }
 
-uint32_t BBox::maxDimension() const {
+uint32_t BBox::maxDimension() const
+{
  uint32_t result = 0;
  if(extent.y > extent.x) result = 1;
  if(extent.z > extent.y) result = 2;
  return result;
 }
 
-float BBox::surfaceArea() const {
- return 2.f*( extent.x*extent.z + extent.x*extent.y + extent.y*extent.z );
+Float BBox::surfaceArea() const
+{
+ return 2.0 * ( extent.x*extent.z + extent.x*extent.y + extent.y*extent.z );
 }
 
 // Typical slab-based Ray-AABB test
-bool BBox::intersect(const Ray& ray, float *tnear, float *tfar) const {
-		Vector3 tbot = ray.inv_d.cmul(min - ray.o);
-		Vector3 ttop = ray.inv_d.cmul(max - ray.o);
+bool BBox::intersect(const Ray& ray, Float *tnear, Float *tfar) const
+{
+	Vector3 tbot = ray.inv_d.cmul(min - ray.o);
+	Vector3 ttop = ray.inv_d.cmul(max - ray.o);
 	 
-		Vector3 tmin = ::min(ttop, tbot);
-  Vector3 tmax = ::max(ttop, tbot);
+	Vector3 tmin = ::min(ttop, tbot);
+	Vector3 tmax = ::max(ttop, tbot);
 
-  *tnear = std::max(std::max(tmin.x, tmin.y), tmin.z);
-  *tfar = std::min(std::min(tmax.x,tmax.y), tmax.z);
+	*tnear = std::max(std::max(tmin.x, tmin.y), tmin.z);
+	*tfar = std::min(std::min(tmax.x,tmax.y), tmax.z);
 
-  return !(*tnear > *tfar) && *tfar > 0;
+	return !(*tnear > *tfar) && *tfar > 0;
 }
 

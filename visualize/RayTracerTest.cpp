@@ -181,9 +181,9 @@ void main()
         ImGui::Text("%s", CPUProfiler::end().c_str());
         ImGui::EndChild();
 
-		std::string smallptLog = smallpter.renderProgress();
-        ImGui::Begin("smallpt log");
-        ImGui::Text("%s", smallptLog.c_str());
+		std::string testLog = smallpter.renderProgress();
+        ImGui::Begin("test log");
+        ImGui::Text("%s", testLog.c_str());
         ImGui::EndChild();
 
 		// ImGui Rendering

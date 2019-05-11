@@ -16,7 +16,7 @@ struct Setting
     Setting()
         : testIndex(0)
         , objectNum(10)
-		, samples(8)
+		, samples(4)
         , screenSize(720, 720)
         , focusOffset(0.f, 0.f)
         , positionOffset(0.f)

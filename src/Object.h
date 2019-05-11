@@ -5,12 +5,10 @@
 #include "Ray.h"
 #include "BBox.h"
 
-struct Object {
+struct Object
+{
  //! All "Objects" must be able to test for intersections with rays.
- virtual bool getIntersection(
-  const Ray& ray, 
-  IntersectionInfo* intersection) 
- const = 0; 
+ virtual bool getIntersection( const Ray& ray, IntersectionInfo* intersection) const = 0; 
 
  //! Return an object normal based on an intersection
  virtual Vector3 getNormal(const IntersectionInfo& I) const = 0;

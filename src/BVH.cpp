@@ -20,7 +20,7 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
 {
 	intersection->t = 999999999.f;
 	intersection->object = NULL;
-	float bbhits[4];
+	Float bbhits[4];
 	int32_t closer, other;
 
 	// Working set

@@ -5,11 +5,14 @@
 #include <sstream>
 
 #include "interface.h"
+#include "Vector3.h"
 
 #ifndef M_PI
 #define M_PI  3.1415926
 #endif
 
+
+#if 0
 struct Vec
 {
   double x, y, z;  // position, also color (r,g,b)
@@ -23,7 +26,9 @@ struct Vec
   double dot(const Vec &b) const { return x*b.x+y*b.y+z*b.z; }
   Vec operator%(Vec&b){return Vec(y*b.z-z*b.y,z*b.x-x*b.z,x*b.y-y*b.x);} // cross:
 };
+#endif
 
+typedef Vector3 Vec;
 
 // resize screen size
 // reset sample number
@@ -33,7 +38,7 @@ private:
 	int w, h;
 	int samples;
 	int iterates;
-	Vec *c ;
+	Vector3 *c ;
 	float *data;
 	int runTest;
 	std::ostringstream ss;
@@ -44,9 +49,14 @@ public:
 		: w(width), h(height), samples(sample), iterates(0)
 		, runTest(true)
 	{
-		c = new Vec[w * h];
+		c = new Vector3[w * h];
 		data = new float[w * h * 3];
 		this->handleSampleCountChange(sample);
+	}
+	~smallptTest()
+	{
+		delete c;
+		delete data;
 	}
 
 	float* renderResult() const { return data; }

@@ -3,7 +3,8 @@
 
 #include "Vector3.h"
 
-struct Ray {
+struct Ray
+{
  Vector3 o; // Ray Origin
  Vector3 d; // Ray Direction
  Vector3 inv_d; // Inverse of each Ray Direction component
