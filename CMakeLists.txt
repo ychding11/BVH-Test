@@ -76,7 +76,7 @@ foreach(f ${SRC_FILES})
     source_group("${SRCGR}" FILES ${f})
 endforeach()
 
-set(ENABLE_HIDECONSOLE_BUILD TRUE CACHE BOOL "TRUE to hide console for Windows sys")
+set(ENABLE_HIDECONSOLE_BUILD FALSE CACHE BOOL "TRUE to hide console for Windows sys" FORCE)
 
 if(WINDOWS)
   set(GUI_TYPE WIN32)
@@ -98,13 +98,15 @@ if(MSVC)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
 
+if(ENABLE_HIDECONSOLE_BUILD)
+if(MSVC)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+endif()
+endif()
+
 
 SET(LINK_OPTIONS " ")
-SET(EXE_NAME "RayTracerTest")
-
-ADD_EXECUTABLE(${EXE_NAME} ${SRC_FILES} ${EXT_FILES})
-
-TARGET_LINK_LIBRARIES(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS})
 
 #--------------------------------------------------------------------
 # preproc
@@ -115,38 +117,15 @@ add_definitions(-DBX_CONFIG_ENABLE_MSVC_LEVEL4_WARNINGS=1)
 add_definitions(-D__STDC_LIMIT_MACROS)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS)
-if(MSVC)
-	#add_definitions(-DWIN32)
-	#add_definitions(-D_WIN32)
-#add_definitions(-DNOMINMAX)
-endif()
 add_definitions(-DUSE_DL_PREFIX)
 add_definitions(-DGLEW_STATIC)
 
-#--------------------------------------------------------------------
-# output dirs
-#--------------------------------------------------------------------
-
-set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
-set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
-set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_SOURCE_DIR}/bin )
-set_target_properties(${EXE_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-set_target_properties(${EXE_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX "RelWithDebInfo")
-set_target_properties(${EXE_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-
-#--------------------------------------------------------------------
-# Hide the console window in visual studio projects
-#--------------------------------------------------------------------
-if(ENABLE_HIDECONSOLE_BUILD)
+if(${ENABLE_HIDECONSOLE_BUILD})
 if(MSVC)
-	#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-	#set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+add_definitions(-DWIN32)
+add_definitions(-D_WIN32)
+add_definitions(-DNOMINMAX)
 endif()
-endif()
-
-if(WINDOWS)
-	#set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-	#set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 endif()
 
 if(ENABLE_HIDECONSOLE_BUILD)
@@ -155,6 +134,29 @@ else()
 MESSAGE(STATUS "Console is visible")
 endif()
 
+#--------------------------------------------------------------------
+# target 
+#--------------------------------------------------------------------
+SET(EXE_NAME "RayTracerTest")
+ADD_EXECUTABLE(${EXE_NAME} ${SRC_FILES} ${EXT_FILES})
+TARGET_LINK_LIBRARIES(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS})
+
+#--------------------------------------------------------------------
+# output dirs
+#--------------------------------------------------------------------
+set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
+set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
+set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_SOURCE_DIR}/bin )
+set_target_properties(${EXE_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+set_target_properties(${EXE_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX "RelWithDebInfo")
+set_target_properties(${EXE_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+
+if(ENABLE_HIDECONSOLE_BUILD)
+if(WINDOWS)
+set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
+set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+endif()
+endif()
 #######################################################################################
 ##For reference
 ##https://cmake.org/cmake/help/latest/manual/cmake-properties.7.html#target-properties
