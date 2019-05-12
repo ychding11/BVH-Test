@@ -14,7 +14,7 @@ struct Setting
     float positionOffset;
 
     Setting()
-        : testIndex(0)
+        : testIndex(1)
         , objectNum(10)
 		, samples(4)
         , screenSize(720, 720)

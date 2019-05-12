@@ -4,11 +4,12 @@
 #include "Stopwatch.h"
 
 //! Node for storing state information during traversal.
-struct BVHTraversal {
- uint32_t i; // Node
- float mint; // Minimum hit time for this node.
- BVHTraversal() { }
- BVHTraversal(int _i, float _mint) : i(_i), mint(_mint) { }
+struct BVHTraversal
+{
+	uint32_t i; // Node
+	float mint; // Minimum hit time for this node.
+	BVHTraversal() { }
+	BVHTraversal(int _i, float _mint) : i(_i), mint(_mint) { }
 };
 
 //! - Compute the nearest intersection of all objects within the tree.
@@ -18,7 +19,7 @@ struct BVHTraversal {
 //!   than find the closest.
 bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool occlusion) const
 {
-	intersection->t = 999999999.f;
+	intersection->t = 1e20;
 	intersection->object = NULL;
 	Float bbhits[4];
 	int32_t closer, other;
@@ -29,7 +30,7 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
 
 	// "Push" on the root node to the working set
 	todo[stackptr].i = 0;
-	todo[stackptr].mint = -9999999.f;
+	todo[stackptr].mint = -1e20;
 
 	while(stackptr>=0)
 	{
@@ -39,26 +40,26 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
 		stackptr--;
 		const BVHFlatNode &node(flatTree[ ni ]);
 
-		// If this node is further than the closest found intersection, continue
+		// If this node is further than the closest found intersection, NO need to test
 		if(near > intersection->t)
 			continue;
 
-	// Is leaf -> Intersect
-	if( node.rightOffset == 0 )
-	{
-		for(uint32_t o=0;o<node.nPrims;++o)
+		// Is leaf -> Intersect
+		if( node.rightOffset == 0 )
 		{
-			const Object* obj = (*build_prims)[node.start+o];
-			bool hit = obj->getIntersection(ray, intersection);
-
-			// If we're only looking for occlusion, then any hit is good enough
-			if(occlusion && hit)
+			for(uint32_t o = 0; o < node.nPrims; ++o)
 			{
-				return true;
+				const Object* obj = (*build_prims)[node.start+o];
+				bool hit = obj->getIntersection(ray, intersection);
+
+				// If we're only looking for occlusion, then any hit is good enough
+				if(occlusion && hit)
+				{
+					return true;
+				}
 			}
 		}
-	}
-	else
+		else
 	{ // Not a leaf
 		bool hitc0 = flatTree[ni+1].bbox.intersect(ray, bbhits, bbhits+1);
 		bool hitc1 = flatTree[ni+node.rightOffset].bbox.intersect(ray, bbhits+2, bbhits+3);
@@ -96,13 +97,15 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
 			todo[++stackptr] = BVHTraversal(ni + node.rightOffset, bbhits[2]);
 		}
 	}
- }
+    }
 
- // If we hit something, 
- if(intersection->object != NULL)
-  intersection->hit = ray.o + ray.d * intersection->t;
-
- return intersection->object != NULL;
+	 // If we hit something, 
+	if (intersection->object != NULL && intersection->t < 1e20)
+	{
+		intersection->hit = ray.o + ray.d * intersection->t;
+		return true;
+	}
+	return false;
 }
 
 BVH::~BVH() {

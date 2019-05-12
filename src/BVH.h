@@ -9,7 +9,8 @@
 #include "Ray.h"
 
 //! Node descriptor for the flattened tree
-struct BVHFlatNode {
+struct BVHFlatNode
+{
  BBox bbox;
  uint32_t start, nPrims, rightOffset;
 };

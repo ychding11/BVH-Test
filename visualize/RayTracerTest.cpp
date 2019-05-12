@@ -111,7 +111,7 @@ void main()
     std::ostringstream msgStream;
 
     BVHTracer bvhTracer(settings.objectNum, settings.screenSize.x, settings.screenSize.y, msgStream);
-    smallptTest smallpter(settings.screenSize.x, settings.screenSize.y, settings.samples);
+    smallpt::smallptTest smallpter(settings.screenSize.x, settings.screenSize.y, settings.samples);
     Observer *uiObserver = &bvhTracer;
     Observer *uiObserverSmallpt = &smallpter;
 
@@ -135,15 +135,15 @@ void main()
 			{
 				uiObserver->handleTestIndexChange(settings.testIndex);
 			}
-			if (ImGui::SliderInt("Samples", &settings.samples, 1, 1024))
+			if (ImGui::SliderInt("spp", &settings.samples, 1, 1024))
 			{
 				uiObserverSmallpt->handleSampleCountChange(settings.samples);
 			}
-			if (ImGui::SliderFloat2("focus offset", &settings.focusOffset.x, -0.5f, 0.5f))
+			if (ImGui::SliderFloat2("translate", &settings.focusOffset.x, -0.5f, 0.5f))
 			{
 				uiObserver->handleFocusOffsetChange(settings.focusOffset);
 			}
-			if (ImGui::SliderFloat("position offset", &settings.positionOffset, 0.0f, 10.f))
+			if (ImGui::SliderFloat("zoom", &settings.positionOffset, 0.0f, 10.f))
 			{
 				uiObserver->handlePositionOffsetChange(settings.positionOffset);
 			}
