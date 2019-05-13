@@ -5,6 +5,7 @@
 #include <vector>
 #include <random>
 #include <iostream>
+#include <fstream>
 
 #include "smallpt.h"
 #include "Ray.h"
@@ -19,7 +20,7 @@ namespace smallpt
 #define M_PI  3.1415926
 #endif
 
-#define	USE_BVH
+//#define	USE_BVH
 
 	std::default_random_engine generator;
 	std::uniform_real_distribution<Float> distr(0.0, 1.0);
@@ -415,4 +416,97 @@ namespace smallpt
 		return data;
 	}
 
+    // read triangle data from obj file
+    void loadObj(const std::string filename, TriangleMesh &mesh)
+    {
+        std::ifstream in(filename.c_str());
+
+        if (!in.good())
+        {
+            std::cout << "ERROR: loading obj:(" << filename << ") file not found or not good" << "\n";
+            system("PAUSE");
+            exit(0);
+        }
+
+        char buffer[256], str[255];
+        float f1, f2, f3;
+
+        while (!in.getline(buffer, 255).eof())
+        {
+            buffer[255] = '\0';
+            sscanf_s(buffer, "%s", str, 255);
+
+            // reading a vertex
+            if (buffer[0] == 'v' && (buffer[1] == ' ' || buffer[1] == 32))
+            {
+                if (sscanf(buffer, "v %f %f %f", &f1, &f2, &f3) == 3)
+                {
+                    mesh.verts.push_back(Vector3(f1, f2, f3));
+                }
+                else
+                {
+                    std::cout << "ERROR: vertex not in wanted format in OBJLoader" << "\n";
+                    exit(-1);
+                }
+            }
+
+            // reading faceMtls 
+            else if (buffer[0] == 'f' && (buffer[1] == ' ' || buffer[1] == 32))
+            {
+                TriangleFace f;
+                int nt = sscanf(buffer, "f %d %d %d", &f.v[0], &f.v[1], &f.v[2]);
+                if (nt != 3)
+                {
+                    std::cout << "ERROR: I don't know the format of that FaceMtl" << "\n";
+                    exit(-1);
+                }
+                mesh.faces.push_back(f);
+            }
+        }
+
+        // calculate the bounding box of the mesh
+        mesh.bounding_box[0] = Vector3(1000000, 1000000, 1000000);
+        mesh.bounding_box[1] = Vector3(-1000000, -1000000, -1000000);
+        for (unsigned int i = 0; i < mesh.verts.size(); i++)
+        {
+            mesh.bounding_box[0] = min(mesh.verts[i], mesh.bounding_box[0]);
+            mesh.bounding_box[1] = max(mesh.verts[i], mesh.bounding_box[1]);
+        }
+
+        std::cout << "obj file loaded: number of faces:" << mesh.faces.size() << " number of vertices:" << mesh.verts.size() << std::endl;
+        std::cout << "obj bounding box: min:(" << mesh.bounding_box[0].x << "," << mesh.bounding_box[0].y << "," << mesh.bounding_box[0].z << ") max:"
+            << mesh.bounding_box[1].x << "," << mesh.bounding_box[1].y << "," << mesh.bounding_box[1].z << ")" << std::endl;
+    }
+
+    ///http://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
+    Float intersectTriangle(const Ray &r,
+        const Vector3 &v0,
+        const Vector3 &edge1,
+        const Vector3 &edge2)
+    {
+        Vector3 tvec = r.o - v0;
+        Vector3 pvec = r.d.cross(edge2);
+        Float  det = edge1.dot( pvec);
+        if (det < 1e-5)
+        {
+
+        }
+
+        Float invdet = 1.0 / det;
+
+        Float u = tvec.dot(pvec) * invdet;
+        if (u < 0.0f || u > 1.0f)
+        {
+            return -1.0f;
+        }
+
+        Vector3 qvec = tvec % edge1;
+        Float v = r.d.dot(qvec) * invdet;
+        if (v < 0.0f || (u + v) > 1.0f)
+        {
+            return -1.0f;
+        }
+
+        return edge2.dot(qvec) * invdet;
+    }
 }

@@ -105,4 +105,18 @@ namespace smallpt
 		}
 
 	};
+
+    // helpers to load triangle data
+    struct TriangleFace
+    {
+        int v[3]; // vertex indices
+    };
+
+    struct TriangleMesh
+    {
+        std::vector<Vector3> verts;
+        std::vector<TriangleFace> faces;
+        Vector3 bounding_box[2];
+    };
+
 }
