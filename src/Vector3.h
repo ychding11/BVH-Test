@@ -19,6 +19,11 @@ struct Vector3
 	Vector3 operator*(Float b) const { return Vector3(x*b, y*b, z*b); }
 	Vector3 operator/(Float b) const { b = 1.f / b; return Vector3(x*b, y*b, z*b); }
 
+	Vector3 operator/(const Vector3 &b) const { return Vector3(x/b.x, y/b.y, z/b.z); }
+
+	Vector3 operator+=(const Vector3& b) { return *this = Vector3(x+b.x, y+b.y, z+b.z); }
+	Vector3 operator*=(Float b) { return *this = Vector3(x*b, y*b, z*b); }
+
 	// Component-wise multiply and divide
 	Vector3 cmul(const Vector3& b) const { return Vector3(x*b.x, y*b.y, z*b.z);	}
 	Vector3 cdiv(const Vector3& b) const { return Vector3(x/b.x, y/b.y, z/b.z);	}
@@ -75,11 +80,23 @@ inline Vector3 min(const Vector3& a, const Vector3& b)
 	return Vector3( std::min(a.x,b.x), std::min(a.y,b.y), std::min(a.z,b.z) ); 
 }
 
+inline Vector3 minVector3(const Vector3& a, const Vector3& b)
+{
+	return Vector3( std::min(a.x,b.x), std::min(a.y,b.y), std::min(a.z,b.z) ); 
+}
+
 // Component-wise max
 inline Vector3 max(const Vector3& a, const Vector3& b)
 {
 	return Vector3( std::max(a.x,b.x), std::max(a.y,b.y), std::max(a.z,b.z) ); 
 }
+
+// Component-wise max
+inline Vector3 maxVector3(const Vector3& a, const Vector3& b)
+{
+	return Vector3( std::max(a.x,b.x), std::max(a.y,b.y), std::max(a.z,b.z) ); 
+}
+
 
 // Length of a vector
 inline Float length(const Vector3& a)

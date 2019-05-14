@@ -8,9 +8,6 @@
 #include <fstream>
 
 #include "smallpt.h"
-#include "Ray.h"
-#include "Object.h"
-#include "BVH.h"
 
 
 namespace smallpt
@@ -22,59 +19,11 @@ namespace smallpt
 
 //#define	USE_BVH
 
-	std::default_random_engine generator;
-	std::uniform_real_distribution<Float> distr(0.0, 1.0);
-	Float erand48(unsigned short* X)
-	{
-		return distr(generator);
-	}
-
+	
 	inline Float clamp(Float x) { return x < 0 ? 0 : x>1 ? 1 : x; }
 	inline int toInt(Float x) { return int(pow(clamp(x), 1 / 2.2) * 255 + .5); }
 
-	enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance()
-
-	struct Sphere : public Object
-	{
-		Float rad;       // radius
-		Vector3 p, e, c;      // position, emission, color
-		Refl_t refl;      // reflection type (DIFFuse, SPECular, REFRactive)
-
-		Sphere(Float rad_, Vector3 p_, Vector3 e_, Vector3 c_, Refl_t refl_)
-			: rad(rad_), p(p_), e(e_), c(c_), refl(refl_) { }
-
-		// returns distance, 0 if nohit
-		Float intersect(const Ray &r) const
-		{
-			Vector3 op = p - r.o; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
-			Float t, eps = 1e-4, b = op.dot(r.d), det = b * b - op.dot(op) + rad * rad;
-			if (det < 0) return 0; else det = sqrt(det);
-			return (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0);
-		}
-		bool getIntersection(const Ray& ray, IntersectionInfo* I) const override
-		{
-			Float t = intersect(ray);
-			I->object = this;
-			I->t = t;
-			//I->hit = ray.o + t * ray.d;
-			// derfer to bvh
-			return t > 0 ? true : false;
-		}
-		Vector3 getNormal(const IntersectionInfo& I) const override
-		{
-			return normalize(I.hit - p);
-		}
-		BBox getBBox() const override
-		{
-			return BBox(p - Vector3(rad, rad, rad), p + Vector3(rad, rad, rad));
-		}
-		Vector3 getCentroid() const override
-		{
-			return p;
-		}
-	};
-
-	Sphere spheres[] =
+	static Sphere spheres[] =
 	{
 		//Scene: radius, position, emission, color, material
 		 Sphere(1e5, Vector3(1e5 + 1,40.8,81.6), Vector3(),Vector3(.75,.25,.25),DIFF),//Left
@@ -84,6 +33,7 @@ namespace smallpt
 		 Sphere(1e5, Vector3(50, 1e5, 81.6),    Vector3(),Vector3(.75,.75,.75),DIFF),//Botm
 		 Sphere(1e5, Vector3(50,-1e5 + 81.6,81.6),Vector3(),Vector3(.75,.75,.75),DIFF),//Top
 		 Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
+		 Sphere(16.5,Vector3(40,16.5,58),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Place holder
 		 Sphere(16.5,Vector3(73,16.5,78),       Vector3(),Vector3(1,1,1)*.999, REFR),//Glas
 		 Sphere(600, Vector3(50,681.6 - .27,81.6),Vector3(12,12,12),  Vector3(), DIFF) //Lite
 	};
@@ -348,6 +298,8 @@ namespace smallpt
 		data = new float[w * h * 3];
 		this->handleSampleCountChange(sample);
 		if (!sphereScene.initialized()) sphereScene.initScene(spheres, sizeof(spheres) / sizeof(Sphere));
+
+		initTriangleScene();
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	//// 
@@ -395,6 +347,7 @@ namespace smallpt
 								cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
 #if 1
 							r = r + myradiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) * (1. / samps);
+							//r = r + radiance(Ray(cam.o + d * 140, d.norm()), total_number_of_triangles, Xi, scene_aabbox_min, scene_aabbox_max);
 #else
 							r = r + radiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) * (1. / samps);
 #endif
@@ -416,97 +369,5 @@ namespace smallpt
 		return data;
 	}
 
-    // read triangle data from obj file
-    void loadObj(const std::string filename, TriangleMesh &mesh)
-    {
-        std::ifstream in(filename.c_str());
-
-        if (!in.good())
-        {
-            std::cout << "ERROR: loading obj:(" << filename << ") file not found or not good" << "\n";
-            system("PAUSE");
-            exit(0);
-        }
-
-        char buffer[256], str[255];
-        float f1, f2, f3;
-
-        while (!in.getline(buffer, 255).eof())
-        {
-            buffer[255] = '\0';
-            sscanf_s(buffer, "%s", str, 255);
-
-            // reading a vertex
-            if (buffer[0] == 'v' && (buffer[1] == ' ' || buffer[1] == 32))
-            {
-                if (sscanf(buffer, "v %f %f %f", &f1, &f2, &f3) == 3)
-                {
-                    mesh.verts.push_back(Vector3(f1, f2, f3));
-                }
-                else
-                {
-                    std::cout << "ERROR: vertex not in wanted format in OBJLoader" << "\n";
-                    exit(-1);
-                }
-            }
-
-            // reading faceMtls 
-            else if (buffer[0] == 'f' && (buffer[1] == ' ' || buffer[1] == 32))
-            {
-                TriangleFace f;
-                int nt = sscanf(buffer, "f %d %d %d", &f.v[0], &f.v[1], &f.v[2]);
-                if (nt != 3)
-                {
-                    std::cout << "ERROR: I don't know the format of that FaceMtl" << "\n";
-                    exit(-1);
-                }
-                mesh.faces.push_back(f);
-            }
-        }
-
-        // calculate the bounding box of the mesh
-        mesh.bounding_box[0] = Vector3(1000000, 1000000, 1000000);
-        mesh.bounding_box[1] = Vector3(-1000000, -1000000, -1000000);
-        for (unsigned int i = 0; i < mesh.verts.size(); i++)
-        {
-            mesh.bounding_box[0] = min(mesh.verts[i], mesh.bounding_box[0]);
-            mesh.bounding_box[1] = max(mesh.verts[i], mesh.bounding_box[1]);
-        }
-
-        std::cout << "obj file loaded: number of faces:" << mesh.faces.size() << " number of vertices:" << mesh.verts.size() << std::endl;
-        std::cout << "obj bounding box: min:(" << mesh.bounding_box[0].x << "," << mesh.bounding_box[0].y << "," << mesh.bounding_box[0].z << ") max:"
-            << mesh.bounding_box[1].x << "," << mesh.bounding_box[1].y << "," << mesh.bounding_box[1].z << ")" << std::endl;
-    }
-
-    ///http://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
-    Float intersectTriangle(const Ray &r,
-        const Vector3 &v0,
-        const Vector3 &edge1,
-        const Vector3 &edge2)
-    {
-        Vector3 tvec = r.o - v0;
-        Vector3 pvec = r.d.cross(edge2);
-        Float  det = edge1.dot( pvec);
-        if (det < 1e-5)
-        {
-
-        }
-
-        Float invdet = 1.0 / det;
-
-        Float u = tvec.dot(pvec) * invdet;
-        if (u < 0.0f || u > 1.0f)
-        {
-            return -1.0f;
-        }
-
-        Vector3 qvec = tvec % edge1;
-        Float v = r.d.dot(qvec) * invdet;
-        if (v < 0.0f || (u + v) > 1.0f)
-        {
-            return -1.0f;
-        }
-
-        return edge2.dot(qvec) * invdet;
-    }
+    
 }
