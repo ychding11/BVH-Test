@@ -13,6 +13,7 @@ struct Vector3
 	Float x,y,z;
 
 	Vector3(Float x = 0, Float y = 0, Float z = 0) : x(x), y(y), z(z) { }
+	Vector3(const Vector3 &b) : x(b.x), y(b.y), z(b.z) { }
 
 	Vector3 operator+(const Vector3& b) const { return Vector3(x+b.x, y+b.y, z+b.z); }
 	Vector3 operator-(const Vector3& b) const { return Vector3(x-b.x, y-b.y, z-b.z); }
@@ -22,7 +23,7 @@ struct Vector3
 	Vector3 operator/(const Vector3 &b) const { return Vector3(x/b.x, y/b.y, z/b.z); }
 
 	Vector3 operator+=(const Vector3& b) { return *this = Vector3(x+b.x, y+b.y, z+b.z); }
-	Vector3 operator*=(Float b) { return *this = Vector3(x*b, y*b, z*b); }
+	Vector3 operator*=(Float b)          { return *this = Vector3(x*b, y*b, z*b); }
 
 	// Component-wise multiply and divide
 	Vector3 cmul(const Vector3& b) const { return Vector3(x*b.x, y*b.y, z*b.z);	}
@@ -42,7 +43,6 @@ struct Vector3
 	   x * b.y - y * b.x
 	   );
 	}
-
 	Vector3 operator%(const Vector3& b) const
 	{
 	  return Vector3(
@@ -51,7 +51,6 @@ struct Vector3
 	   x * b.y - y * b.x
 	   );
 	}
-
 	Vector3 cross(const Vector3& b) const
 	{
 	  return Vector3(

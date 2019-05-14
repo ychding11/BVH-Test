@@ -113,51 +113,33 @@ namespace smallpt
 		}
 	}
 
-	class SphereScene
-	{
-	private:
-		std::vector<Object*> _prims;
-		BVH* _bvh;
-		bool _initialized;
-	public:
-		SphereScene() : _bvh(nullptr), _initialized(false) { }
-		bool initialized() const { return _initialized; }
-		void initScene(Sphere* scene, int n)
-		{
-			_prims.reserve(n);
-			for (int i = n; i-- ; )
-			{
-				_prims.push_back(&scene[i]);
-			}
-			_bvh = new BVH(&_prims);
-			_initialized = true;
-		}
-		bool intersec(const Ray&r, IntersectionInfo& hit)
-		{
+    bool SphereScene::intersec(const Ray&r, IntersectionInfo& hit)
+    {
 #if defined(USE_BVH)
-			return _bvh->getIntersection(r, &hit, false);
+        return _bvh->getIntersection(r, &hit, false);
 #else
-			Float  d,
-				   inf = 1e20,
-				   t = 1e20;
-			int n = _prims.size(),
-				id = -1;
-			for (int i = n; i--;)
-			{
-				Sphere& sphere = *(Sphere*)_prims[i];
-				if ((d = sphere.intersect(r)) && d < t)
-				{ t = d; id = i; }
-			}
-			if (t < inf)
-			{
-				hit.t = t;
-				hit.hit = r.o + r.d*t;
-				hit.object = _prims[id];
-			}
-			return t < inf;
+        Float  d,
+            inf = 1e20,
+            t = 1e20;
+        int n = _prims.size(),
+            id = -1;
+        for (int i = n; i--;)
+        {
+            Sphere& sphere = *(Sphere*)_prims[i];
+            if ((d = sphere.intersect(r)) && d < t)
+            {
+                t = d; id = i;
+            }
+        }
+        if (t < inf)
+        {
+            hit.t = t;
+            hit.hit = r.o + r.d*t;
+            hit.object = _prims[id];
+        }
+        return t < inf;
 #endif
-		}
-	};
+    }
 
 	static SphereScene sphereScene;
 
@@ -298,9 +280,8 @@ namespace smallpt
 		data = new float[w * h * 3];
 		this->handleSampleCountChange(sample);
 		if (!sphereScene.initialized()) sphereScene.initScene(spheres, sizeof(spheres) / sizeof(Sphere));
-
-		initTriangleScene();
 	}
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	//// 
 	//// https://docs.microsoft.com/en-us/cpp/build/reference/openmp-enable-openmp-2-0-support?view=vs-2019
@@ -330,7 +311,7 @@ namespace smallpt
 		for (int y = 0; y < h; y++) // Loop over image rows
 		{
 #if 0
-#pragma omp critical
+            #pragma omp critical
 			{
 				ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
 			}
@@ -347,7 +328,6 @@ namespace smallpt
 								cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
 #if 1
 							r = r + myradiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) * (1. / samps);
-							//r = r + radiance(Ray(cam.o + d * 140, d.norm()), total_number_of_triangles, Xi, scene_aabbox_min, scene_aabbox_max);
 #else
 							r = r + radiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) * (1. / samps);
 #endif

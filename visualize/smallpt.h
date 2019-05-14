@@ -1,8 +1,8 @@
 #pragma once
 
-#include <math.h>   // smallpt, a Path Tracer by Kevin Beason, 2008
-#include <stdlib.h> // Make : g++ -O3 -fopenmp smallpt.cpp -o smallpt
-#include <stdio.h>  //        Remove "-fopenmp" for g++ version < 4.2
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <iostream>
 #include <sstream>
 #include <random>
@@ -45,6 +45,10 @@ namespace smallpt
 		return distr(generator);
 	}
 
+    struct hitable
+    {
+       virtual bool intersec(const Ray&r, IntersectionInfo& hit) = 0;
+    };
 
 	inline Float minFloat(Float a, Float b) { return a < b ? a : b; }
 	inline Float maxFloat(Float a, Float b) { return a > b ? a : b; }
@@ -91,7 +95,31 @@ namespace smallpt
 		}
 	};
 
-	struct Box {
+    class SphereScene : public hitable
+    {
+    private:
+        std::vector<Object*> _prims;
+        BVH* _bvh;
+        bool _initialized;
+    public:
+        SphereScene() : _bvh(nullptr), _initialized(false) { }
+        bool initialized() const { return _initialized; }
+        void initScene(Sphere* scene, int n)
+        {
+            _prims.reserve(n);
+            for (int i = n; i--; )
+            {
+                _prims.push_back(&scene[i]);
+            }
+            _bvh = new BVH(&_prims);
+            _initialized = true;
+        }
+
+        bool intersec(const Ray&r, IntersectionInfo& hit) override;
+    };
+
+	struct Box
+    {
 
 		Vector3 min; // minimum bounds
 		Vector3 max; // maximum bounds
@@ -213,10 +241,12 @@ namespace smallpt
 
 	};
 
-    // helpers to load triangle data
+    //! only position needed 
     struct TriangleFace
     {
-        int v[3]; // vertex indices
+        int v[3]; //< vertex indices
+        //TriangleFace() { v[0] = v[1] = v[2] = 0; }
+        //TriangleFace(int x, int y, int z) { v[0] = x; v[1] = y; v[2] = z; }
     };
 
     struct TriangleMesh
@@ -226,13 +256,110 @@ namespace smallpt
         Vector3 bounding_box[2];
     };
 
-	//TriangleMesh mesh1;
-	//TriangleMesh mesh2;
-	//std::vector<Vector3> triangles;
-	extern int total_number_of_triangles;
-	extern Vector3	scene_aabbox_min;
-	extern Vector3	scene_aabbox_max;
+    class ObjParser
+    {
+    private:
+        std::string  _filepath;
+        TriangleMesh _mesh;
 
-	void initTriangleScene();
-	Vector3 radiance(Ray &r, const int totaltris, unsigned short *Xi, const Vector3& scene_aabb_min, const Vector3& scene_aabb_max);
+        void loadObj();
+        void unitTriangle()
+        {
+            _mesh.verts.push_back(Vector3(0,1,0));
+            _mesh.verts.push_back(Vector3(-1,0,0));
+            _mesh.verts.push_back(Vector3(1,0,0));
+            //_mesh.faces.push_back(TriangleFace(0, 1, 2));
+            _mesh.faces.push_back({ 0, 1, 2 });
+        }
+
+    public :
+        ObjParser() :_filepath("")
+        {
+            unitTriangle();
+        }
+
+        ObjParser(std::string file) :_filepath(file)
+        {
+            loadObj();
+        }
+
+        const TriangleMesh& getTriangleMesh() const { return _mesh; }
+              TriangleMesh& getTriangleMesh()       { return _mesh; }
+    };
+
+    class Triangle
+    {
+    private:
+        Vector3 _v0, _v1, _v2, _e1, _e2;
+    public:
+        Triangle(const Vector3 &v0, const Vector3 &v1, const Vector3 &v2 )
+            : _v0(v0), _v1(v1), _v2(v2)
+            , _e1(v1 - v0)
+            , _e2(v2 - v0)
+        { }
+        Triangle(const Triangle &b)
+            : _v0(b._v0), _v1(b._v1), _v2(b._v2)
+            , _e1(b._e1)
+            , _e2(b._e2)
+        { }
+
+        Vector3 getTriangleNormal()const { return (_e1%_e2).norm(); }
+
+        /////////////////////////////////////////////
+        ////http://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
+        /////////////////////////////////////////////
+        Float intersect(const Ray &r)
+        {
+            Vector3 tvec = r.o - _v0;
+            Vector3 pvec = r.d.cross(_e2);
+            Float  det = _e1.dot(pvec);
+            //if (det < 1e-5) { return 0;  }//< parallel or backface 
+            if (fabs(det) < 1e-5) { return 0;  }//< parallel
+            if (det < 1e-5) { return 0;  }//< parallel or backface 
+            Float invdet = 1.0 / det;
+
+            Float u = tvec.dot(pvec) * invdet;
+            if (u < 0.0f || u > 1.0f) { return 0; }//< outside triangle
+
+            Vector3 qvec = tvec % _e1;
+            Float v = r.d.dot(qvec) * invdet;
+            if (v < 0.0f || (u + v) > 1.0f) { return 0; } //< outside triangle
+
+            return _e2.dot(qvec) * invdet;
+        }
+    };
+
+    class TriangleScene : public hitable
+    {
+    private:
+	    int     _numTriangles;
+	    Vector3	_aabb_min;
+	    Vector3	_aabb_max;
+        Float   _scale;
+        Vector3 _translate;
+        std::vector<Triangle> _triangles;
+
+	    void initTriangleScene();
+
+    public:
+        TriangleScene()
+            :_scale(16.5), _translate(30, 30, 40)
+        {
+	        initTriangleScene();
+        }
+
+        bool intersec(const Ray& r, IntersectionInfo &hit) override;
+    };
+
+    class Scene
+    {
+    private:
+
+    public:
+        bool intersec(const Ray& r, IntersectionInfo &hit) ;
+
+
+    };
+
+	Vector3 radiance(Ray &r,  unsigned short *Xi);
 }
