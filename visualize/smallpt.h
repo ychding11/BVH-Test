@@ -45,6 +45,9 @@ namespace smallpt
 		return distr(generator);
 	}
 
+    //! Generate a random float in [0, 1)
+    Float randomFloat(uint32_t &X);
+
     struct hitable
     {
        virtual bool intersec(const Ray&r, IntersectionInfo& hit) = 0;
