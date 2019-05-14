@@ -41,7 +41,7 @@ namespace smallpt
             sscanf_s(buffer, "%s", str, 255);
             if (buffer[0] == 'v' && (buffer[1] == ' ' || buffer[1] == 32))// reading a vertex
             {
-                if (sscanf(buffer, "v %f %f %f", &f1, &f2, &f3) == 3)
+                if (sscanf(buffer, "v %e %e %e", &f1, &f2, &f3) == 3)
                 {
                     _mesh.verts.push_back(Vector3(f1, f2, f3));
                 }
@@ -73,14 +73,15 @@ namespace smallpt
             _mesh.bounding_box[1] = max(_mesh.verts[i], _mesh.bounding_box[1]);
         }
 
-        std::cout << "obj file loaded: number of faces:" << _mesh.faces.size() << " number of vertices:" << _mesh.verts.size() << std::endl;
-        std::cout << "obj bounding box: min:(" << _mesh.bounding_box[0].x << "," << _mesh.bounding_box[0].y << "," << _mesh.bounding_box[0].z << ") max:"
+        std::cout << "obj loaded: faces:" << _mesh.faces.size() << " vertices:" << _mesh.verts.size() << std::endl;
+        std::cout << "obj asbb: min:(" << _mesh.bounding_box[0].x << "," << _mesh.bounding_box[0].y << "," << _mesh.bounding_box[0].z << ") max:"
             << _mesh.bounding_box[1].x << "," << _mesh.bounding_box[1].y << "," << _mesh.bounding_box[1].z << ")" << std::endl;
     }
 
 	void TriangleScene::initTriangleScene()
 	{
         ObjParser objparser;
+        //ObjParser objparser("../data/bunny.obj");
         TriangleMesh& mesh1 = objparser.getTriangleMesh();
 
 		_aabb_min = mesh1.bounding_box[0] * _scale;  _aabb_min = _aabb_min + _translate;

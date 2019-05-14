@@ -223,8 +223,8 @@ namespace smallpt
             : _v0(v0), _v1(v1), _v2(v2)
             , _e1(v1 - v0)
             , _e2(v2 - v0)
-			, e(0,0,0), c(1,0,0)
-			, refl(DIFF)
+			, e(0,0,0), c(1,1,1)
+			, refl(REFR)
         { }
         Triangle(const Triangle &b)
             : _v0(b._v0), _v1(b._v1), _v2(b._v2)
@@ -246,7 +246,7 @@ namespace smallpt
             Float  det = _e1.dot(pvec);
             //if (det < 1e-5) { return 0;  }//< parallel or backface 
             if (fabs(det) < 1e-5) { return 0;  }//< parallel
-            if (det < 1e-5) { return 0;  }//< parallel or backface 
+            //if (det < 1e-5) { return 0;  }//< parallel or backface 
             Float invdet = 1.0 / det;
 
             Float u = tvec.dot(pvec) * invdet;
@@ -296,7 +296,7 @@ namespace smallpt
 
     public:
         TriangleScene()
-            :_scale(16.5), _translate(40, 60, 40)
+            :_scale(16.5), _translate(55, 16, 90)
         {
 	        initTriangleScene();
         }
