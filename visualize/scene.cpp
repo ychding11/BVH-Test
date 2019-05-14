@@ -110,13 +110,13 @@ namespace smallpt
 		std::cout << "Total number of triangles in Scene :" << _numTriangles << std::endl;
 	}
 
-	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit)
+	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit) const
 	{
         int id = -1;
-        Float inf = 1e6, t = inf;
+        Float inf = 1e20, t = inf;
 		for (int i = 0; i < _numTriangles; i++)
 		{
-			Triangle& triangle = _triangles[i];
+			const Triangle& triangle = _triangles[i];
 			if (Float ct = triangle.intersect(r))
             {
 			    if (ct < t && ct > 1e-5 && ct < inf)
@@ -125,11 +125,20 @@ namespace smallpt
 			    }
             }
 		}
-        if (id != -1)
+        if (id != -1 && t < hit.t)
         {
             hit.t = t;
+			hit.object = &_triangles[id];
+			hit.hit = r.o + r.d*t;
         }
-        return id == -1;
+        return id == -1 && t == hit.t;
+	}
+
+	bool Scene::intersec(const Ray& r, IntersectionInfo &hit) const
+	{
+		bool a = _spheres.intersec(r, hit);
+		bool b = _triangles.intersec(r, hit);
+		return a || b;
 	}
 
 	static Box boxes[] =

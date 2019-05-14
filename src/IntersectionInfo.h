@@ -10,6 +10,7 @@ struct IntersectionInfo
  Float t; // Intersection distance along the ray
  const Object* object; // Object that was hit
  Vector3 hit; // Location of the intersection
+ IntersectionInfo() : t(1e20), object(nullptr), hit() {}
 };
 
 #endif

@@ -38,19 +38,12 @@ namespace smallpt
 	};
 #endif
 
-	static std::default_random_engine generator;
-	static std::uniform_real_distribution<Float> distr(0.0, 1.0);
-	static Float erand48(unsigned short* X = 0)
-	{
-		return distr(generator);
-	}
-
     //! Generate a random float in [0, 1)
     Float randomFloat(uint32_t &X);
 
     struct hitable
     {
-       virtual bool intersec(const Ray&r, IntersectionInfo& hit) = 0;
+       virtual bool intersec(const Ray&r, IntersectionInfo& hit) const = 0;
     };
 
 	inline Float minFloat(Float a, Float b) { return a < b ? a : b; }
@@ -105,10 +98,12 @@ namespace smallpt
         BVH* _bvh;
         bool _initialized;
     public:
-        SphereScene() : _bvh(nullptr), _initialized(false) { }
+		SphereScene() : _bvh(nullptr), _initialized(false) { init(); }
         bool initialized() const { return _initialized; }
+		void init();
         void initScene(Sphere* scene, int n)
         {
+            _prims.clear();
             _prims.reserve(n);
             for (int i = n; i--; )
             {
@@ -118,7 +113,7 @@ namespace smallpt
             _initialized = true;
         }
 
-        bool intersec(const Ray&r, IntersectionInfo& hit) override;
+        bool intersec(const Ray&r, IntersectionInfo& hit) const override;
     };
 
 	struct Box
@@ -171,6 +166,163 @@ namespace smallpt
 		}
 	};
 
+    //! only position needed 
+    struct TriangleFace
+    {
+        int v[3]; //< vertex indices
+        //TriangleFace() { v[0] = v[1] = v[2] = 0; }
+        //TriangleFace(int x, int y, int z) { v[0] = x; v[1] = y; v[2] = z; }
+    };
+
+    struct TriangleMesh
+    {
+        std::vector<Vector3> verts;
+        std::vector<TriangleFace> faces;
+        Vector3 bounding_box[2];
+    };
+
+    class ObjParser
+    {
+    private:
+        std::string  _filepath;
+        TriangleMesh _mesh;
+
+        void loadObj();
+        void unitTriangle()
+        {
+            _mesh.verts.push_back(Vector3(0,1,0));
+            _mesh.verts.push_back(Vector3(-1,0,0));
+            _mesh.verts.push_back(Vector3(1,0,0));
+            //_mesh.faces.push_back(TriangleFace(0, 1, 2));
+            _mesh.faces.push_back({ 0, 1, 2 });
+        }
+
+    public :
+        ObjParser() :_filepath("")
+        {
+            unitTriangle();
+        }
+
+        ObjParser(std::string file) :_filepath(file)
+        {
+            loadObj();
+        }
+
+        const TriangleMesh& getTriangleMesh() const { return _mesh; }
+              TriangleMesh& getTriangleMesh()       { return _mesh; }
+    };
+
+    class Triangle :public Object
+    {
+    private:
+        Vector3 _v0, _v1, _v2, _e1, _e2;
+		Vector3 e, c;      // emission, color
+		Refl_t refl;       // reflection type (DIFFuse, SPECular, REFRactive)
+    public:
+        Triangle(const Vector3 &v0, const Vector3 &v1, const Vector3 &v2 )
+            : _v0(v0), _v1(v1), _v2(v2)
+            , _e1(v1 - v0)
+            , _e2(v2 - v0)
+			, e(0,0,0), c(1,0,0)
+			, refl(DIFF)
+        { }
+        Triangle(const Triangle &b)
+            : _v0(b._v0), _v1(b._v1), _v2(b._v2)
+            , _e1(b._e1)
+            , _e2(b._e2)
+			, e(b.e), c(b.c)
+			, refl(b.refl)
+        { }
+
+        Vector3 getTriangleNormal()const { return (_e1%_e2).norm(); }
+
+        /////////////////////////////////////////////
+        ////http://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
+        /////////////////////////////////////////////
+        Float intersect(const Ray &r) const
+        {
+            Vector3 tvec = r.o - _v0;
+            Vector3 pvec = r.d.cross(_e2);
+            Float  det = _e1.dot(pvec);
+            //if (det < 1e-5) { return 0;  }//< parallel or backface 
+            if (fabs(det) < 1e-5) { return 0;  }//< parallel
+            if (det < 1e-5) { return 0;  }//< parallel or backface 
+            Float invdet = 1.0 / det;
+
+            Float u = tvec.dot(pvec) * invdet;
+            if (u < 0.0f || u > 1.0f) { return 0; }//< outside triangle
+
+            Vector3 qvec = tvec % _e1;
+            Float v = r.d.dot(qvec) * invdet;
+            if (v < 0.0f || (u + v) > 1.0f) { return 0; } //< outside triangle
+
+            return _e2.dot(qvec) * invdet;
+        }
+
+		bool getIntersection(const Ray& ray, IntersectionInfo* I) const override
+		{
+			Float t = intersect(ray);
+			I->object = this;
+			I->t = t;
+			//deferto bvh
+			//I->hit = ray.o + t * ray.d;
+			return t > 0 ? true : false;
+		}
+		Vector3 getNormal(const IntersectionInfo& I) const override
+		{
+			return getTriangleNormal();
+		}
+		BBox getBBox() const override
+		{
+			return BBox(Vector3(), Vector3());
+		}
+		Vector3 getCentroid() const override
+		{
+			return (_v0+_v1+_v2) / 3.;
+		}
+    };
+
+    class TriangleScene : public hitable
+    {
+    private:
+	    int     _numTriangles;
+	    Vector3	_aabb_min;
+	    Vector3	_aabb_max;
+        Float   _scale;
+        Vector3 _translate;
+        std::vector<Triangle> _triangles;
+
+	    void initTriangleScene();
+
+    public:
+        TriangleScene()
+            :_scale(16.5), _translate(40, 60, 40)
+        {
+	        initTriangleScene();
+        }
+
+        bool intersec(const Ray& r, IntersectionInfo &hit) const override;
+    };
+
+    class Scene
+    {
+    private:
+        bool _initialized;
+		SphereScene _spheres;
+		TriangleScene _triangles;
+
+        bool intersec(const Ray& r, IntersectionInfo &hit) const;
+
+    public:
+		Scene() : _initialized(false) { init(); }
+
+		bool init();
+        bool initialized() const { return _initialized; }
+
+		Vector3 myradiance(const Ray &r, int depth, uint32_t &Xi);
+
+    };
+
 	// resize screen size
 	// reset sample number
 	class smallptTest : public Observer
@@ -184,6 +336,7 @@ namespace smallpt
 		int runTest;
 		std::ostringstream ss;
 		std::string progress;
+		Scene scene;
 
 	public:
 		smallptTest(int width = 1280, int height = 720, int sample = 1);
@@ -244,125 +397,4 @@ namespace smallpt
 
 	};
 
-    //! only position needed 
-    struct TriangleFace
-    {
-        int v[3]; //< vertex indices
-        //TriangleFace() { v[0] = v[1] = v[2] = 0; }
-        //TriangleFace(int x, int y, int z) { v[0] = x; v[1] = y; v[2] = z; }
-    };
-
-    struct TriangleMesh
-    {
-        std::vector<Vector3> verts;
-        std::vector<TriangleFace> faces;
-        Vector3 bounding_box[2];
-    };
-
-    class ObjParser
-    {
-    private:
-        std::string  _filepath;
-        TriangleMesh _mesh;
-
-        void loadObj();
-        void unitTriangle()
-        {
-            _mesh.verts.push_back(Vector3(0,1,0));
-            _mesh.verts.push_back(Vector3(-1,0,0));
-            _mesh.verts.push_back(Vector3(1,0,0));
-            //_mesh.faces.push_back(TriangleFace(0, 1, 2));
-            _mesh.faces.push_back({ 0, 1, 2 });
-        }
-
-    public :
-        ObjParser() :_filepath("")
-        {
-            unitTriangle();
-        }
-
-        ObjParser(std::string file) :_filepath(file)
-        {
-            loadObj();
-        }
-
-        const TriangleMesh& getTriangleMesh() const { return _mesh; }
-              TriangleMesh& getTriangleMesh()       { return _mesh; }
-    };
-
-    class Triangle
-    {
-    private:
-        Vector3 _v0, _v1, _v2, _e1, _e2;
-    public:
-        Triangle(const Vector3 &v0, const Vector3 &v1, const Vector3 &v2 )
-            : _v0(v0), _v1(v1), _v2(v2)
-            , _e1(v1 - v0)
-            , _e2(v2 - v0)
-        { }
-        Triangle(const Triangle &b)
-            : _v0(b._v0), _v1(b._v1), _v2(b._v2)
-            , _e1(b._e1)
-            , _e2(b._e2)
-        { }
-
-        Vector3 getTriangleNormal()const { return (_e1%_e2).norm(); }
-
-        /////////////////////////////////////////////
-        ////http://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
-        /////////////////////////////////////////////
-        Float intersect(const Ray &r)
-        {
-            Vector3 tvec = r.o - _v0;
-            Vector3 pvec = r.d.cross(_e2);
-            Float  det = _e1.dot(pvec);
-            //if (det < 1e-5) { return 0;  }//< parallel or backface 
-            if (fabs(det) < 1e-5) { return 0;  }//< parallel
-            if (det < 1e-5) { return 0;  }//< parallel or backface 
-            Float invdet = 1.0 / det;
-
-            Float u = tvec.dot(pvec) * invdet;
-            if (u < 0.0f || u > 1.0f) { return 0; }//< outside triangle
-
-            Vector3 qvec = tvec % _e1;
-            Float v = r.d.dot(qvec) * invdet;
-            if (v < 0.0f || (u + v) > 1.0f) { return 0; } //< outside triangle
-
-            return _e2.dot(qvec) * invdet;
-        }
-    };
-
-    class TriangleScene : public hitable
-    {
-    private:
-	    int     _numTriangles;
-	    Vector3	_aabb_min;
-	    Vector3	_aabb_max;
-        Float   _scale;
-        Vector3 _translate;
-        std::vector<Triangle> _triangles;
-
-	    void initTriangleScene();
-
-    public:
-        TriangleScene()
-            :_scale(16.5), _translate(30, 30, 40)
-        {
-	        initTriangleScene();
-        }
-
-        bool intersec(const Ray& r, IntersectionInfo &hit) override;
-    };
-
-    class Scene
-    {
-    private:
-
-    public:
-        bool intersec(const Ray& r, IntersectionInfo &hit) ;
-
-
-    };
-
-	Vector3 radiance(Ray &r,  unsigned short *Xi);
 }
