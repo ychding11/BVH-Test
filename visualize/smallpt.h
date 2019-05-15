@@ -195,9 +195,14 @@ namespace smallpt
         {
             _mesh.verts.push_back(Vector3(0,1,0));
             _mesh.verts.push_back(Vector3(-1,0,0));
+            _mesh.verts.push_back(Vector3(0,0,1));
             _mesh.verts.push_back(Vector3(1,0,0));
+            _mesh.verts.push_back(Vector3(0,0,-1));
             //_mesh.faces.push_back(TriangleFace(0, 1, 2));
             _mesh.faces.push_back({ 0, 1, 2 });
+            _mesh.faces.push_back({ 0, 2, 3 });
+            _mesh.faces.push_back({ 0, 3, 4 });
+            _mesh.faces.push_back({ 0, 4, 1 });
         }
 
     public :
@@ -301,7 +306,7 @@ namespace smallpt
 
     public:
         TriangleScene()
-            :_scale(165), _translate(55, 16, 90)
+            :_scale(16.1), _translate(55, 16, 90)
         {
 	        initTriangleScene();
         }

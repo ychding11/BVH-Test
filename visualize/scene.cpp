@@ -71,8 +71,11 @@ namespace smallpt
 
 	void TriangleScene::initTriangleScene()
 	{
-        //ObjParser objparser;
+#if 1
+        ObjParser objparser;
+#else
         ObjParser objparser("../data/bunny.obj");
+#endif
         TriangleMesh& mesh1 = objparser.getTriangleMesh();
 
 		_aabb_min = mesh1.bounding_box[0] * _scale;  _aabb_min = _aabb_min + _translate;
