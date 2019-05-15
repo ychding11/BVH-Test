@@ -118,6 +118,8 @@ void main()
 	double lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
 	{
+        FrameRateDetector frameratedetector;
+        frameratedetector.start();
 		glfwPollEvents();
 
 		// Start the Dear ImGui frame
@@ -130,7 +132,6 @@ void main()
             CPUProfiler profiler("imgui");
 			ImGui::Begin("Settings");
 
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
 			if (ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0"))
 			{
 				uiObserver->handleTestIndexChange(settings.testIndex);
@@ -175,9 +176,11 @@ void main()
             CPUProfiler profiler("Quad Render");
             quadRender.render();
         }
-
         CPUProfiler::end();
+        frameratedetector.stop();
+
         ImGui::Begin("Profiler");
+		ImGui::Text("Frame time %.3f ms\t(%.1f FPS)", frameratedetector.frametime(), frameratedetector.framerate());
         ImGui::Text("%s", CPUProfiler::end().c_str());
         ImGui::EndChild();
 

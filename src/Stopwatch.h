@@ -60,6 +60,24 @@ public:
     }
 };
 
+class FrameRateDetector
+{
+private:
+    double _frametime; //< in ms unit
+    double _framerate; //< 1000/_frametime
+    Stopwatch _stopwatch;
+public:
+    FrameRateDetector() :_frametime(1e20), _stopwatch() { _framerate = 1000. / _frametime; }
+    void start() {}
+    void stop()
+    {
+        _frametime = _stopwatch.read() * 1000.; //< in ms
+        _framerate = 1000. / _frametime;
+    }
+    double framerate() const { return _framerate; }
+    double frametime() const { return _frametime; }
+};
+
 struct ProfilerEntry
 {
     std::string name;
