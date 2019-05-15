@@ -87,7 +87,7 @@ struct ProfilerEntry
     std::string str()
     {
         std::ostringstream ss;
-        ss << name << "\t" << std::setprecision(9) << std::fixed << (detaTime / count) * 1000.f << " ms";
+        ss << std::left << std::setw(24) <<  name << "\t" << std::setprecision(9) << std::fixed << (detaTime / count) * 1000.f << " ms";
         return ss.str();
     }
 };

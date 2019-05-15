@@ -13,6 +13,8 @@
 #include "Ray.h"
 #include "Object.h"
 #include "BVH.h"
+#include "Stopwatch.h"
+#include "objparser.h"
 
 namespace smallpt
 {
@@ -170,8 +172,8 @@ namespace smallpt
     struct TriangleFace
     {
         int v[3]; //< vertex indices
-        //TriangleFace() { v[0] = v[1] = v[2] = 0; }
-        //TriangleFace(int x, int y, int z) { v[0] = x; v[1] = y; v[2] = z; }
+        TriangleFace() { v[0] = v[1] = v[2] = 0; }
+        TriangleFace(int x, int y, int z) { v[0] = x; v[1] = y; v[2] = z; }
     };
 
     struct TriangleMesh
@@ -186,6 +188,7 @@ namespace smallpt
     private:
         std::string  _filepath;
         TriangleMesh _mesh;
+        ObjFile _objModel;
 
         void loadObj();
         void unitTriangle()
@@ -224,7 +227,7 @@ namespace smallpt
             , _e1(v1 - v0)
             , _e2(v2 - v0)
 			, e(0,0,0), c(1,1,1)
-			, refl(REFR)
+			, refl(DIFF)
 		{
 			c *= 0.99;
 		}
@@ -298,7 +301,7 @@ namespace smallpt
 
     public:
         TriangleScene()
-            :_scale(16.5), _translate(55, 16, 90)
+            :_scale(165), _translate(55, 16, 90)
         {
 	        initTriangleScene();
         }

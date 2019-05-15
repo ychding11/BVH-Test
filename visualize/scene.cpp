@@ -23,47 +23,38 @@ namespace smallpt
     // only read positon triangle data from obj file
     void ObjParser::loadObj()
     {
-        std::ifstream in(_filepath.c_str());
-
-        if (!in.good())
         {
-            std::cout << "ERROR: loading obj:(" << _filepath << ") file not found or not good" << "\n";
-            system("PAUSE");
-            exit(0);
-        }
-
-        char buffer[256], str[255];
-        Float f1, f2, f3;
-
-        while (!in.getline(buffer, 255).eof())
-        {
-            buffer[255] = '\0';
-            sscanf_s(buffer, "%s", str, 255);
-            if (buffer[0] == 'v' && (buffer[1] == ' ' || buffer[1] == 32))// reading a vertex
+            CPUProfiler("Load Model", true);
+            //! Load full obj Model
+            if (!objParseFile(_objModel, _filepath.c_str()))
             {
-                if (sscanf(buffer, "v %e %e %e", &f1, &f2, &f3) == 3)
-                {
-                    _mesh.verts.push_back(Vector3(f1, f2, f3));
-                }
-                else
-                {
-                    std::cout << "ERROR: vertex not in wanted format in OBJLoader" << "\n";
-                    exit(-1);
-                }
-            }
-            else if (buffer[0] == 'f' && (buffer[1] == ' ' || buffer[1] == 32))// reading faceMtls 
-            {
-                TriangleFace f;
-                int nt = sscanf(buffer, "f %d %d %d", &f.v[0], &f.v[1], &f.v[2]);
-                if (nt != 3)
-                {
-                    std::cout << "ERROR: I don't know the format of that FaceMtl" << "\n";
-                    exit(-1);
-                }
-                _mesh.faces.push_back(f);
+                std::cout << "ERROR: loading obj:(" << _filepath << ") file not found or not good" << "\n";
+                system("PAUSE");
+                exit(0);
             }
         }
 
+        float* v = _objModel.v;
+        float f1, f2, f3;
+        assert(_objModel.v_size / 3 == 0);
+        for (int i = 0; i < _objModel.v_size / 3; i+=3)
+        {
+            f1 = v[i];
+            f2 = v[i+1];
+            f3 = v[i+2];
+            _mesh.verts.push_back(Vector3(f1, f2, f3));
+        }
+
+        int* f = _objModel.f;
+        assert(_objModel.f_size / 9 == 0);
+        for (int i = 0; i < _objModel.f_size / 9; i+=9)
+        {
+            f1 = f[i];
+            f2 = f[i+1];
+            f3 = f[i+2];
+            _mesh.faces.push_back(TriangleFace(f1, f2, f3));
+        }
+        
         // calculate the bounding box of the _mesh
         _mesh.bounding_box[0] = Vector3(1000000, 1000000, 1000000);
         _mesh.bounding_box[1] = Vector3(-1000000, -1000000, -1000000);
@@ -74,14 +65,14 @@ namespace smallpt
         }
 
         std::cout << "obj loaded: faces:" << _mesh.faces.size() << " vertices:" << _mesh.verts.size() << std::endl;
-        std::cout << "obj asbb: min:(" << _mesh.bounding_box[0].x << "," << _mesh.bounding_box[0].y << "," << _mesh.bounding_box[0].z << ") max:"
+        std::cout << "obj aabb: min:(" << _mesh.bounding_box[0].x << "," << _mesh.bounding_box[0].y << "," << _mesh.bounding_box[0].z << ") max:("
             << _mesh.bounding_box[1].x << "," << _mesh.bounding_box[1].y << "," << _mesh.bounding_box[1].z << ")" << std::endl;
     }
 
 	void TriangleScene::initTriangleScene()
 	{
-        ObjParser objparser;
-        //ObjParser objparser("../data/bunny.obj");
+        //ObjParser objparser;
+        ObjParser objparser("../data/bunny.obj");
         TriangleMesh& mesh1 = objparser.getTriangleMesh();
 
 		_aabb_min = mesh1.bounding_box[0] * _scale;  _aabb_min = _aabb_min + _translate;
