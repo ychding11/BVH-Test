@@ -234,7 +234,7 @@ namespace smallpt
 			, e(0,0,0), c(1,1,1)
 			, refl(DIFF)
 		{
-			c *= 0.99;
+			c *= 0.09;
 		}
         Triangle(const Triangle &b)
             : _v0(b._v0), _v1(b._v1), _v2(b._v2)

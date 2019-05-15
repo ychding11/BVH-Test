@@ -44,7 +44,7 @@ namespace smallpt
         return rng_state;
     }
 
-#if 1
+#if 0
     //! Generate a random float in [0, 1)
     Float randomFloat(uint32_t &X)
     {
@@ -213,7 +213,7 @@ namespace smallpt
 			if (randomFloat(Xi) < p) f = f * (1 / p);
 			else return obj.e;
 		}
-		else if (depth > 4)
+		else if (depth > 6)
 		{
 			return obj.e;
 		}
@@ -323,8 +323,8 @@ namespace smallpt
 							r = r + radiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) * (1. / samps);
 							#endif
 						}
-						//c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
-						c[i] = c[i] + r * .25;
+						c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
+						//c[i] = c[i] + r * .25;
 					}
 		}
 		this->iterates++;
@@ -333,9 +333,9 @@ namespace smallpt
 		// Convert to float
 		for (int i = 0, j = 0; i < w * h * 3 && j < w * h; i += 3, j += 1)
 		{
-			data[i + 0] = clamp(c[j].x / count);
-			data[i + 1] = clamp(c[j].y / count);
-			data[i + 2] = clamp(c[j].z / count);
+			data[i + 0] = (c[j].x / count);
+			data[i + 1] = (c[j].y / count);
+			data[i + 2] = (c[j].z / count);
 		}
 
 		return data;
