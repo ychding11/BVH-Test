@@ -225,7 +225,9 @@ namespace smallpt
             , _e2(v2 - v0)
 			, e(0,0,0), c(1,1,1)
 			, refl(REFR)
-        { }
+		{
+			c *= 0.99;
+		}
         Triangle(const Triangle &b)
             : _v0(b._v0), _v1(b._v1), _v2(b._v2)
             , _e1(b._e1)

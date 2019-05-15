@@ -44,7 +44,7 @@ namespace smallpt
         return rng_state;
     }
 
-#if 0
+#if 1
     //! Generate a random float in [0, 1)
     Float randomFloat(uint32_t &X)
     {
@@ -67,7 +67,7 @@ namespace smallpt
 		 Sphere(1e5, Vector3(50,40.8,-1e5 + 170), Vector3(),Vector3(),           DIFF),//Frnt
 		 Sphere(1e5, Vector3(50, 1e5, 81.6),    Vector3(),Vector3(.75,.75,.75),DIFF),//Botm
 		 Sphere(1e5, Vector3(50,-1e5 + 81.6,81.6),Vector3(),Vector3(.75,.75,.75),DIFF),//Top
-		 Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
+		 //Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
 		 //Sphere(16.5,Vector3(40,16.5,58),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Place holder
 		 Sphere(16.5,Vector3(73,16.5,78),       Vector3(),Vector3(1,1,1)*.999, REFR),//Glas
 		 Sphere(600, Vector3(50,681.6 - .27,81.6),Vector3(12,12,12),  Vector3(), DIFF) //Lite
@@ -113,7 +113,7 @@ namespace smallpt
 			if (randomFloat(Xi) < p) f = f * (1 / p);
 			else return obj.e;
 		}
-		else if (depth > 4)
+		else if (depth > 6)
 		{
 			return obj.e;
 		}
@@ -306,7 +306,7 @@ namespace smallpt
 				ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
 			}
             #endif
-			for (uint32_t x = 0, Xi =  wang_hash(iterates*iterates*y*y); x < w; x++)   // Loop cols
+			for (uint32_t x = 0, Xi =  wang_hash(iterates*iterates); x < w; x++)   // Loop cols
 				for (int sy = 0, i = (y)* w + x; sy < 2; sy++)     // 2x2 subpixel rows
 					for (int sx = 0; sx < 2; sx++, r = Vector3())			  // 2x2 subpixel cols
 					{
@@ -333,9 +333,9 @@ namespace smallpt
 		// Convert to float
 		for (int i = 0, j = 0; i < w * h * 3 && j < w * h; i += 3, j += 1)
 		{
-			data[i + 0] = c[j].x / count;
-			data[i + 1] = c[j].y / count;
-			data[i + 2] = c[j].z / count;
+			data[i + 0] = clamp(c[j].x / count);
+			data[i + 1] = clamp(c[j].y / count);
+			data[i + 2] = clamp(c[j].z / count);
 		}
 
 		return data;
