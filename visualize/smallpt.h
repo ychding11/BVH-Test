@@ -16,6 +16,8 @@
 #include "Stopwatch.h"
 #include "objparser.h"
 
+	extern double erand48(unsigned short xseed[3]);
+
 namespace smallpt
 {
 
@@ -39,6 +41,7 @@ namespace smallpt
 		Vec operator%(Vec&b) { return Vec(y*b.z - z * b.y, z*b.x - x * b.z, x*b.y - y * b.x); } // cross:
 	};
 #endif
+
 
     //! Generate a random float in [0, 1)
     Float randomFloat(uint32_t &X);
@@ -329,7 +332,7 @@ namespace smallpt
 		bool init();
         bool initialized() const { return _initialized; }
 
-		Vector3 myradiance(const Ray &r, int depth, uint32_t &Xi);
+		Vector3 myradiance(const Ray &r, int depth, unsigned short *Xi);
 
     };
 

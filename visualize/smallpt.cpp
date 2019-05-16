@@ -44,7 +44,7 @@ namespace smallpt
         return rng_state;
     }
 
-#if 0
+#if 1
     //! Generate a random float in [0, 1)
     Float randomFloat(uint32_t &X)
     {
@@ -197,7 +197,7 @@ namespace smallpt
 		return true;
 	}
 
-	Vector3 Scene::myradiance(const Ray &r, int depth, uint32_t &Xi)
+	Vector3 Scene::myradiance(const Ray &r, int depth, unsigned short *Xi)
 	{
 		IntersectionInfo hitInfo;
 		if (!intersec(r, hitInfo)) return Vector3(); // if miss, return black
@@ -210,7 +210,7 @@ namespace smallpt
 
 		if (++depth > 4 && depth <= 6)
 		{
-			if (randomFloat(Xi) < p) f = f * (1 / p);
+			if (erand48(Xi) < p) f = f * (1 / p);
 			else return obj.e;
 		}
 		else if (depth > 6)
@@ -220,8 +220,8 @@ namespace smallpt
 
 		if (obj.refl == DIFF) // Ideal DIFFUSE reflection
 		{
-			Float r1 = 2 * M_PI*randomFloat(Xi),
-				r2 = randomFloat(Xi),
+			Float r1 = 2 * M_PI*erand48(Xi),
+				r2 = erand48(Xi),
 				r2s = sqrt(r2);
 			Vector3 w = nl,
 				u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(),
@@ -256,7 +256,7 @@ namespace smallpt
 				P = .25 + .5*Re,
 				RP = Re / P,
 				TP = Tr / (1 - P);
-			return obj.e + f.mult(depth > 2 ? (randomFloat(Xi) < P ?   // Russian roulette
+			return obj.e + f.mult(depth > 2 ? (erand48(Xi) < P ?   // Russian roulette
 				myradiance(reflRay, depth, Xi)*RP : myradiance(Ray(x, tdir), depth, Xi)*TP) :
 				myradiance(reflRay, depth, Xi)*Re + myradiance(Ray(x, tdir), depth, Xi)*Tr);
 		}
@@ -283,19 +283,7 @@ namespace smallpt
 			cy = (cx%cam.d).norm()*.5135,
 			r;
 
-		const int samps = 1;
-		std::ostringstream ss;
-		ss << " Total Number: " << this->samples * 4 * samps << "\n";
-		ss << " Sample Number: " << this->iterates * 4 * samps << "\n";
-		this->progress = ss.str();
-
-		if (this->iterates >= this->samples) // render done 
-		{
-			runTest = false; // Test Done
-			ss << " Render Done! samples : " << this->iterates * 4 * samps << "\n";
-			this->progress = ss.str();
-			return data;
-		}
+		const int samps = this->samples;
 
 		#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
 		for (int y = 0; y < h; y++) // Loop over image rows
@@ -306,14 +294,15 @@ namespace smallpt
 				ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
 			}
             #endif
-			for (uint32_t x = 0, Xi =  wang_hash(iterates*iterates); x < w; x++)   // Loop cols
+			unsigned short Xi[] = { 0, 0, y*y*y };
+			for (uint32_t x = 0; x < w; x++)   // Loop cols
 				for (int sy = 0, i = (y)* w + x; sy < 2; sy++)     // 2x2 subpixel rows
 					for (int sx = 0; sx < 2; sx++, r = Vector3())			  // 2x2 subpixel cols
 					{
 						for (int s = 0; s < samps; s++)
 						{
-							Float r1 = 2 * randomFloat(Xi), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-							Float r2 = 2 * randomFloat(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+							Float r1 = 2 * erand48(Xi), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+							Float r2 = 2 * erand48(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
                             //assert(r1 != r2);
 							Vector3 d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
 								cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
@@ -327,17 +316,15 @@ namespace smallpt
 						//c[i] = c[i] + r * .25;
 					}
 		}
-		this->iterates++;
 
-		uint64_t count = this->iterates;
 		// Convert to float
 		for (int i = 0, j = 0; i < w * h * 3 && j < w * h; i += 3, j += 1)
 		{
-			data[i + 0] = (c[j].x / count);
-			data[i + 1] = (c[j].y / count);
-			data[i + 2] = (c[j].z / count);
+			data[i + 0] = (c[j].x );
+			data[i + 1] = (c[j].y );
+			data[i + 2] = (c[j].z );
 		}
-
+		this->runTest = false;
 		return data;
 	}
 
