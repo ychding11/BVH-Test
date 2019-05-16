@@ -77,13 +77,10 @@ namespace smallpt
 	void SphereScene::init()
     {
 		int n = sizeof(spheres) / sizeof(Sphere);
-
-        _prims.reserve(n);
         for (int i = n; i--; )
         {
             _prims.push_back(&spheres[i]);
         }
-        _bvh = new BVH(&_prims);
         _initialized = true;
     }
 
@@ -165,13 +162,10 @@ namespace smallpt
     bool SphereScene::intersec(const Ray&r, IntersectionInfo& hit) const
     {
 #if defined(USE_BVH)
-        return _bvh->getIntersection(r, &hit, false);
+		//! wait for BVH implement
 #else
-        Float  d,
-            inf = 1e20,
-            t = 1e20;
-        int n = _prims.size(),
-            id = -1;
+        Float  d, t = inf;
+        int n = _prims.size(), id = -1;
         for (int i = n; i--;)
         {
             Sphere& sphere = *(Sphere*)_prims[i];
@@ -237,7 +231,7 @@ namespace smallpt
 		{
 			Ray reflRay(x, r.d - n * 2 * n.dot(r.d));
 			bool into = n.dot(nl) > 0;                // Ray from outside going in?
-			Float nc = 1,       // Air
+			Float nc = 1,   // Air
 				nt = 1.3,   // IOR  Glass
 				nnt = into ? nc / nt : nt / nc,
 				ddn = r.d.dot(nl),

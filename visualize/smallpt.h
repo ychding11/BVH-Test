@@ -9,14 +9,10 @@
 #include <fstream>
 
 #include "interface.h"
-#include "Vector3.h"
-#include "Ray.h"
-#include "Object.h"
-#include "BVH.h"
 #include "Stopwatch.h"
 #include "objparser.h"
 
-	extern double erand48(unsigned short xseed[3]);
+extern double erand48(unsigned short xseed[3]);
 
 namespace smallpt
 {
@@ -40,30 +36,244 @@ namespace smallpt
 		double dot(const Vec &b) const { return x * b.x + y * b.y + z * b.z; }
 		Vec operator%(Vec&b) { return Vec(y*b.z - z * b.y, z*b.x - x * b.z, x*b.y - y * b.x); } // cross:
 	};
+#else
+	typedef double Float;
+
+	struct Vector3
+	{
+		Float x, y, z;
+
+		Vector3(Float x = 0, Float y = 0, Float z = 0) : x(x), y(y), z(z) { }
+		Vector3(const Vector3 &b) : x(b.x), y(b.y), z(b.z) { }
+
+		Vector3 operator+(const Vector3& b) const { return Vector3(x + b.x, y + b.y, z + b.z); }
+		Vector3 operator-(const Vector3& b) const { return Vector3(x - b.x, y - b.y, z - b.z); }
+		Vector3 operator*(Float b) const { return Vector3(x*b, y*b, z*b); }
+		Vector3 operator/(Float b) const { b = 1.f / b; return Vector3(x*b, y*b, z*b); }
+
+		Vector3 operator/(const Vector3 &b) const { return Vector3(x / b.x, y / b.y, z / b.z); }
+
+		Vector3 operator+=(const Vector3& b) { return *this = Vector3(x + b.x, y + b.y, z + b.z); }
+		Vector3 operator*=(Float b) { return *this = Vector3(x*b, y*b, z*b); }
+
+		// Component-wise multiply and divide
+		Vector3 cmul(const Vector3& b) const { return Vector3(x*b.x, y*b.y, z*b.z); }
+		Vector3 cdiv(const Vector3& b) const { return Vector3(x / b.x, y / b.y, z / b.z); }
+		Vector3 mult(const Vector3& b) const { return Vector3(x*b.x, y*b.y, z*b.z); }
+
+		// dot (inner) product
+		Float operator*(const Vector3& b) const { return x * b.x + y * b.y + z * b.z; }
+		Float dot(const Vector3& b) const { return x * b.x + y * b.y + z * b.z; }
+
+		// Cross Product	
+		Vector3 operator^(const Vector3& b) const
+		{
+			return Vector3(
+				y * b.z - z * b.y,
+				z * b.x - x * b.z,
+				x * b.y - y * b.x
+			);
+		}
+		Vector3 operator%(const Vector3& b) const
+		{
+			return Vector3(
+				y * b.z - z * b.y,
+				z * b.x - x * b.z,
+				x * b.y - y * b.x
+			);
+		}
+		Vector3 cross(const Vector3& b) const
+		{
+			return Vector3(
+				y * b.z - z * b.y,
+				z * b.x - x * b.z,
+				x * b.y - y * b.x
+			);
+		}
+
+		///! Caution 
+		///! normalize itself
+		///! Caution 
+		Vector3& norm() { return *this = *this * (1.0 / sqrt(x*x + y * y + z * z)); }
+
+		// Handy component indexing 
+		Float& operator[](const unsigned int i) { return (&x)[i]; }
+
+		const Float& operator[](const unsigned int i) const { return (&x)[i]; }
+	};
+
+	inline Vector3 operator*(Float a, const Vector3& b) { return b * a; }
+
+	// Component-wise min
+	inline Vector3 min(const Vector3& a, const Vector3& b)
+	{
+		return Vector3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
+	}
+
+	inline Vector3 minVector3(const Vector3& a, const Vector3& b)
+	{
+		return Vector3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
+	}
+
+	// Component-wise max
+	inline Vector3 max(const Vector3& a, const Vector3& b)
+	{
+		return Vector3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
+	}
+
+	// Component-wise max
+	inline Vector3 maxVector3(const Vector3& a, const Vector3& b)
+	{
+		return Vector3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
+	}
+
+
+	// Length of a vector
+	inline Float length(const Vector3& a)
+	{
+		return sqrt(a*a);
+	}
+
+	// Make a vector unit length
+	inline Vector3 normalize(const Vector3& in)
+	{
+		return in / length(in);
+	}
 #endif
 
+
+	static const Float inf = 1e20;
+	static const Float eps = 1e-6;
 
     //! Generate a random float in [0, 1)
     Float randomFloat(uint32_t &X);
 
-    struct hitable
-    {
-       virtual bool intersec(const Ray&r, IntersectionInfo& hit) const = 0;
-    };
 
 	inline Float minFloat(Float a, Float b) { return a < b ? a : b; }
 	inline Float maxFloat(Float a, Float b) { return a > b ? a : b; }
 
 	enum Refl_t { DIFF, SPEC, REFR };  // material types
 
+	struct Ray
+	{
+		Vector3 o; // Ray Origin
+		Vector3 d; // Ray Direction
+		Vector3 inv_d; // Inverse of each Ray Direction component
+
+		Ray(const Vector3& o, const Vector3& d)
+			: o(o), d(d), inv_d(Vector3(1, 1, 1).cdiv(d)) { }
+	};
+
+	class Object;
+
+	struct IntersectionInfo
+	{
+		Float t; //< hit distance along the ray
+		const Object* object; //< hit object
+		Vector3 hit; //< hit point
+		IntersectionInfo() : t(inf), object(nullptr), hit() {}
+	};
+
+    struct hitable
+    {
+       virtual bool intersec(const Ray&r, IntersectionInfo& hit) const = 0;
+    };
+
+	struct AABB
+	{
+		inline AABB() { min = Vector3(inf, inf, inf); max = Vector3(-inf, -inf, -inf); }	// an empty interval
+		inline AABB(Vector3 min_, Vector3 max_) { min = min_; max = max_; }
+		inline bool unbounded() const { return min.x == -inf || min.y == -inf || min.z == -inf || max.x == inf || max.y == inf || max.z == inf; }
+		inline size_t largestDimension() const
+		{
+			double dx = std::fabs(max.x - min.x);
+			double dy = std::fabs(max.y - min.y);
+			double dz = std::fabs(max.z - min.z);
+			if (dx > dy && dx > dz)
+			{
+				return 0;
+			}
+			if (dy > dz)
+			{
+				return 1;
+			}
+			return 2;
+		}
+
+		// ray-slab tests, see PBRT 2nd edition, section 4.2.1
+		inline bool intersect(const Ray& ray, const Vector3& inverseDirection, double closestKnownT) const
+		{
+			bool xDirNegative = ray.d.x < 0;
+			bool yDirNegative = ray.d.y < 0;
+			bool zDirNegative = ray.d.z < 0;
+
+			// check for ray intersection against x and y slabs
+			float tmin = ((xDirNegative ? max.x : min.x) - ray.o.x) * inverseDirection.x;
+			float tmax = ((xDirNegative ? min.x : max.x) - ray.o.x) * inverseDirection.x;
+			float tymin = ((yDirNegative ? max.y : min.y) - ray.o.y) * inverseDirection.y;
+			float tymax = ((yDirNegative ? min.y : max.y) - ray.o.y) * inverseDirection.y;
+			if (tmin > tymax || tymin > tmax) {
+				return false;
+			}
+			if (tymin > tmin) {
+				tmin = tymin;
+			}
+			if (tymax < tmax) {
+				tmax = tymax;
+			}
+
+			// check for ray intersection against z slab
+			float tzmin = ((zDirNegative ? max.z : min.z) - ray.o.z) * inverseDirection.z;
+			float tzmax = ((zDirNegative ? min.z : max.z) - ray.o.z) * inverseDirection.z;
+			if (tmin > tzmax || tzmin > tmax) {
+				return false;
+			}
+			if (tzmin > tmin) {
+				tmin = tzmin;
+			}
+			if (tzmax < tmax) {
+				tmax = tzmax;
+			}
+			return (tmin < closestKnownT) && (tmax > eps);
+		}
+
+		Vector3 min;
+		Vector3 max;
+	};
+
+	struct Object
+	{
+	public:
+		Vector3 e; //< emission
+		Vector3 c; //< color
+		Refl_t refl; //< reflection type (DIFFuse, SPECular, REFRactive)
+
+	public:
+		Object(Vector3 emi = Vector3(), Vector3 color = Vector3(), Refl_t type = DIFF)
+			: e(emi), c(color), refl(type) { }
+	public:
+		//! All "Objects" must be able to test for intersections with rays.
+		virtual bool getIntersection(const Ray& ray, IntersectionInfo* intersection) const = 0;
+
+		//! Return an object normal based on an intersection
+		virtual Vector3 getNormal(const IntersectionInfo& I) const = 0;
+
+		//! Return a bounding box for this object
+		virtual AABB getBBox() const = 0;
+
+		//! Return the centroid for this object. (Used in BVH Sorting)
+		virtual Vector3 getCentroid() const = 0;
+	};
+
 	struct Sphere : public Object
 	{
-		Float rad;            // radius
-		Vector3 p, e, c;      // position, emission, color
-		Refl_t refl;          // reflection type (DIFFuse, SPECular, REFRactive)
+		Float rad; // radius
+		Vector3 p; // position
 
 		Sphere(Float rad_, Vector3 p_, Vector3 e_, Vector3 c_, Refl_t refl_)
-			: rad(rad_), p(p_), e(e_), c(c_), refl(refl_) { }
+			: Object(e_,c_,refl_)
+			,rad(rad_), p(p_)
+		{ }
 
 		// returns distance, 0 if nohit
 		Float intersect(const Ray &r) const
@@ -78,17 +288,16 @@ namespace smallpt
 			Float t = intersect(ray);
 			I->object = this;
 			I->t = t;
-			//I->hit = ray.o + t * ray.d;
-			// derfer to bvh
+			//I->hit = ray.o + t * ray.d; // derfer to bvh
 			return t > 0 ? true : false;
 		}
 		Vector3 getNormal(const IntersectionInfo& I) const override
 		{
 			return normalize(I.hit - p);
 		}
-		BBox getBBox() const override
+		AABB getBBox() const override
 		{
-			return BBox(p - Vector3(rad, rad, rad), p + Vector3(rad, rad, rad));
+			return AABB(p - Vector3(rad, rad, rad), p + Vector3(rad, rad, rad));
 		}
 		Vector3 getCentroid() const override
 		{
@@ -100,76 +309,25 @@ namespace smallpt
     {
     private:
         std::vector<Object*> _prims;
-        BVH* _bvh;
         bool _initialized;
+
     public:
-		SphereScene() : _bvh(nullptr), _initialized(false) { init(); }
+		SphereScene() :  _initialized(false) { init(); }
         bool initialized() const { return _initialized; }
 		void init();
         void initScene(Sphere* scene, int n)
         {
             _prims.clear();
-            _prims.reserve(n);
             for (int i = n; i--; )
             {
                 _prims.push_back(&scene[i]);
             }
-            _bvh = new BVH(&_prims);
             _initialized = true;
         }
 
         bool intersec(const Ray&r, IntersectionInfo& hit) const override;
     };
 
-	struct Box
-    {
-
-		Vector3 min; // minimum bounds
-		Vector3 max; // maximum bounds
-		Vector3 emi; // emission
-		Vector3 col; // colour
-		Refl_t refl; // material type
-
-		// ray/box intersection
-		// for theoretical background of the algorithm see 
-		// http://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection
-		// optimised code from http://www.gamedev.net/topic/495636-raybox-collision-intersection-point/
-		Float intersect(const Ray &r) const
-		{
-			Float epsilon = 1e-3;
-
-			Vector3 tmin = (min - r.o) / r.d;
-			Vector3 tmax = (max - r.o) / r.d;
-
-			Vector3 real_min = minVector3(tmin, tmax);
-			Vector3 real_max = maxVector3(tmin, tmax);
-
-			Float minmax = minFloat(minFloat(real_max.x, real_max.y), real_max.z);
-			Float maxmin = maxFloat(maxFloat(real_min.x, real_min.y), real_min.z);
-
-			if (minmax >= maxmin) { return maxmin > epsilon ? maxmin : 0; }
-			else return 0;
-		}
-
-		// calculate normal for point on axis aligned box
-		Vector3 normalAt(Vector3 &point)
-		{
-
-			Vector3 normal(0.f, 0.f, 0.f);
-			Float min_distance = 1e8;
-			Float distance;
-			Float epsilon = 0.001f;
-
-			if (fabs(min.x - point.x) < epsilon) normal = Vector3(-1, 0, 0);
-			else if (fabs(max.x - point.x) < epsilon) normal = Vector3(1, 0, 0);
-			else if (fabs(min.y - point.y) < epsilon) normal = Vector3(0, -1, 0);
-			else if (fabs(max.y - point.y) < epsilon) normal = Vector3(0, 1, 0);
-			else if (fabs(min.z - point.z) < epsilon) normal = Vector3(0, 0, -1);
-			else normal = Vector3(0, 0, 1);
-
-			return normal;
-		}
-	};
 
     //! only position needed 
     struct TriangleFace
@@ -227,24 +385,20 @@ namespace smallpt
     {
     private:
         Vector3 _v0, _v1, _v2, _e1, _e2;
-		Vector3 e, c;      // emission, color
-		Refl_t refl;       // reflection type (DIFFuse, SPECular, REFRactive)
     public:
         Triangle(const Vector3 &v0, const Vector3 &v1, const Vector3 &v2 )
-            : _v0(v0), _v1(v1), _v2(v2)
+            : Object(Vector3(), Vector3() )
+			, _v0(v0), _v1(v1), _v2(v2)
             , _e1(v1 - v0)
             , _e2(v2 - v0)
-			, e(0,0,0), c(1,1,1)
-			, refl(DIFF)
 		{
 			c *= 0.09;
 		}
         Triangle(const Triangle &b)
-            : _v0(b._v0), _v1(b._v1), _v2(b._v2)
+            : Object(b.e, b.c, b.refl)
+			, _v0(b._v0), _v1(b._v1), _v2(b._v2)
             , _e1(b._e1)
             , _e2(b._e2)
-			, e(b.e), c(b.c)
-			, refl(b.refl)
         { }
 
         Vector3 getTriangleNormal()const { return (_e1%_e2).norm(); }
@@ -285,9 +439,9 @@ namespace smallpt
 		{
 			return getTriangleNormal();
 		}
-		BBox getBBox() const override
+		AABB getBBox() const override
 		{
-			return BBox(Vector3(), Vector3());
+			return AABB();
 		}
 		Vector3 getCentroid() const override
 		{
