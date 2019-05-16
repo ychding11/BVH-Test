@@ -115,11 +115,24 @@ namespace smallpt
 		return true;
 	}
 
+	//! used for hit algorithms test.
+	Vector3 Scene::hittest(const Ray &r)
+	{
+		IntersectionInfo hitInfo;
+		if (!intersec(r, hitInfo)) return Vector3(); // if miss, return black
+		const Object &obj = *hitInfo.object;        // the hit object
+		Vector3 x = hitInfo.hit,
+			n = hitInfo.object->getNormal(hitInfo),
+			nl = n.dot(r.d) < 0 ? n : n * -1,
+			f = obj.c;
+		return f;
+	}
+
 	Vector3 Scene::myradiance(const Ray &r, int depth, unsigned short *Xi)
 	{
 		IntersectionInfo hitInfo;
 		if (!intersec(r, hitInfo)) return Vector3(); // if miss, return black
-		const Sphere &obj = *(Sphere*)hitInfo.object;        // the hit object
+		const Object &obj = *hitInfo.object;        // the hit object
 		Vector3 x = hitInfo.hit,
 			n = hitInfo.object->getNormal(hitInfo),
 			nl = n.dot(r.d) < 0 ? n : n * -1,

@@ -488,6 +488,9 @@ namespace smallpt
 
 		Vector3 myradiance(const Ray &r, int depth, unsigned short *Xi);
 
+		//! used for hit algorithms test.
+		Vector3 hittest(const Ray &r);
+
     };
 
 	// resize screen size

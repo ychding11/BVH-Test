@@ -129,7 +129,7 @@ namespace smallpt
 	{
 		bool a = false;
 		a = _spheres.intersec(r, hit) || a;
-		//a = _triangles.intersec(r, hit) || a;
+		a = _triangles.intersec(r, hit) || a;
 		return a;
 	}
 }//namespace
