@@ -18,7 +18,6 @@ namespace smallpt
 
 //#define	USE_BVH
 
-	
 	inline Float clamp(Float x) { return x < 0 ? 0 : x>1 ? 1 : x; }
 	inline int toInt(Float x) { return int(pow(clamp(x), 1 / 2.2) * 255 + .5); }
 	
@@ -67,7 +66,7 @@ namespace smallpt
 		 Sphere(1e5, Vector3(50,40.8,-1e5 + 170), Vector3(),Vector3(),           DIFF),//Frnt
 		 Sphere(1e5, Vector3(50, 1e5, 81.6),    Vector3(),Vector3(.75,.75,.75),DIFF),//Botm
 		 Sphere(1e5, Vector3(50,-1e5 + 81.6,81.6),Vector3(),Vector3(.75,.75,.75),DIFF),//Top
-		 //Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
+		 Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
 		 //Sphere(16.5,Vector3(40,16.5,58),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Place holder
 		 Sphere(16.5,Vector3(73,16.5,78),       Vector3(),Vector3(1,1,1)*.999, REFR),//Glas
 		 Sphere(600, Vector3(50,681.6 - .27,81.6),Vector3(12,12,12),  Vector3(), DIFF) //Lite
@@ -83,81 +82,6 @@ namespace smallpt
         }
         _initialized = true;
     }
-
-	inline bool intersectScene(const Ray &r, Float &t, int &id)
-	{
-		Float n = sizeof(spheres) / sizeof(Sphere),
-			  d,
-			  inf = t = 1e20;
-		for (int i = int(n); i--;) if ((d = spheres[i].intersect(r)) && d < t) { t = d; id = i; }
-		return t < inf;
-	}
-
-	Vector3 radiance(const Ray &r, int depth, uint32_t &Xi)
-	{
-		Float t;                               // distance to intersection
-		int id = 0;                               // id of intersected object
-		if (!intersectScene(r, t, id)) return Vector3(); // if miss, return black
-		const Sphere &obj = spheres[id];        // the hit object
-		Vector3 x = r.o + r.d*t,
-			n = (x - obj.p).norm(),
-			nl = n.dot(r.d) < 0 ? n : n * -1,
-			f = obj.c;
-		Float p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
-
-		if (++depth > 4 && depth <= 6)
-		{
-			if (randomFloat(Xi) < p) f = f * (1 / p);
-			else return obj.e;
-		}
-		else if (depth > 6)
-		{
-			return obj.e;
-		}
-
-		if (obj.refl == DIFF) // Ideal DIFFUSE reflection
-		{
-			Float r1 = 2 * M_PI*randomFloat(Xi),
-				r2 = randomFloat(Xi),
-				r2s = sqrt(r2);
-			Vector3 w = nl,
-				u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(),
-				v = w % u;
-			Vector3 d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2)).norm();
-			return obj.e + f.mult(radiance(Ray(x, d), depth, Xi));
-		}
-		else if (obj.refl == SPEC)            // Ideal SPECULAR reflection
-		{
-			return obj.e + f.mult(radiance(Ray(x, r.d - n * 2 * n.dot(r.d)), depth, Xi));
-		}
-		else
-		{
-			Ray reflRay(x, r.d - n * 2 * n.dot(r.d));     // Ideal dielectric REFRACTION
-			bool into = n.dot(nl) > 0;                // Ray from outside going in?
-			Float nc = 1,       // Air
-				nt = 1.3,   // IOR  Glass
-				nnt = into ? nc / nt : nt / nc,
-				ddn = r.d.dot(nl),
-				cos2t;
-			if ((cos2t = 1 - nnt * nnt*(1 - ddn * ddn)) < 0)    // Total internal reflection
-			{
-				return obj.e + f.mult(radiance(reflRay, depth, Xi));
-			}
-			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
-			Float a = nt - nc,
-				b = nt + nc,
-				R0 = a * a / (b*b),
-				c = 1 - (into ? -ddn : tdir.dot(n));
-			Float Re = R0 + (1 - R0)*c*c*c*c*c,
-				Tr = 1 - Re,
-				P = .25 + .5*Re,
-				RP = Re / P,
-				TP = Tr / (1 - P);
-			return obj.e + f.mult(depth > 2 ? (randomFloat(Xi) < P ?   // Russian roulette
-				radiance(reflRay, depth, Xi)*RP : radiance(Ray(x, tdir), depth, Xi)*TP) :
-				radiance(reflRay, depth, Xi)*Re + radiance(Ray(x, tdir), depth, Xi)*Tr);
-		}
-	}
 
     bool SphereScene::intersec(const Ray&r, IntersectionInfo& hit) const
     {
@@ -323,6 +247,82 @@ namespace smallpt
 	}
 
 #if 0
+
+	inline bool intersectScene(const Ray &r, Float &t, int &id)
+	{
+		Float n = sizeof(spheres) / sizeof(Sphere),
+			  d,
+			  inf = t = 1e20;
+		for (int i = int(n); i--;) if ((d = spheres[i].intersect(r)) && d < t) { t = d; id = i; }
+		return t < inf;
+	}
+
+	Vector3 radiance(const Ray &r, int depth, uint32_t &Xi)
+	{
+		Float t;                               // distance to intersection
+		int id = 0;                               // id of intersected object
+		if (!intersectScene(r, t, id)) return Vector3(); // if miss, return black
+		const Sphere &obj = spheres[id];        // the hit object
+		Vector3 x = r.o + r.d*t,
+			n = (x - obj.p).norm(),
+			nl = n.dot(r.d) < 0 ? n : n * -1,
+			f = obj.c;
+		Float p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+
+		if (++depth > 4 && depth <= 6)
+		{
+			if (randomFloat(Xi) < p) f = f * (1 / p);
+			else return obj.e;
+		}
+		else if (depth > 6)
+		{
+			return obj.e;
+		}
+
+		if (obj.refl == DIFF) // Ideal DIFFUSE reflection
+		{
+			Float r1 = 2 * M_PI*randomFloat(Xi),
+				r2 = randomFloat(Xi),
+				r2s = sqrt(r2);
+			Vector3 w = nl,
+				u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(),
+				v = w % u;
+			Vector3 d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2)).norm();
+			return obj.e + f.mult(radiance(Ray(x, d), depth, Xi));
+		}
+		else if (obj.refl == SPEC)            // Ideal SPECULAR reflection
+		{
+			return obj.e + f.mult(radiance(Ray(x, r.d - n * 2 * n.dot(r.d)), depth, Xi));
+		}
+		else
+		{
+			Ray reflRay(x, r.d - n * 2 * n.dot(r.d));     // Ideal dielectric REFRACTION
+			bool into = n.dot(nl) > 0;                // Ray from outside going in?
+			Float nc = 1,       // Air
+				nt = 1.3,   // IOR  Glass
+				nnt = into ? nc / nt : nt / nc,
+				ddn = r.d.dot(nl),
+				cos2t;
+			if ((cos2t = 1 - nnt * nnt*(1 - ddn * ddn)) < 0)    // Total internal reflection
+			{
+				return obj.e + f.mult(radiance(reflRay, depth, Xi));
+			}
+			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
+			Float a = nt - nc,
+				b = nt + nc,
+				R0 = a * a / (b*b),
+				c = 1 - (into ? -ddn : tdir.dot(n));
+			Float Re = R0 + (1 - R0)*c*c*c*c*c,
+				Tr = 1 - Re,
+				P = .25 + .5*Re,
+				RP = Re / P,
+				TP = Tr / (1 - P);
+			return obj.e + f.mult(depth > 2 ? (randomFloat(Xi) < P ?   // Russian roulette
+				radiance(reflRay, depth, Xi)*RP : radiance(Ray(x, tdir), depth, Xi)*TP) :
+				radiance(reflRay, depth, Xi)*Re + radiance(Ray(x, tdir), depth, Xi)*Tr);
+		}
+	}
+
 	//// https://docs.microsoft.com/en-us/cpp/build/reference/openmp-enable-openmp-2-0-support?view=vs-2019
 	float* smallpt(std::string &log, int w = 1024, int h = 768, int samps = 1)
 	{
