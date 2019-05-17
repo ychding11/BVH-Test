@@ -8,6 +8,10 @@
 #include <random>
 #include <fstream>
 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
 #include "interface.h"
 #include "Stopwatch.h"
 #include "objparser.h"
@@ -387,12 +391,11 @@ namespace smallpt
         Vector3 _v0, _v1, _v2, _e1, _e2;
     public:
         Triangle(const Vector3 &v0, const Vector3 &v1, const Vector3 &v2 )
-            : Object(Vector3(), Vector3() )
+            : Object()
 			, _v0(v0), _v1(v1), _v2(v2)
             , _e1(v1 - v0)
             , _e2(v2 - v0)
 		{
-			c *= 0.09;
 		}
         Triangle(const Triangle &b)
             : Object(b.e, b.c, b.refl)

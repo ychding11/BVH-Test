@@ -137,6 +137,10 @@ namespace smallpt
 	{
 		IntersectionInfo hitInfo;
 		if (!intersec(r, hitInfo)) return Vector3(); // if miss, return black
+		if (dynamic_cast<const Triangle*>(hitInfo.object))
+		{
+			return hitInfo.object->c;
+		}
 		const Object &obj = *hitInfo.object;        // the hit object
 		Vector3 x = hitInfo.hit,
 			n = hitInfo.object->getNormal(hitInfo),
@@ -216,7 +220,7 @@ namespace smallpt
 			cy = (cx%cam.d).norm()*.5135,
 			r;
 
-		const int samps = spp;
+		const int samps = 1;
 
 		#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
 		for (int y = 0; y < h; y++) // Loop over image rows
@@ -227,7 +231,7 @@ namespace smallpt
 				ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
 			}
             #endif
-			unsigned short Xi[] = { 0, 0, y*y*y };
+			unsigned short Xi[] = {y*y*y,0, iterates*iterates*iterates};
 			for (uint32_t x = 0; x < w; x++)   // Loop cols
 				for (int sy = 0, i = (y)* w + x; sy < 2; sy++)     // 2x2 subpixel rows
 					for (int sx = 0; sx < 2; sx++, r = Vector3())  // 2x2 subpixel cols
@@ -238,22 +242,27 @@ namespace smallpt
 							Float r2 = 2 * erand48(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
                             //assert(r1 != r2);
 							Vector3 d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
-								cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
-							r = r + scene.myradiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) * (1. / samps);
+								        cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
+							Ray ray(cam.o + d * 140, d.norm());
+							r = r + scene.myradiance(ray, 0, Xi) * (1. / samps);
 						}
-						c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
-						//c[i] = c[i] + r * .25;
+						//c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
+						c[i] = c[i] + r;
 					}
 		}
-
+		++iterates;
+		ss.str(""); ss.clear();
+		ss << "[Iterate: " << iterates << "] ssp:" << iterates * 4 << std::endl;
+		progress = ss.str();
+		Float invSPP = 1. / (iterates * 4);
 		// Convert to float
 		for (int i = 0, j = 0; i < w * h * 3 && j < w * h; i += 3, j += 1)
 		{
-			data[i + 0] = (c[j].x );
-			data[i + 1] = (c[j].y );
-			data[i + 2] = (c[j].z );
+			data[i + 0] = clamp(c[j].x * invSPP);
+			data[i + 1] = clamp(c[j].y * invSPP);
+			data[i + 2] = clamp(c[j].z * invSPP);
 		}
-        this->runTest = false;
+        this->runTest = true;
 	}
 
 #if 0

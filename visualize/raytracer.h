@@ -99,7 +99,7 @@ private:
         _objects.clear();
 
 		{
-			CPUProfiler profiler("generate objects", true);
+			//CPUProfiler profiler("generate objects", true);
 			for (size_t i = 0; i < _scale; ++i)
 			for (size_t j = 0; j < _scale; ++j)
 			for (size_t k = 0; k < _scale; ++k)
@@ -116,7 +116,7 @@ private:
 
         delete _bvh;
 		{
-			CPUProfiler profiler("construct bvh", true);
+			//CPUProfiler profiler("construct bvh", true);
 			_bvh = new BVH(&_objects);
 		}
     }
