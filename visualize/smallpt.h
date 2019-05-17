@@ -249,7 +249,7 @@ namespace smallpt
 		Refl_t refl; //< reflection type (DIFFuse, SPECular, REFRactive)
 
 	public:
-		Object(Vector3 emi = Vector3(), Vector3 color = Vector3(), Refl_t type = DIFF)
+		Object(Vector3 emi = Vector3(), Vector3 color = Vector3(0.5,0.5,0.5), Refl_t type = DIFF)
 			: e(emi), c(color), refl(type) { }
 	public:
 		//! All "Objects" must be able to test for intersections with rays.
@@ -463,7 +463,7 @@ namespace smallpt
 
     public:
         TriangleScene()
-            :_scale(16.1), _translate(55, 16, 90)
+            :_scale(16.1), _translate(55, 6, 90)
         {
 	        initTriangleScene();
         }
@@ -499,7 +499,7 @@ namespace smallpt
 	{
 	private:
 		int w, h;
-		int samples;
+		int spp;
 		int iterates;
 		Vector3 *c;
 		float *data;
@@ -530,7 +530,7 @@ namespace smallpt
 			}
 		}
 	private:
-		float* smallpt();
+		void smallpt();
 
 	public:
 		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize)
@@ -555,9 +555,9 @@ namespace smallpt
 		}
 		virtual void handleSampleCountChange(int sample)
 		{
-			if (this->samples != sample / 4)
+			if (this->spp != sample / 4)
 			{
-				this->samples = sample / 4;
+				this->spp = sample / 4;
 				memset(data, 0, sizeof(data));
 				memset(c, 0, sizeof(c));
 				iterates = 0;

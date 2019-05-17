@@ -195,7 +195,7 @@ namespace smallpt
 
 
 	smallptTest::smallptTest(int width, int height, int sample)
-		: w(width), h(height), samples(sample), iterates(0)
+		: w(width), h(height), spp(sample), iterates(0)
 		, runTest(true)
 	{
 		c = new Vector3[w * h];
@@ -207,14 +207,14 @@ namespace smallpt
 	//// 
 	//// https://docs.microsoft.com/en-us/cpp/build/reference/openmp-enable-openmp-2-0-support?view=vs-2019
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	float* smallptTest::smallpt(void)
+	void smallptTest::smallpt(void)
 	{
 		Ray cam(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm()); // cam pos, dir
 		Vector3 cx = Vector3(w*.5135 / h),
 			cy = (cx%cam.d).norm()*.5135,
 			r;
 
-		const int samps = this->samples;
+		const int samps = spp;
 
 		#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
 		for (int y = 0; y < h; y++) // Loop over image rows
@@ -228,7 +228,7 @@ namespace smallpt
 			unsigned short Xi[] = { 0, 0, y*y*y };
 			for (uint32_t x = 0; x < w; x++)   // Loop cols
 				for (int sy = 0, i = (y)* w + x; sy < 2; sy++)     // 2x2 subpixel rows
-					for (int sx = 0; sx < 2; sx++, r = Vector3())			  // 2x2 subpixel cols
+					for (int sx = 0; sx < 2; sx++, r = Vector3())  // 2x2 subpixel cols
 					{
 						for (int s = 0; s < samps; s++)
 						{
@@ -237,11 +237,7 @@ namespace smallpt
                             //assert(r1 != r2);
 							Vector3 d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
 								cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
-							#if 1
 							r = r + scene.myradiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) * (1. / samps);
-							#else
-							r = r + radiance(Ray(cam.o + d * 140, d.norm()), 0, Xi) * (1. / samps);
-							#endif
 						}
 						c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
 						//c[i] = c[i] + r * .25;
@@ -255,8 +251,7 @@ namespace smallpt
 			data[i + 1] = (c[j].y );
 			data[i + 2] = (c[j].z );
 		}
-		this->runTest = false;
-		return data;
+        this->runTest = false;
 	}
 
 #if 0
