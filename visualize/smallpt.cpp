@@ -128,6 +128,11 @@ namespace smallpt
 		return f;
 	}
 
+	inline Vector3 reflect(const Vector3 &in, const Vector3 &n)
+	{
+		return in - n * 2 * n.dot(in);
+	}
+
 	Vector3 Scene::myradiance(const Ray &r, int depth, unsigned short *Xi)
 	{
 		IntersectionInfo hitInfo;
@@ -137,11 +142,11 @@ namespace smallpt
 			n = hitInfo.object->getNormal(hitInfo),
 			nl = n.dot(r.d) < 0 ? n : n * -1,
 			f = obj.c;
-		Float p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+		const Float p = .2; //< RR stop Pr
 
 		if (++depth > 4 && depth <= 6)
 		{
-			if (erand48(Xi) < p) f = f * (1 / p);
+			if (erand48(Xi) < p) f = f * (1 /(1.-p));
 			else return obj.e;
 		}
 		else if (depth > 6)
@@ -151,22 +156,20 @@ namespace smallpt
 
 		if (obj.refl == DIFF) // Ideal DIFFUSE reflection
 		{
-			Float r1 = 2 * M_PI*erand48(Xi),
-				r2 = erand48(Xi),
-				r2s = sqrt(r2);
+			Float r1 = 2 * M_PI*erand48(Xi), r2 = erand48(Xi), r2s = sqrt(r2);
 			Vector3 w = nl,
 				u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(),
 				v = w % u;
 			Vector3 d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2)).norm();
 			return obj.e + f.mult(myradiance(Ray(x, d), depth, Xi));
 		}
-		else if (obj.refl == SPEC)            // Ideal SPECULAR reflection
+		else if (obj.refl == SPEC) // Ideal SPECULAR reflection
 		{
-			return obj.e + f.mult(myradiance(Ray(x, r.d - n * 2 * n.dot(r.d)), depth, Xi));
+			return obj.e + f.mult(myradiance(Ray(x, reflect(r.d, n)), depth, Xi));
 		}
-		else        // Ideal dielectric REFRACTION
+		else // Ideal dielectric REFRACTION
 		{
-			Ray reflRay(x, r.d - n * 2 * n.dot(r.d));
+			Ray reflRay(x, reflect(r.d, n));
 			bool into = n.dot(nl) > 0;                // Ray from outside going in?
 			Float nc = 1,   // Air
 				nt = 1.3,   // IOR  Glass
@@ -178,8 +181,7 @@ namespace smallpt
 				return obj.e + f.mult(myradiance(reflRay, depth, Xi));
 			}
 			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
-			Float a = nt - nc,
-				b = nt + nc,
+			Float a = nt - nc, b = nt + nc,
 				R0 = a * a / (b*b),
 				c = 1 - (into ? -ddn : tdir.dot(n));
 			Float Re = R0 + (1 - R0)*c*c*c*c*c,
