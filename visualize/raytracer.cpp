@@ -7,7 +7,7 @@
 
 void BVHTracer::trace()
 {
-	CPUProfiler profiler("trace bvh", true);
+	CPUProfiler profiler("trace bvh");
 
     // Create a camera from position and focus point
     Vector3 camera_position(1.6, 1.3, 1.6);

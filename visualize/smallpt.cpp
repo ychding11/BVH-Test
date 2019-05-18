@@ -137,10 +137,12 @@ namespace smallpt
 	{
 		IntersectionInfo hitInfo;
 		if (!intersec(r, hitInfo)) return Vector3(); // if miss, return black
+#if 0
 		if (dynamic_cast<const Triangle*>(hitInfo.object))
 		{
 			return hitInfo.object->c;
 		}
+#endif
 		const Object &obj = *hitInfo.object;        // the hit object
 		Vector3 x = hitInfo.hit,
 			n = hitInfo.object->getNormal(hitInfo),
@@ -199,10 +201,16 @@ namespace smallpt
 		}
 	}
 
+	void smallptTest::render(void *data)
+	{
+		smallptTest &test = *(smallptTest*)data;
+		test.smallpt();
+	}
 
 	smallptTest::smallptTest(int width, int height, int sample)
 		: w(width), h(height), spp(sample), iterates(0)
 		, runTest(true)
+		, _renderThread(smallptTest::render, this)
 	{
 		c = new Vector3[w * h];
 		data = new float[w * h * 3];
@@ -222,47 +230,56 @@ namespace smallpt
 
 		const int samps = 1;
 
-		#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
-		for (int y = 0; y < h; y++) // Loop over image rows
+		std::unique_lock<std::mutex> lock(_mutex);
+		_condVar.wait(lock);
+
+		while (true)
 		{
-            #if 0
-            #pragma omp critical
+			CPUProfiler profiler("Render time",true);
+			#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
+			for (int y = 0; y < h; y++) // Loop over image rows
 			{
-				ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
-			}
-            #endif
-			unsigned short Xi[] = {y*y*y,0, iterates*iterates*iterates};
-			for (uint32_t x = 0; x < w; x++)   // Loop cols
-				for (int sy = 0, i = (y)* w + x; sy < 2; sy++)     // 2x2 subpixel rows
-					for (int sx = 0; sx < 2; sx++, r = Vector3())  // 2x2 subpixel cols
-					{
-						for (int s = 0; s < samps; s++)
+				#if 0
+				#pragma omp critical
+				{
+					ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
+				}
+				#endif
+				unsigned short Xi[] = { y*y*y,0, iterates*iterates*iterates };
+				for (uint32_t x = 0; x < w; x++)   // Loop cols
+					for (int sy = 0, i = (y)* w + x; sy < 2; sy++)     // 2x2 subpixel rows
+						for (int sx = 0; sx < 2; sx++, r = Vector3())  // 2x2 subpixel cols
 						{
-							Float r1 = 2 * erand48(Xi), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-							Float r2 = 2 * erand48(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-                            //assert(r1 != r2);
-							Vector3 d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
-								        cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
-							Ray ray(cam.o + d * 140, d.norm());
-							r = r + scene.myradiance(ray, 0, Xi) * (1. / samps);
+							for (int s = 0; s < samps; s++)
+							{
+								Float r1 = 2 * erand48(Xi), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+								Float r2 = 2 * erand48(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
+								//assert(r1 != r2);
+								Vector3 d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
+									cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
+								Ray ray(cam.o + d * 140, d.norm());
+								r = r + scene.myradiance(ray, 0, Xi) * (1. / samps);
+							}
+							//c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
+							c[i] = c[i] + r;
 						}
-						//c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
-						c[i] = c[i] + r;
-					}
+			}
+			++iterates;
+			ss.str(""); ss.clear();
+			ss << "[Iterate: " << iterates << "] ssp:" << iterates * 4 << std::endl;
+			progress = ss.str();
+			Float invSPP = 1. / (iterates * 4);
+
+			// Convert to float
+			#pragma omp parallel for schedule(static, 1)      // OpenMP
+			for (int i = 0; i < w * h; i++ )
+			{
+				data[i*3 + 0] = clamp(c[i].x * invSPP);
+				data[i*3 + 1] = clamp(c[i].y * invSPP);
+				data[i*3 + 2] = clamp(c[i].z * invSPP);
+			}
+			this->runTest = true;
 		}
-		++iterates;
-		ss.str(""); ss.clear();
-		ss << "[Iterate: " << iterates << "] ssp:" << iterates * 4 << std::endl;
-		progress = ss.str();
-		Float invSPP = 1. / (iterates * 4);
-		// Convert to float
-		for (int i = 0, j = 0; i < w * h * 3 && j < w * h; i += 3, j += 1)
-		{
-			data[i + 0] = clamp(c[j].x * invSPP);
-			data[i + 1] = clamp(c[j].y * invSPP);
-			data[i + 2] = clamp(c[j].z * invSPP);
-		}
-        this->runTest = true;
 	}
 
 #if 0

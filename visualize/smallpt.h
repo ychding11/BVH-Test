@@ -500,6 +500,8 @@ namespace smallpt
 	// reset sample number
 	class smallptTest : public Observer
 	{
+	public:
+		static void render(void *data);
 	private:
 		int w, h;
 		int spp;
@@ -511,6 +513,9 @@ namespace smallpt
 		std::string progress;
 		Scene scene;
 
+		std::mutex _mutex;
+		std::condition_variable _condVar;
+		std::thread _renderThread;
 	public:
 		smallptTest(int width = 1280, int height = 720, int sample = 1);
 		~smallptTest()
@@ -529,7 +534,8 @@ namespace smallpt
 		{
 			if (runTest)
 			{
-				smallpt();
+				//smallpt();
+				_condVar.notify_one();
 			}
 		}
 	private:
