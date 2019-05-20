@@ -516,10 +516,13 @@ namespace smallpt
 		std::mutex _mutex;
 		std::condition_variable _condVar;
 		std::thread _renderThread;
+        bool _exitRendering;
 	public:
 		smallptTest(int width = 1280, int height = 720, int sample = 1);
 		~smallptTest()
 		{
+            _exitRendering = true;
+            _renderThread.join(); //< wait render thread exit, then delete resource.
 			delete c;
 			delete data;
 		}

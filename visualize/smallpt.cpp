@@ -211,6 +211,7 @@ namespace smallpt
 		: w(width), h(height), spp(sample), iterates(0)
 		, runTest(true)
 		, _renderThread(smallptTest::render, this)
+        , _exitRendering(false)
 	{
 		c = new Vector3[w * h];
 		data = new float[w * h * 3];
@@ -233,7 +234,7 @@ namespace smallpt
 		std::unique_lock<std::mutex> lock(_mutex);
 		_condVar.wait(lock);
 
-		while (true)
+		while (!_exitRendering)
 		{
 			CPUProfiler profiler("Render time",true);
 			#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP

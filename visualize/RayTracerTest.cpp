@@ -136,10 +136,12 @@ void main()
 			{
 				uiObserver->handleTestIndexChange(settings.testIndex);
 			}
+#if 0
 			if (ImGui::SliderInt("spp", &settings.samples, 1, 1024))
 			{
 				uiObserverSmallpt->handleSampleCountChange(settings.samples);
 			}
+#endif
 			if (ImGui::SliderFloat2("translate", &settings.focusOffset.x, -0.5f, 0.5f))
 			{
 				uiObserver->handleFocusOffsetChange(settings.focusOffset);
