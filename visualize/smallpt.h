@@ -168,6 +168,55 @@ namespace smallpt
 			: o(o), d(d), inv_d(Vector3(1, 1, 1).cdiv(d)) { }
 	};
 
+	//! Generate rays easly
+	class Camera
+	{
+	private:
+		Float _vfov;
+		uint32_t _w, _h;
+		Vector3 _p, _u, _v, _d; //< coordiate & position
+
+		void constructCoordinate()
+		{
+			Float halfVfov = _vfov * 0.5;
+			Float h = std::tanf(halfVfov);
+			Float aspect = double(_w) / double(_h);
+			_u = Vector3(aspect * h, 0, 0);
+			_v = (_u%_d).norm()*h;
+		}
+
+	public:
+		Camera() = delete; //< No default constructor allowed
+		Camera(uint32_t w, uint32_t _h, Float vfov);
+
+		//! \param position is in world space
+		//! \param dir is in world space and is normalized
+		Camera(Vector3 position, Vector3 dir)
+			: _p(position), _d(dir)
+			, _w(1280), _h(720)
+			, _vfov(91.)
+		{
+			constructCoordinate();
+		}
+
+		void setImageSize(uint32_t w, uint32_t h)
+		{
+			_w = w; _h = h;
+			constructCoordinate();
+		}
+
+		Float aspect() const { return double(_w) / double(_h); };
+
+		//! get a random ray based on (u, v) in image plane
+		Ray getRay(uint32_t u, uint32_t v, unsigned short *X = nullptr)
+		{
+			Ray r(_p, _d);
+
+			return r;
+		}
+
+	};
+
 	class Object;
 
 	struct IntersectionInfo
