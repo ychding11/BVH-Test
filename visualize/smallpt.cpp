@@ -35,7 +35,8 @@ namespace smallpt
     }
 
     // Xorshift algorithm from George Marsaglia's paper
-    uint32_t rand_xorshift(uint32_t &rng_state)
+    static uint32_t rng_state;
+    uint32_t rand_xorshift()
     {
         rng_state ^= (rng_state << 13);
         rng_state ^= (rng_state >> 17);
@@ -43,14 +44,14 @@ namespace smallpt
         return rng_state;
     }
 
-#if 1
+#if 0
     //! Generate a random float in [0, 1)
-    Float randomFloat(uint32_t &X)
+    Float randomFloat()
     {
-        return Float(rand_xorshift(X)) * (1.0 / 4294967296.0);
+        return Float(rand_xorshift()) * (1.0 / 4294967296.0);
     }
 #else
-	Float randomFloat(uint32_t &X)
+	Float randomFloat()
 	{
 		return distr(generator);
 	}
@@ -204,7 +205,7 @@ namespace smallpt
 	void smallptTest::render(void *data)
 	{
 		smallptTest &test = *(smallptTest*)data;
-		test.smallpt();
+		test.newsmallpt();
 	}
 
 	smallptTest::smallptTest(int width, int height, int sample)
@@ -212,6 +213,7 @@ namespace smallpt
 		, runTest(true)
 		, _renderThread(smallptTest::render, this)
         , _exitRendering(false)
+        , _camera(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm(), w, h)
 	{
 		c = new Vector3[w * h];
 		data = new float[w * h * 3];
@@ -283,6 +285,51 @@ namespace smallpt
 		}
 	}
 
+	void smallptTest::newsmallpt(void)
+	{
+		Vector3 r;
+
+		std::unique_lock<std::mutex> lock(_mutex);
+		_condVar.wait(lock);
+
+		while (!_exitRendering)
+		{
+			CPUProfiler profiler("Render time",true);
+			#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
+			for (int y = 0; y < h; y++) // Loop over image rows
+			{
+				#if 0
+				#pragma omp critical
+				{
+					ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
+				}
+				#endif
+				unsigned short Xi[] = { y*y*y,0, iterates*iterates*iterates };
+                for (uint32_t x = 0; x < w; x++)   // Loop cols
+                {
+                    int i = (y)* w + x;
+                    Ray ray = _camera.getRay(x, y, Xi);
+                    r = scene.myradiance(ray, 0, Xi);
+                    c[i] = c[i] + r;
+                }
+			}
+			++iterates;
+			ss.str(""); ss.clear();
+			ss << "[Iterate: " << iterates << "] ssp:" << iterates << std::endl;
+			progress = ss.str();
+			Float invSPP = 1. / double(iterates);
+
+			// Convert to float
+			#pragma omp parallel for schedule(static, 1)      // OpenMP
+			for (int i = 0; i < w * h; i++ )
+			{
+				data[i*3 + 0] = clamp(c[i].x * invSPP);
+				data[i*3 + 1] = clamp(c[i].y * invSPP);
+				data[i*3 + 2] = clamp(c[i].z * invSPP);
+			}
+			this->runTest = true;
+		}
+	}
 #if 0
 
 	inline bool intersectScene(const Ray &r, Float &t, int &id)

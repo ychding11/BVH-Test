@@ -150,8 +150,7 @@ namespace smallpt
 	static const Float eps = 1e-6;
 
     //! Generate a random float in [0, 1)
-    Float randomFloat(uint32_t &X);
-
+    Float randomFloat();
 
 	inline Float minFloat(Float a, Float b) { return a < b ? a : b; }
 	inline Float maxFloat(Float a, Float b) { return a > b ? a : b; }
@@ -178,23 +177,44 @@ namespace smallpt
 
 		void constructCoordinate()
 		{
-			Float halfVfov = _vfov * 0.5;
-			Float h = std::tanf(halfVfov);
+			Float halfVfov = _vfov * 0.5 * (M_PI / 180.);
+            Float h = std::tanf(halfVfov);
 			Float aspect = double(_w) / double(_h);
 			_u = Vector3(aspect * h, 0, 0);
 			_v = (_u%_d).norm()*h;
 		}
 
+        //! get a sample in [0,0), support subpixel;
+        Float getSample(unsigned short *X = nullptr)
+        {
+            static uint32_t i = 0;
+            uint32_t N = 2; //< NxN sub-pixel
+            Float w = 1. / double(N) * 0.5; //< width of sub-pixel
+            Float c = w; //< first center of sub-pixel
+            Float rd; //< random uniform distribute [0,1)
+            if (X)
+            {
+                rd = erand48(X);
+            }
+            else
+            {
+                rd = randomFloat();
+            }
+            rd = (2. * rd - 1.) * w;
+            c =  (i++) % N * w * 2.;
+            return c + rd;
+        }
+
 	public:
 		Camera() = delete; //< No default constructor allowed
-		Camera(uint32_t w, uint32_t _h, Float vfov);
+		//Camera(uint32_t w, uint32_t _h, Float vfov);
 
 		//! \param position is in world space
 		//! \param dir is in world space and is normalized
-		Camera(Vector3 position, Vector3 dir)
+		Camera(Vector3 position, Vector3 dir, uint32_t w = 1024, uint32_t h = 1024, Float vfov = 55.)
 			: _p(position), _d(dir)
-			, _w(1280), _h(720)
-			, _vfov(91.)
+			, _w(w), _h(h)
+			, _vfov(vfov)
 		{
 			constructCoordinate();
 		}
@@ -210,11 +230,16 @@ namespace smallpt
 		//! get a random ray based on (u, v) in image plane
 		Ray getRay(uint32_t u, uint32_t v, unsigned short *X = nullptr)
 		{
-			Ray r(_p, _d);
-
+            Float x = getSample(X);
+            Float y = getSample(X);
+            Float dW = 1. / double(_w);
+            Float dH = 1. / double(_h);
+            x = x * dW + double(u) / double(_w) - 0.5;
+            y = y * dW + double(v) / double(_w) - 0.5;
+            Vector3 d = _u * x + _v * y + _d;
+			Ray r(_p + d * 140, d.norm());
 			return r;
 		}
-
 	};
 
 	class Object;
@@ -539,6 +564,7 @@ namespace smallpt
         bool initialized() const { return _initialized; }
 
 		Vector3 myradiance(const Ray &r, int depth, unsigned short *Xi);
+		//Vector3 newradiance(const Ray &r, int depth, unsigned short *Xi);
 
 		//! used for hit algorithms test.
 		Vector3 hittest(const Ray &r);
@@ -562,12 +588,14 @@ namespace smallpt
 		std::string progress;
 		Scene scene;
 
+        Camera _camera; // cam pos, dir
+
 		std::mutex _mutex;
 		std::condition_variable _condVar;
 		std::thread _renderThread;
         bool _exitRendering;
 	public:
-		smallptTest(int width = 1280, int height = 720, int sample = 1);
+		smallptTest(int width = 720, int height = 720, int sample = 1);
 		~smallptTest()
 		{
             _exitRendering = true;
@@ -592,6 +620,7 @@ namespace smallpt
 		}
 	private:
 		void smallpt();
+		void newsmallpt();
 
 	public:
 		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize)

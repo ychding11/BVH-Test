@@ -65,7 +65,7 @@ void main()
 
 	GLFWwindow *window;
 	glfwInit();
-	window = glfwCreateWindow(settings.screenSize.x, settings.screenSize.y, "BVH Visulaizer", 0, 0);
+	window = glfwCreateWindow(settings.screenSize.x, settings.screenSize.y, "smallpt", 0, 0);
 	glfwSetWindowPos(window, 300, 100);
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//glfwSetCursorPos(window, 0, 0);
