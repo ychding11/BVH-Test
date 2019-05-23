@@ -1,4 +1,4 @@
-#include <math.h>   // smallpt, a Path Tracer by Kevin Beason, 2008
+﻿#include <math.h>   // smallpt, a Path Tracer by Kevin Beason, 2008
 #include <stdlib.h> // Make : g++ -O3 -fopenmp smallpt.cpp -o smallpt
 #include <stdio.h>  
 #include <omp.h>
@@ -129,10 +129,31 @@ namespace smallpt
 		return f;
 	}
 
+    //! caculate reflected ray direction. dot(in, n) < 0
+    //! in is unit vector, n is unit vector, result is unit vector
 	inline Vector3 reflect(const Vector3 &in, const Vector3 &n)
 	{
 		return in - n * 2 * n.dot(in);
 	}
+
+    //! put an attention to normal n
+    //! consine weighed hemisphere sample
+    inline Vector3 cosWeightedSample(const Vector3 &n, unsigned short *Xi = nullptr)
+    {
+        Float r1 , r2 ;
+        if (Xi)
+        {
+            r1 = 2 * M_PI * erand48(Xi); r2 = erand48(Xi);
+        }
+        else
+        {
+            r1 = 2 * M_PI * randomFloat(); r2 = randomFloat();
+        }
+        Float r2s = sqrt(r2);
+        Vector3 w = n, u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(), v = w % u;
+        Vector3 d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2)).norm();
+        return d;
+    }
 
 	Vector3 Scene::myradiance(const Ray &r, int depth, unsigned short *Xi)
 	{
@@ -145,16 +166,15 @@ namespace smallpt
 		}
 #endif
 		const Object &obj = *hitInfo.object;        // the hit object
-		Vector3 x = hitInfo.hit,
-			n = hitInfo.object->getNormal(hitInfo),
-			nl = n.dot(r.d) < 0 ? n : n * -1,
-			f = obj.c;
+		Vector3 x = hitInfo.hit, n = hitInfo.object->getNormal(hitInfo);
+		Vector3 nl = n.dot(r.d) < 0 ? n : n * -1;
+		Vector3 f = obj.c;
 		const Float p = .2; //< RR stop Pr
 
 		if (++depth > 4 && depth <= 6)
 		{
-			if (erand48(Xi) < p) f = f * (1 /(1.-p));
-			else return obj.e;
+            if (erand48(Xi) < p) return obj.e;
+			else f = f * (1 /(1.-p));
 		}
 		else if (depth > 6)
 		{
@@ -163,12 +183,9 @@ namespace smallpt
 
 		if (obj.refl == DIFF) // Ideal DIFFUSE reflection
 		{
-			Float r1 = 2 * M_PI*erand48(Xi), r2 = erand48(Xi), r2s = sqrt(r2);
-			Vector3 w = nl,
-				u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(),
-				v = w % u;
-			Vector3 d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2)).norm();
-			return obj.e + f.mult(myradiance(Ray(x, d), depth, Xi));
+            // Why converge slow with spp goes up ?
+            // So how to let diffuse converges fast ?
+			return obj.e + f.mult(myradiance(Ray(x, cosWeightedSample(nl, Xi)), depth, Xi));
 		}
 		else if (obj.refl == SPEC) // Ideal SPECULAR reflection
 		{
@@ -177,7 +194,7 @@ namespace smallpt
 		else // Ideal dielectric REFRACTION
 		{
 			Ray reflRay(x, reflect(r.d, n));
-			bool into = n.dot(nl) > 0;                // Ray from outside going in?
+			bool into = n.dot(nl) > 0;     // Ray from outside going in
 			Float nc = 1,   // Air
 				nt = 1.3,   // IOR  Glass
 				nnt = into ? nc / nt : nt / nc,
