@@ -228,12 +228,13 @@ namespace smallpt
 	smallptTest::smallptTest(int width, int height, int sample)
 		: w(width), h(height), spp(sample), iterates(0)
 		, runTest(true)
+		, c(nullptr), data(nullptr)
 		, _renderThread(smallptTest::render, this)
         , _exitRendering(false)
+		, _pauseRender(false)
         , _camera(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm(), w, h)
 	{
-		c = new Vector3[w * h];
-		data = new float[w * h * 3];
+		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
 	}
 
@@ -302,50 +303,69 @@ namespace smallpt
 		}
 	}
 
+    std::mutex smallptTest::_sMutex;
+
 	void smallptTest::newsmallpt(void)
 	{
 		Vector3 r;
-
+		_isRendering = false;
 		std::unique_lock<std::mutex> lock(_mutex);
 		_condVar.wait(lock);
 
 		while (!_exitRendering)
 		{
 			CPUProfiler profiler("Render time",true);
-			#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
-			for (int y = 0; y < h; y++) // Loop over image rows
+			
+			if (_pauseRender)
 			{
-				#if 0
-				#pragma omp critical
-				{
-					ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
-				}
-				#endif
-				unsigned short Xi[] = { y*y*y,0, iterates*iterates*iterates };
-                for (uint32_t x = 0; x < w; x++)   // Loop cols
-                {
-                    int i = (y)* w + x;
-                    Ray ray = _camera.getRay(x, y, Xi);
-                    r = scene.myradiance(ray, 0, Xi);
-                    c[i] = c[i] + r;
-                }
+				_isRendering = false;
+		        _condVar.wait(lock);
 			}
-			++iterates;
+			else
+			{
+				_isRendering = true;
+			}
+
+            {
+                std::lock_guard<std::mutex> lock(_sMutex);
+
+			    #pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
+			    for (int y = 0; y < h; y++) // Loop over image rows
+			    {
+				    #if 0
+				    #pragma omp critical
+				    {
+					    ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
+				    }
+				    #endif
+				    unsigned short Xi[] = { y*y*y,0, iterates*iterates*iterates };
+                    for (uint32_t x = 0; x < w; x++)   // Loop cols
+                    {
+                        int i = (y)* w + x;
+                        Ray ray = _camera.getRay(x, y, Xi);
+                        r = scene.myradiance(ray, 0, Xi);
+                        c[i] = c[i] + r;
+                    }
+			    }
+			    ++iterates;
+			    Float invSPP = 1. / double(iterates);
+
+			    // Convert to float
+			    #pragma omp parallel for schedule(static, 1)      // OpenMP
+			    for (int i = 0; i < w * h; i++ )
+			    {
+				    data[i*3 + 0] = clamp(c[i].x * invSPP);
+				    data[i*3 + 1] = clamp(c[i].y * invSPP);
+				    data[i*3 + 2] = clamp(c[i].z * invSPP);
+			    }
+            }
 			ss.str(""); ss.clear();
+			ss << "[width: " << w << ",height: " << h <<  "]" << std::endl;
 			ss << "[Iterate: " << iterates << "] ssp:" << iterates << std::endl;
 			progress = ss.str();
-			Float invSPP = 1. / double(iterates);
-
-			// Convert to float
-			#pragma omp parallel for schedule(static, 1)      // OpenMP
-			for (int i = 0; i < w * h; i++ )
-			{
-				data[i*3 + 0] = clamp(c[i].x * invSPP);
-				data[i*3 + 1] = clamp(c[i].y * invSPP);
-				data[i*3 + 2] = clamp(c[i].z * invSPP);
-			}
-			this->runTest = true;
+			runTest = true;
 		}
+		_isRendering = false;
 	}
 #if 0
 

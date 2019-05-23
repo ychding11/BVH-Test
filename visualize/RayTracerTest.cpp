@@ -59,6 +59,17 @@ void update(float secondsElapsed, GLFWwindow *window)
 	}
 }
 
+Observer *uiObserverSmallpt = nullptr;
+Observer *uiObserverQuad= nullptr;
+
+//! Handle back frame buffer size change
+void frameBufferSizeCallback(GLFWwindow *window, int width, int height)
+{
+    if (uiObserverSmallpt) uiObserverSmallpt->handleScreenSizeChange(glm::ivec2(width, height));
+    if (uiObserverQuad) uiObserverQuad->handleScreenSizeChange(glm::ivec2(width, height));
+    settings.screenSize.x = width; settings.screenSize.y = height;
+}
+
 void main()
 {
 	srand(unsigned int(time(0)));
@@ -71,6 +82,8 @@ void main()
 	//glfwSetCursorPos(window, 0, 0);
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(0);
+	glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback);
+
 	glewInit();
 
 	// Setup Dear ImGui context
@@ -107,13 +120,14 @@ void main()
 
     Quad::Renderer quadRender("../quad/shaders/");
     quadRender.setScreenSize(settings.screenSize);
+    uiObserverQuad = &quadRender;
 
     std::ostringstream msgStream;
 
     BVHTracer bvhTracer(settings.objectNum, settings.screenSize.x, settings.screenSize.y, msgStream);
     smallpt::smallptTest smallpter(settings.screenSize.x, settings.screenSize.y, settings.samples);
     Observer *uiObserver = &bvhTracer;
-    Observer *uiObserverSmallpt = &smallpter;
+    uiObserverSmallpt = &smallpter;
 
 	double lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))

@@ -221,8 +221,11 @@ namespace smallpt
 
 		void setImageSize(uint32_t w, uint32_t h)
 		{
-			_w = w; _h = h;
-			constructCoordinate();
+			if (w != _w || h != _h)
+			{
+				_w = w; _h = h;
+				constructCoordinate();
+			}
 		}
 
 		Float aspect() const { return double(_w) / double(_h); };
@@ -577,6 +580,8 @@ namespace smallpt
 	{
 	public:
 		static void render(void *data);
+        static std::mutex _sMutex;
+
 	private:
 		int w, h;
 		int spp;
@@ -594,6 +599,9 @@ namespace smallpt
 		std::condition_variable _condVar;
 		std::thread _renderThread;
         bool _exitRendering;
+		bool _isRendering; //< rendering thread responsible for this
+		bool _pauseRender;
+
 	public:
 		smallptTest(int width = 720, int height = 720, int sample = 1);
 		~smallptTest()
@@ -604,7 +612,11 @@ namespace smallpt
 			delete data;
 		}
 
-		float* renderResult() const { return data; }
+		float* renderResult() const
+        {
+            std::lock_guard<std::mutex> lock(_sMutex);
+            return data;
+        }
 		std::string renderLog() const { return ss.str(); }
 		std::string renderProgress() const { return progress; }
 
@@ -625,7 +637,15 @@ namespace smallpt
 	public:
 		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize)
 		{
-			assert(0 && "This function should NOT be called before override !!!");
+            std::lock_guard<std::mutex> lock(_sMutex);
+			_camera.setImageSize(newScreenSize.x, newScreenSize.y);
+            w = newScreenSize.x; h = newScreenSize.y;
+			delete c; delete data; //< delete nullptr is OK
+		    c = new Vector3[w * h]; data = new float[w * h * 3];
+			assert((c && data));
+			memset(data, 0, sizeof(data));
+			memset(c, 0, sizeof(c));
+			iterates = 0;
 		}
 		virtual void handleFocusOffsetChange(const glm::fvec2 &newFocusOffset)
 		{
@@ -647,6 +667,8 @@ namespace smallpt
 		{
 			if (this->spp != sample / 4)
 			{
+				// signal rendering thread stop
+				// wait for rendering thread's signal
 				this->spp = sample / 4;
 				memset(data, 0, sizeof(data));
 				memset(c, 0, sizeof(c));
