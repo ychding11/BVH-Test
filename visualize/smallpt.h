@@ -626,12 +626,10 @@ namespace smallpt
 		{
 			if (runTest)
 			{
-				//smallpt();
 				_condVar.notify_one();
 			}
 		}
 	private:
-		void smallpt();
 		void newsmallpt();
 
 	public:

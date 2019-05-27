@@ -238,6 +238,68 @@ namespace smallpt
 		this->handleSampleCountChange(sample);
 	}
 
+    std::mutex smallptTest::_sMutex;
+
+	void smallptTest::newsmallpt(void)
+	{
+		Vector3 r;
+		_isRendering = false;
+		std::unique_lock<std::mutex> lock(_mutex);
+		_condVar.wait(lock);
+
+		while (!_exitRendering)
+		{
+			CPUProfiler profiler("Render time",true);
+			
+			if (_pauseRender)
+			{
+				_isRendering = false;
+		        _condVar.wait(lock);
+			}
+			else
+			{
+				_isRendering = true;
+			}
+
+			    ++iterates;
+			    Float invSPP = 1. / double(iterates);
+
+            {
+                std::lock_guard<std::mutex> lock(_sMutex);
+
+			    #pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
+			    for (int y = 0; y < h; y++) // Loop over image rows
+			    {
+				    #if 0
+				    #pragma omp critical
+				    {
+					    ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
+				    }
+				    #endif
+				    unsigned short Xi[] = { y*y*y,0, iterates*iterates*iterates };
+                    for (uint32_t x = 0; x < w; x++)   // Loop cols
+                    {
+                        int i = (y)* w + x;
+                        Ray ray = _camera.getRay(x, y, Xi);
+                        r = scene.myradiance(ray, 0, Xi);
+                        c[i] = c[i] + r;
+						// Convert to float
+						data[i*3 + 0] = clamp(c[i].x * invSPP);
+						data[i*3 + 1] = clamp(c[i].y * invSPP);
+						data[i*3 + 2] = clamp(c[i].z * invSPP);
+                    }
+			    }
+            }
+			ss.str(""); ss.clear();
+			ss << "[width: " << w << ",height: " << h <<  "]" << std::endl;
+			ss << "[Iterate: " << iterates << "] ssp:" << iterates << std::endl;
+			progress = ss.str();
+			runTest = true;
+		}
+		_isRendering = false;
+	}
+#if 0
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	//// 
 	//// https://docs.microsoft.com/en-us/cpp/build/reference/openmp-enable-openmp-2-0-support?view=vs-2019
@@ -302,72 +364,6 @@ namespace smallpt
 			this->runTest = true;
 		}
 	}
-
-    std::mutex smallptTest::_sMutex;
-
-	void smallptTest::newsmallpt(void)
-	{
-		Vector3 r;
-		_isRendering = false;
-		std::unique_lock<std::mutex> lock(_mutex);
-		_condVar.wait(lock);
-
-		while (!_exitRendering)
-		{
-			CPUProfiler profiler("Render time",true);
-			
-			if (_pauseRender)
-			{
-				_isRendering = false;
-		        _condVar.wait(lock);
-			}
-			else
-			{
-				_isRendering = true;
-			}
-
-            {
-                std::lock_guard<std::mutex> lock(_sMutex);
-
-			    #pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
-			    for (int y = 0; y < h; y++) // Loop over image rows
-			    {
-				    #if 0
-				    #pragma omp critical
-				    {
-					    ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
-				    }
-				    #endif
-				    unsigned short Xi[] = { y*y*y,0, iterates*iterates*iterates };
-                    for (uint32_t x = 0; x < w; x++)   // Loop cols
-                    {
-                        int i = (y)* w + x;
-                        Ray ray = _camera.getRay(x, y, Xi);
-                        r = scene.myradiance(ray, 0, Xi);
-                        c[i] = c[i] + r;
-                    }
-			    }
-			    ++iterates;
-			    Float invSPP = 1. / double(iterates);
-
-			    // Convert to float
-			    #pragma omp parallel for schedule(static, 1)      // OpenMP
-			    for (int i = 0; i < w * h; i++ )
-			    {
-				    data[i*3 + 0] = clamp(c[i].x * invSPP);
-				    data[i*3 + 1] = clamp(c[i].y * invSPP);
-				    data[i*3 + 2] = clamp(c[i].z * invSPP);
-			    }
-            }
-			ss.str(""); ss.clear();
-			ss << "[width: " << w << ",height: " << h <<  "]" << std::endl;
-			ss << "[Iterate: " << iterates << "] ssp:" << iterates << std::endl;
-			progress = ss.str();
-			runTest = true;
-		}
-		_isRendering = false;
-	}
-#if 0
 
 	inline bool intersectScene(const Ray &r, Float &t, int &id)
 	{
