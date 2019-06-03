@@ -193,26 +193,32 @@ namespace smallpt
 		}
 		else // Ideal dielectric REFRACTION
 		{
+            //! Maybe write a single function to do this things.
+            //! Input: IOR1, IOR2, incomming direction(source->shading point), normal
 			Ray reflRay(x, reflect(r.d, n));
 			bool into = n.dot(nl) > 0;     // Ray from outside going in
-			Float nc = 1,   // Air
-				nt = 1.3,   // IOR  Glass
-				nnt = into ? nc / nt : nt / nc,
-				ddn = r.d.dot(nl),
-				cos2t;
+			Float nc = 1.;   // Air
+			Float nt = 1.3;  // IOR  Glass
+			Float nnt = into ? nc / nt : nt / nc,
+				  ddn = r.d.dot(nl),
+				  cos2t;
 			if ((cos2t = 1 - nnt * nnt*(1 - ddn * ddn)) < 0)    // Total internal reflection
 			{
 				return obj.e + f.mult(myradiance(reflRay, depth, Xi));
 			}
 			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
-			Float a = nt - nc, b = nt + nc,
-				R0 = a * a / (b*b),
-				c = 1 - (into ? -ddn : tdir.dot(n));
-			Float Re = R0 + (1 - R0)*c*c*c*c*c,
-				Tr = 1 - Re,
-				P = .25 + .5*Re,
-				RP = Re / P,
-				TP = Tr / (1 - P);
+
+            //! Schlick's approximation:
+            //!  https://en.wikipedia.org/wiki/Schlick%27s_approximation
+            //!
+			Float a = nt - nc, b = nt + nc, R0 = (a * a) / (b*b),
+				  c = 1 - (into ? -ddn : tdir.dot(n));  //! Term: 1 - cos(theta)
+			Float Re = R0 + (1 - R0)*c*c*c*c*c, Tr = 1 - Re; // Specular Relection & Transmission
+
+            // Russian roulette weight
+            Float P = .25 + .5 * Re,
+				  RP = Re / P,
+				  TP = Tr / (1 - P);
 			return obj.e + f.mult(depth > 2 ? (erand48(Xi) < P ?   // Russian roulette
 				myradiance(reflRay, depth, Xi)*RP : myradiance(Ray(x, tdir), depth, Xi)*TP) :
 				myradiance(reflRay, depth, Xi)*Re + myradiance(Ray(x, tdir), depth, Xi)*Tr);
