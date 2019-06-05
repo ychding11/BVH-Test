@@ -136,6 +136,17 @@ namespace smallpt
 		return in - n * 2 * n.dot(in);
 	}
 
+    //! Schlick's approximation:
+    //!  https://en.wikipedia.org/wiki/Schlick%27s_approximation
+    //!
+    inline Float SchlickApproxim(Float n1, Float n2, Float cosTheta)
+    {
+		Float a = n1 - n2, b = n1 + n2, R0 = (a * a) / (b*b),
+			  c = 1 - cosTheta;  //! Term: 1 - cos(theta)
+		Float Re = R0 + (1 - R0)*c*c*c*c*c; // Specular Relection & Transmission
+        return Re;
+    }
+
     //! put an attention to normal n
     //! consine weighed hemisphere sample
     inline Vector3 cosWeightedSample(const Vector3 &n, unsigned short *Xi = nullptr)
@@ -208,12 +219,17 @@ namespace smallpt
 			}
 			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
 
+#if 0
             //! Schlick's approximation:
             //!  https://en.wikipedia.org/wiki/Schlick%27s_approximation
             //!
 			Float a = nt - nc, b = nt + nc, R0 = (a * a) / (b*b),
 				  c = 1 - (into ? -ddn : tdir.dot(n));  //! Term: 1 - cos(theta)
 			Float Re = R0 + (1 - R0)*c*c*c*c*c, Tr = 1 - Re; // Specular Relection & Transmission
+#endif
+
+            Float Re = SchlickApproxim(nt, nc, into ? -ddn : tdir.dot(n)); //! Schlick's approximation
+            Float Tr = 1 - Re;
 
             // Russian roulette weight
             Float P = .25 + .5 * Re,
