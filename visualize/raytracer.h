@@ -167,7 +167,7 @@ public:
     }
 	virtual void handleTestIndexChange(int newTestIndex) override
     {
-        assert(0 && "This function should NOT be called before override !!!");
+        //assert(0 && "This function should NOT be called before override !!!");
     }
 
 	int objectNum() const

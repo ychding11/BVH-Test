@@ -32,22 +32,24 @@ namespace smallpt
 
         float* v = _objModel.v;
         float f1, f2, f3;
-        assert(_objModel.v_size / 3 == 0);
+        assert(_objModel.v_size % 3 == 0);
         for (int i = 0; i < _objModel.v_size / 3; i+=3)
         {
             f1 = v[i];
             f2 = v[i+1];
             f3 = v[i+2];
-            _mesh.verts.push_back(Vector3(f1, f2, f3));
+            _mesh.rawVerts.push_back(f1);
+            _mesh.rawVerts.push_back(f2);
+            _mesh.rawVerts.push_back(f3);
         }
 
         int* f = _objModel.f;
-        assert(_objModel.f_size / 9 == 0);
+        assert(_objModel.f_size % 9 == 0);
         for (int i = 0; i < _objModel.f_size / 9; i+=9)
         {
             f1 = f[i];
-            f2 = f[i+1];
-            f3 = f[i+2];
+            f2 = f[i+3];
+            f3 = f[i+3];
             _mesh.faces.push_back(TriangleFace(f1, f2, f3));
         }
         
@@ -67,7 +69,7 @@ namespace smallpt
 
 	void TriangleScene::initTriangleScene()
 	{
-#if 1
+#if 0
         ObjParser objparser;
 #else
         ObjParser objparser("../data/bunny.obj");
@@ -77,12 +79,15 @@ namespace smallpt
 		_aabb_min = mesh1.bounding_box[0] * _scale;  _aabb_min = _aabb_min + _translate;
 		_aabb_max = mesh1.bounding_box[1] * _scale;  _aabb_max = _aabb_max + _translate;
 
+        std::cout << "obj aabb: min:(" << mesh1.bounding_box[0].x << "," << mesh1.bounding_box[0].y << "," << mesh1.bounding_box[0].z << ") max:("
+            << mesh1.bounding_box[1].x << "," << mesh1.bounding_box[1].y << "," << mesh1.bounding_box[1].z << ")" << std::endl;
+
 		for (unsigned int i = 0; i < mesh1.faces.size(); i++)
 		{
 			// make a local copy of the triangle vertices
-			Vector3 v0 = mesh1.verts[mesh1.faces[i].v[0] - 1];
-			Vector3 v1 = mesh1.verts[mesh1.faces[i].v[1] - 1];
-			Vector3 v2 = mesh1.verts[mesh1.faces[i].v[2] - 1];
+			Vector3 v0 = mesh1.rawVerts[ mesh1.faces[i].v[0] ];
+			Vector3 v1 = mesh1.rawVerts[ mesh1.faces[i].v[1] ];
+			Vector3 v2 = mesh1.rawVerts[ mesh1.faces[i].v[2] ];
 
 			// scale
 			v0 *= _scale;
@@ -108,7 +113,7 @@ namespace smallpt
 		for (int i = 0; i < _numTriangles; i++)
 		{
 			const Triangle& triangle = _triangles[i];
-			if (Float ct = triangle.intersect(r))
+            Float ct = triangle.intersect(r);
             {
 			    if (ct < t && ct > 1e-5 && ct < inf)
 			    {

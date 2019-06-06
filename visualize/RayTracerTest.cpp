@@ -195,13 +195,13 @@ void main()
         CPUProfiler::end();
         frameratedetector.stop();
 
-        ImGui::Begin("Profiler");
+        ImGui::BeginChild("Profiler");
 		ImGui::Text("Frame time %.3f ms\t(%.1f FPS)", frameratedetector.frametime(), frameratedetector.framerate());
         ImGui::Text("%s", CPUProfiler::end().c_str());
         ImGui::EndChild();
 
 		std::string testLog = smallpter.renderProgress();
-        ImGui::Begin("test log");
+        ImGui::BeginChild("test log");
         ImGui::Text("%s", testLog.c_str());
         ImGui::EndChild();
 
