@@ -12,6 +12,9 @@ struct Setting
     glm::ivec2 screenSize;
     glm::fvec2 focusOffset;
     float positionOffset;
+	float ior;
+	bool sphereScene;
+	bool triangleScene;
 
     Setting()
         : testIndex(0)
@@ -20,6 +23,9 @@ struct Setting
         , screenSize(768, 768)
         , focusOffset(0.f, 0.f)
         , positionOffset(0.f)
+		, ior(1.5f)
+		, sphereScene(true)
+		, triangleScene(false)
     {}
 };
 
@@ -52,6 +58,10 @@ public:
         assert(0 && "This function should NOT be called before override !!!");
     }
 	virtual void handleNewRenderResult(void* newData, int newSize)
+    {
+        assert(0 && "This function should NOT be called before override !!!");
+    }
+	virtual void handleIORChange(float newIOR)
     {
         assert(0 && "This function should NOT be called before override !!!");
     }

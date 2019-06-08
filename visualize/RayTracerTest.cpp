@@ -149,14 +149,13 @@ void main()
 
 			if (ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0"))
 			{
-				uiObserver->handleTestIndexChange(settings.testIndex);
+				//uiObserver->handleTestIndexChange(settings.testIndex);
 			}
 #if 0
 			if (ImGui::SliderInt("spp", &settings.samples, 1, 1024))
 			{
 				uiObserverSmallpt->handleSampleCountChange(settings.samples);
 			}
-#endif
 			if (ImGui::SliderFloat2("translate", &settings.focusOffset.x, -0.5f, 0.5f))
 			{
 				uiObserver->handleFocusOffsetChange(settings.focusOffset);
@@ -165,7 +164,23 @@ void main()
 			{
 				uiObserver->handlePositionOffsetChange(settings.positionOffset);
 			}
+#endif
+			if (ImGui::SliderFloat("IOR", &settings.ior, 1.0f, 2.2f))
+			{
+				uiObserverSmallpt->handleIORChange(settings.ior);
+			}
 
+			if (ImGui::Button("Save"))
+			{
+			}
+			if (ImGui:: Checkbox("Sphere Scene", &settings.sphereScene))
+			{
+
+			}
+			if (ImGui:: Checkbox("Triangle Scene", &settings.triangleScene))
+			{
+
+			}
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
@@ -197,9 +212,10 @@ void main()
 
 		std::string testLog = smallpter.renderProgress();
 
-        ImGui::BeginChild("Profiler&Log");
+        ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
 		ImGui::Text("Frame time %.3f ms\t(%.1f FPS)", frameratedetector.frametime(), frameratedetector.framerate());
         ImGui::Text("%s", CPUProfiler::end().c_str());
+        ImGui::Text("-------------------");
         ImGui::Text("%s", testLog.c_str());
         ImGui::EndChild();
 

@@ -209,7 +209,7 @@ namespace smallpt
 			Ray reflRay(x, reflect(r.d, n));
 			bool into = n.dot(nl) > 0;     // Ray from outside going in
 			Float nc = 1.;   // Air
-			Float nt = 1.3;  // IOR  Glass
+			Float nt = _ior;  // IOR  Glass
 			Float nnt = into ? nc / nt : nt / nc,
 				  ddn = r.d.dot(nl),
 				  cos2t;
@@ -255,6 +255,7 @@ namespace smallpt
         , _exitRendering(false)
 		, _pauseRender(false)
         , _camera(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm(), w, h)
+		, _ior(1.5f)
 	{
 		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
@@ -283,12 +284,10 @@ namespace smallpt
 				_isRendering = true;
 			}
 
-			    ++iterates;
-			    Float invSPP = 1. / double(iterates);
+			++iterates;
+			Float invSPP = 1. / double(iterates);
 
             {
-                std::lock_guard<std::mutex> lock(_sMutex);
-
 			    #pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
 			    for (int y = 0; y < h; y++) // Loop over image rows
 			    {
@@ -304,11 +303,14 @@ namespace smallpt
                         int i = (y)* w + x;
                         Ray ray = _camera.getRay(x, y, Xi);
                         r = scene.myradiance(ray, 0, Xi);
+						{
+						std::lock_guard<std::mutex> lock(_sMutex);
                         c[i] = c[i] + r;
 						// Convert to float
 						data[i*3 + 0] = clamp(c[i].x * invSPP);
 						data[i*3 + 1] = clamp(c[i].y * invSPP);
 						data[i*3 + 2] = clamp(c[i].z * invSPP);
+						}
                     }
 			    }
             }

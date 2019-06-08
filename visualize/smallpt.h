@@ -552,17 +552,22 @@ namespace smallpt
         bool intersec(const Ray& r, IntersectionInfo &hit) const override;
     };
 
+	class smallptTest;
+
     class Scene
     {
     private:
         bool _initialized;
 		SphereScene _spheres;
 		TriangleScene _triangles;
+		Float _ior;
+
+	friend class smallptTest;
 
         bool intersec(const Ray& r, IntersectionInfo &hit) const;
 
     public:
-		Scene() : _initialized(false) { init(); }
+		Scene() : _initialized(false), _ior(1.5) { init(); }
 
 		bool init();
         bool initialized() const { return _initialized; }
@@ -602,6 +607,7 @@ namespace smallpt
         bool _exitRendering;
 		bool _isRendering; //< rendering thread responsible for this
 		bool _pauseRender;
+		float _ior;
 
 	public:
 		smallptTest(int width = 720, int height = 720, int sample = 1);
@@ -634,7 +640,7 @@ namespace smallpt
 		void newsmallpt();
 
 	public:
-		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize)
+		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override
 		{
             std::lock_guard<std::mutex> lock(_sMutex);
 			_camera.setImageSize(newScreenSize.x, newScreenSize.y);
@@ -662,7 +668,7 @@ namespace smallpt
 		{
 			assert(0 && "This function should NOT be called before override !!!");
 		}
-		virtual void handleSampleCountChange(int sample)
+		virtual void handleSampleCountChange(int sample) override
 		{
 			if (this->spp != sample / 4)
 			{
@@ -674,6 +680,15 @@ namespace smallpt
 				iterates = 0;
 				runTest = true;
 			}
+		}
+
+		virtual void handleIORChange(float newIOR) override
+		{
+			std::lock_guard<std::mutex> lock(_sMutex);
+			scene._ior = newIOR;
+			memset(data, 0, sizeof(data));
+			memset(c, 0, sizeof(c));
+			iterates = 0;
 		}
 
 	};
