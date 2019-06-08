@@ -561,13 +561,18 @@ namespace smallpt
 		SphereScene _spheres;
 		TriangleScene _triangles;
 		Float _ior;
+		bool _sphereScene;
+		bool _triangleScene;
 
 	friend class smallptTest;
 
         bool intersec(const Ray& r, IntersectionInfo &hit) const;
 
     public:
-		Scene() : _initialized(false), _ior(1.5) { init(); }
+		Scene() : _initialized(false), _ior(1.5)
+			, _sphereScene(true)
+			, _triangleScene(false)
+		{ init(); }
 
 		bool init();
         bool initialized() const { return _initialized; }

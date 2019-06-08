@@ -131,8 +131,14 @@ namespace smallpt
 	bool Scene::intersec(const Ray& r, IntersectionInfo &hit) const
 	{
 		bool a = false;
-		a = _spheres.intersec(r, hit) || a;
-		a = _triangles.intersec(r, hit) || a;
+		if (_sphereScene)
+		{
+			a = _spheres.intersec(r, hit) || a;
+		}
+		if (_triangleScene)
+		{
+			a = _triangles.intersec(r, hit) || a;
+		}
 		return a;
 	}
 }//namespace
