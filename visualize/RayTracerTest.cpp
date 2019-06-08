@@ -141,10 +141,11 @@ void main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		ImGui::Begin("Settings");
+
         CPUProfiler::begin();
 		{
             CPUProfiler profiler("imgui");
-			ImGui::Begin("Settings");
 
 			if (ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0"))
 			{
@@ -165,7 +166,6 @@ void main()
 				uiObserver->handlePositionOffsetChange(settings.positionOffset);
 			}
 
-			ImGui::End();
 		}
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
@@ -195,15 +195,15 @@ void main()
         CPUProfiler::end();
         frameratedetector.stop();
 
-        ImGui::BeginChild("Profiler");
+		std::string testLog = smallpter.renderProgress();
+
+        ImGui::BeginChild("Profiler&Log");
 		ImGui::Text("Frame time %.3f ms\t(%.1f FPS)", frameratedetector.frametime(), frameratedetector.framerate());
         ImGui::Text("%s", CPUProfiler::end().c_str());
-        ImGui::EndChild();
-
-		std::string testLog = smallpter.renderProgress();
-        ImGui::BeginChild("test log");
         ImGui::Text("%s", testLog.c_str());
         ImGui::EndChild();
+
+		ImGui::End();
 
 		// ImGui Rendering
 		ImGui::Render();

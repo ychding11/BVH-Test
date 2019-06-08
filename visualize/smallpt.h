@@ -420,7 +420,7 @@ namespace smallpt
 
     struct TriangleMesh
     {
-        std::vector<Float> rawVerts;
+        float *v;
         std::vector<Vector3> verts;
         std::vector<TriangleFace> faces;
         Vector3 bounding_box[2];
@@ -544,7 +544,7 @@ namespace smallpt
 
     public:
         TriangleScene()
-            :_scale(161), _translate(55, 6, 90)
+            :_scale(16.1), _translate(5, 6, 9)
         {
 	        initTriangleScene();
         }
