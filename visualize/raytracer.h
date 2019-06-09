@@ -122,6 +122,10 @@ private:
     }
     
 public:
+	virtual void* getRenderResult() const override
+	{
+		return _pixels;
+	}
 
 	virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override
     {

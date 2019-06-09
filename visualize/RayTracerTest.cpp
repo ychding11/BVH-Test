@@ -18,6 +18,10 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#define STBI_MSC_SECURE_CRT
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #include "BVH.h"
 #include "Sphere.h"
 #include "interface.h"
@@ -32,6 +36,8 @@ std::vector<ProfilerEntry> CPUProfiler::ProfilerDataA;
 
 struct Setting;
 static Setting settings;
+
+float gClearColor[4] = {0, 0, 0, 1};
 
 bool keyPressed = false;
 void update(float secondsElapsed, GLFWwindow *window)
@@ -145,62 +151,75 @@ void main()
 
         CPUProfiler::begin();
 		{
-            CPUProfiler profiler("imgui");
+            CPUProfiler profiler("ImGui");
 
 			if (ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0"))
 			{
 				//uiObserver->handleTestIndexChange(settings.testIndex);
 			}
-#if 0
-			if (ImGui::SliderInt("spp", &settings.samples, 1, 1024))
+			if (settings.testIndex == 0)
 			{
-				uiObserverSmallpt->handleSampleCountChange(settings.samples);
+				if (ImGui::SliderInt("spp", &settings.samples, 1, 1024))
+				{
+					//uiObserverSmallpt->handleSampleCountChange(settings.samples);
+				}
+				if (ImGui::SliderFloat2("translate", &settings.focusOffset.x, -0.5f, 0.5f))
+				{
+					uiObserver->handleFocusOffsetChange(settings.focusOffset);
+				}
+				if (ImGui::SliderFloat("zoom", &settings.positionOffset, 0.0f, 10.f))
+				{
+					uiObserver->handlePositionOffsetChange(settings.positionOffset);
+				}
 			}
-			if (ImGui::SliderFloat2("translate", &settings.focusOffset.x, -0.5f, 0.5f))
+			else if (settings.testIndex == 1)
 			{
-				uiObserver->handleFocusOffsetChange(settings.focusOffset);
-			}
-			if (ImGui::SliderFloat("zoom", &settings.positionOffset, 0.0f, 10.f))
-			{
-				uiObserver->handlePositionOffsetChange(settings.positionOffset);
-			}
-#endif
-			uint32_t sceneMask = settings.sceneMask;
-			if (ImGui::SliderFloat("IOR", &settings.ior, 1.0f, 2.2f))
-			{
-				uiObserverSmallpt->handleIORChange(settings.ior);
-			}
+				ImGui::BeginGroup();
 
-			if (ImGui::Button("Save"))
-			{
-			}
-			if (ImGui:: Checkbox("Sphere Scene", &settings.sphereScene))
-			{
-				if (settings.sphereScene)
+				if (ImGui::Button("Save"))
 				{
-					sceneMask |= 0x1;
+					stbi_write_png("output.png", settings.screenSize.x, settings.screenSize.y, 4, smallpter.getRenderResult(), settings.screenSize.x * 4);
 				}
-				else
+				ImGui::SameLine();
+				if (ImGui::Button("Pause"))
 				{
-					sceneMask &= ~0x1;
 				}
-			}
-			if (ImGui:: Checkbox("Triangle Scene", &settings.triangleScene))
-			{
-				if (settings.triangleScene)
-				{
-					sceneMask |= 0x2;
-				}
-				else
-				{
-					sceneMask &= ~0x2;
-				}
-			}
 
-			if (sceneMask != settings.sceneMask)
-			{
-				settings.sceneMask = sceneMask;
-				uiObserverSmallpt->handleSceneMaskChange(settings.sceneMask);
+				uint32_t sceneMask = settings.sceneMask;
+				if (ImGui::SliderFloat("IOR", &settings.ior, 1.0f, 2.2f))
+				{
+					uiObserverSmallpt->handleIORChange(settings.ior);
+				}
+				if (ImGui:: Checkbox("Sphere Scene", &settings.sphereScene))
+				{
+					if (settings.sphereScene)
+					{
+						sceneMask |= 0x1;
+					}
+					else
+					{
+						sceneMask &= ~0x1;
+					}
+				}
+				ImGui::SameLine();
+				if (ImGui:: Checkbox("Triangle Scene", &settings.triangleScene))
+				{
+					if (settings.triangleScene)
+					{
+						sceneMask |= 0x2;
+					}
+					else
+					{
+						sceneMask &= ~0x2;
+					}
+				}
+				ImGui::ColorEdit4("clear color", gClearColor);
+				ImGui::EndGroup();
+				if (sceneMask != settings.sceneMask)
+				{
+					settings.sceneMask = sceneMask;
+					uiObserverSmallpt->handleSceneMaskChange(settings.sceneMask);
+				}
 			}
 		}
 
@@ -210,17 +229,20 @@ void main()
 		update((float)(presentTime - lastTime), window);
 		lastTime = presentTime;
 
+		std::string progress;
+		int sizeInBytes = (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3);
         {
-            CPUProfiler profiler("Run Test");
+            CPUProfiler profiler("Test Running");
             if (settings.testIndex == 0)
             {
                 bvhTracer.run();
-                quadRender.handleNewRenderResult(bvhTracer._pixels, (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3));
+                quadRender.handleNewRenderResult(bvhTracer.getRenderResult(), sizeInBytes);
             }
             else
             {
 				smallpter.run();
-                quadRender.handleNewRenderResult(smallpter.renderResult(), (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3));
+				progress = smallpter.getRenderProgress();
+                quadRender.handleNewRenderResult(smallpter.getRenderResult(), sizeInBytes);
             }
         }
 		
@@ -228,16 +250,15 @@ void main()
             CPUProfiler profiler("Quad Render");
             quadRender.render();
         }
+
         CPUProfiler::end();
         frameratedetector.stop();
-
-		std::string testLog = smallpter.renderProgress();
 
         ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
 		ImGui::Text("Frame time %.3f ms\t(%.1f FPS)", frameratedetector.frametime(), frameratedetector.framerate());
         ImGui::Text("%s", CPUProfiler::end().c_str());
         ImGui::Text("-------------------");
-        ImGui::Text("%s", testLog.c_str());
+        ImGui::Text("%s", progress.c_str());
         ImGui::EndChild();
 
 		ImGui::End();

@@ -67,10 +67,19 @@ public:
     {
         assert(0 && "This function should NOT be called before override !!!");
     }
-
 	virtual void handleSceneMaskChange(uint32_t newMask)
     {
         assert(0 && "This function should NOT be called before override !!!");
     }
+	virtual void* getRenderResult() const
+    {
+        assert(0 && "This function should NOT be called before override !!!");
+		return nullptr;
+    }
+	virtual std::string getRenderProgress() const
+	{
+        assert(0 && "This function should NOT be called before override !!!");
+		return "";
+	}
 };
 

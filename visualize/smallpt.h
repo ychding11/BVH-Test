@@ -624,13 +624,19 @@ namespace smallpt
 			delete data;
 		}
 
-		float* renderResult() const
-        {
+		virtual void* getRenderResult() const override
+		{
             std::lock_guard<std::mutex> lock(_sMutex);
             return data;
-        }
+		}
+
 		std::string renderLog() const { return ss.str(); }
 		std::string renderProgress() const { return progress; }
+
+		virtual std::string getRenderProgress() const override
+		{
+			return progress;
+		}
 
 		void clearRenderLog() { ss.clear(); }
 
