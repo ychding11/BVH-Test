@@ -15,6 +15,7 @@ struct Setting
 	float ior;
 	bool sphereScene;
 	bool triangleScene;
+	uint32_t sceneMask;
 
     Setting()
         : testIndex(0)
@@ -26,6 +27,7 @@ struct Setting
 		, ior(1.5f)
 		, sphereScene(true)
 		, triangleScene(false)
+		, sceneMask(0x1)
     {}
 };
 
@@ -62,6 +64,11 @@ public:
         assert(0 && "This function should NOT be called before override !!!");
     }
 	virtual void handleIORChange(float newIOR)
+    {
+        assert(0 && "This function should NOT be called before override !!!");
+    }
+
+	virtual void handleSceneMaskChange(uint32_t newMask)
     {
         assert(0 && "This function should NOT be called before override !!!");
     }

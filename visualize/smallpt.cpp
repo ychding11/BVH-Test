@@ -288,6 +288,7 @@ namespace smallpt
 			Float invSPP = 1. / double(iterates);
 
             {
+				std::lock_guard<std::mutex> lock(_sMutex);
 			    #pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
 			    for (int y = 0; y < h; y++) // Loop over image rows
 			    {
@@ -304,7 +305,6 @@ namespace smallpt
                         Ray ray = _camera.getRay(x, y, Xi);
                         r = scene.myradiance(ray, 0, Xi);
 						{
-						std::lock_guard<std::mutex> lock(_sMutex);
                         c[i] = c[i] + r;
 						// Convert to float
 						data[i*3 + 0] = clamp(c[i].x * invSPP);

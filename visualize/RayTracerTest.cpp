@@ -165,6 +165,7 @@ void main()
 				uiObserver->handlePositionOffsetChange(settings.positionOffset);
 			}
 #endif
+			uint32_t sceneMask = settings.sceneMask;
 			if (ImGui::SliderFloat("IOR", &settings.ior, 1.0f, 2.2f))
 			{
 				uiObserverSmallpt->handleIORChange(settings.ior);
@@ -175,11 +176,31 @@ void main()
 			}
 			if (ImGui:: Checkbox("Sphere Scene", &settings.sphereScene))
 			{
-
+				if (settings.sphereScene)
+				{
+					sceneMask |= 0x1;
+				}
+				else
+				{
+					sceneMask &= ~0x1;
+				}
 			}
 			if (ImGui:: Checkbox("Triangle Scene", &settings.triangleScene))
 			{
+				if (settings.triangleScene)
+				{
+					sceneMask |= 0x2;
+				}
+				else
+				{
+					sceneMask &= ~0x2;
+				}
+			}
 
+			if (sceneMask != settings.sceneMask)
+			{
+				settings.sceneMask = sceneMask;
+				uiObserverSmallpt->handleSceneMaskChange(settings.sceneMask);
 			}
 		}
 

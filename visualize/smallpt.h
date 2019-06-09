@@ -653,8 +653,8 @@ namespace smallpt
 			delete c; delete data; //< delete nullptr is OK
 		    c = new Vector3[w * h]; data = new float[w * h * 3];
 			assert((c && data));
-			memset(data, 0, sizeof(data));
-			memset(c, 0, sizeof(c));
+			memset(data, 0, sizeof(data[0])*w*h);
+			memset(c, 0, sizeof(c[0])*w*h);
 			iterates = 0;
 		}
 		virtual void handleFocusOffsetChange(const glm::fvec2 &newFocusOffset)
@@ -680,8 +680,8 @@ namespace smallpt
 				// signal rendering thread stop
 				// wait for rendering thread's signal
 				this->spp = sample / 4;
-				memset(data, 0, sizeof(data));
-				memset(c, 0, sizeof(c));
+				memset(data, 0, sizeof(data[0])*w*h);
+				memset(c, 0, sizeof(c[0])*w*h);
 				iterates = 0;
 				runTest = true;
 			}
@@ -691,11 +691,19 @@ namespace smallpt
 		{
 			std::lock_guard<std::mutex> lock(_sMutex);
 			scene._ior = newIOR;
-			memset(data, 0, sizeof(data));
-			memset(c, 0, sizeof(c));
+			memset(data, 0, sizeof(data[0])*w*h);
+			memset(c, 0, sizeof(c[0])*w*h);
 			iterates = 0;
 		}
-
+		virtual void handleSceneMaskChange(uint32_t newMask) override
+		{
+			std::lock_guard<std::mutex> lock(_sMutex);
+			scene._sphereScene = newMask & 0x1 ? true : false;
+			scene._triangleScene = newMask & 0x2 ? true : false;
+			memset(data, 0, sizeof(data[0])*w*h);
+			memset(c, 0, sizeof(c[0])*w*h);
+			iterates = 0;
+		}
 	};
 
 }
