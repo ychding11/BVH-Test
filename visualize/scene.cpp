@@ -21,6 +21,7 @@ namespace smallpt
     {
         {
             CPUProfiler("Load Model", true);
+
             //! Load full obj Model
             if (!objParseFile(_objModel, _filepath.c_str()))
             {
@@ -30,39 +31,27 @@ namespace smallpt
             }
         }
 
-        float f1, f2, f3;
         assert(_objModel.v_size % 3 == 0);
-        _mesh.v = _objModel.v;
+        assert(_objModel.f_size % 9 == 0);
+        float *v = _objModel.v;
 
         int* f = _objModel.f;
-        assert(_objModel.f_size % 9 == 0);
 		int nTriangles = _objModel.f_size / 9;
         for (int i = 0; i < nTriangles ; i++)
         {
 			int idx0 = f[i * 9 + 0] * 3;
 			int idx1 = f[i * 9 + 3] * 3;
 			int idx2 = f[i * 9 + 6] * 3;
-			Vector3 v0 = Vector3(_mesh.v[idx0 + 0], _mesh.v[idx0 + 1], _mesh.v[idx0 + 2]);
-			Vector3 v1 = Vector3(_mesh.v[idx1 + 0], _mesh.v[idx1 + 1], _mesh.v[idx1 + 2]);
-			Vector3 v2 = Vector3(_mesh.v[idx2 + 0], _mesh.v[idx2 + 1], _mesh.v[idx2 + 2]);
-            _mesh.verts.push_back(v0);
-            _mesh.verts.push_back(v1);
-            _mesh.verts.push_back(v2);
+			Vector3 v0 = Vector3(v[idx0 + 0], v[idx0 + 1], v[idx0 + 2]);
+			Vector3 v1 = Vector3(v[idx1 + 0], v[idx1 + 1], v[idx1 + 2]);
+			Vector3 v2 = Vector3(v[idx2 + 0], v[idx2 + 1], v[idx2 + 2]);
+            _mesh.vertex.push_back(v0);
+            _mesh.vertex.push_back(v1);
+            _mesh.vertex.push_back(v2);
             _mesh.faces.push_back(TriangleFace(3*i, 3*i+1, 3*i+2));
         }
         
-        // calculate the bounding box of the _mesh
-        _mesh.bounding_box[0] = Vector3(1000000, 1000000, 1000000);
-        _mesh.bounding_box[1] = Vector3(-1000000, -1000000, -1000000);
-        for (unsigned int i = 0; i < _mesh.verts.size(); i++)
-        {
-            _mesh.bounding_box[0] = min(_mesh.verts[i], _mesh.bounding_box[0]);
-            _mesh.bounding_box[1] = max(_mesh.verts[i], _mesh.bounding_box[1]);
-        }
-
-        std::cout << "obj loaded: faces:" << _mesh.faces.size() << " vertices:" << _mesh.verts.size() << std::endl;
-        std::cout << "obj aabb: min:(" << _mesh.bounding_box[0].x << "," << _mesh.bounding_box[0].y << "," << _mesh.bounding_box[0].z << ") max:("
-            << _mesh.bounding_box[1].x << "," << _mesh.bounding_box[1].y << "," << _mesh.bounding_box[1].z << ")" << std::endl;
+        std::cout << "obj loaded: faces:" << _mesh.faces.size() << " vertices:" << _mesh.vertex.size() << std::endl;
     }
 
 	void TriangleScene::initTriangleScene()
@@ -72,20 +61,13 @@ namespace smallpt
 #else
         ObjParser objparser("../data/bunny.obj");
 #endif
-        TriangleMesh& mesh1 = objparser.getTriangleMesh();
-
-		_aabb_min = mesh1.bounding_box[0] * _scale;  _aabb_min = _aabb_min + _translate;
-		_aabb_max = mesh1.bounding_box[1] * _scale;  _aabb_max = _aabb_max + _translate;
-
-        std::cout << "obj aabb: min:(" << mesh1.bounding_box[0].x << "," << mesh1.bounding_box[0].y << "," << mesh1.bounding_box[0].z << ") max:("
-            << mesh1.bounding_box[1].x << "," << mesh1.bounding_box[1].y << "," << mesh1.bounding_box[1].z << ")" << std::endl;
-
-		for (unsigned int i = 0; i < mesh1.faces.size(); i++)
+        TriangleMesh& mesh = objparser.getTriangleMesh();
+		for (unsigned int i = 0; i < mesh.faces.size(); i++)
 		{
 			// make a local copy of the triangle vertices
-			Vector3 v0 = mesh1.verts[ mesh1.faces[i].v[0] ];
-			Vector3 v1 = mesh1.verts[ mesh1.faces[i].v[1] ];
-			Vector3 v2 = mesh1.verts[ mesh1.faces[i].v[2] ];
+			Vector3 v0 = mesh.vertex[ mesh.faces[i].v[0] ];
+			Vector3 v1 = mesh.vertex[ mesh.faces[i].v[1] ];
+			Vector3 v2 = mesh.vertex[ mesh.faces[i].v[2] ];
 
 			// scale
 			v0 *= _scale;

@@ -25,6 +25,7 @@ namespace smallpt
 #define M_PI  3.1415926
 #endif
 
+#define Log printf
 
 #if 0
 	struct Vec
@@ -409,60 +410,6 @@ namespace smallpt
         bool intersec(const Ray&r, IntersectionInfo& hit) const override;
     };
 
-
-    //! only position needed 
-    struct TriangleFace
-    {
-        int v[3]; //< vertex indices
-        TriangleFace() { v[0] = v[1] = v[2] = 0; }
-        TriangleFace(int x, int y, int z) { v[0] = x; v[1] = y; v[2] = z; }
-    };
-
-    struct TriangleMesh
-    {
-        float *v;
-        std::vector<Vector3> verts;
-        std::vector<TriangleFace> faces;
-        Vector3 bounding_box[2];
-    };
-
-    class ObjParser
-    {
-    private:
-        std::string  _filepath;
-        TriangleMesh _mesh;
-        ObjFile _objModel;
-
-        void loadObj();
-        void unitTriangle()
-        {
-            _mesh.verts.push_back(Vector3(0,1,0));
-            _mesh.verts.push_back(Vector3(-1,0,0));
-            _mesh.verts.push_back(Vector3(0,0,1));
-            _mesh.verts.push_back(Vector3(1,0,0));
-            _mesh.verts.push_back(Vector3(0,0,-1));
-            //_mesh.faces.push_back(TriangleFace(0, 1, 2));
-            _mesh.faces.push_back({ 0, 1, 2 });
-            _mesh.faces.push_back({ 0, 2, 3 });
-            _mesh.faces.push_back({ 0, 3, 4 });
-            _mesh.faces.push_back({ 0, 4, 1 });
-        }
-
-    public :
-        ObjParser() :_filepath("")
-        {
-            unitTriangle();
-        }
-
-        ObjParser(std::string file) :_filepath(file)
-        {
-            loadObj();
-        }
-
-        const TriangleMesh& getTriangleMesh() const { return _mesh; }
-              TriangleMesh& getTriangleMesh()       { return _mesh; }
-    };
-
     class Triangle :public Object
     {
     private:
@@ -530,6 +477,60 @@ namespace smallpt
 		}
     };
 
+
+    //! only position needed 
+    struct TriangleFace
+    {
+        int v[3]; //< vertex indices
+        TriangleFace() { v[0] = v[1] = v[2] = 0; }
+        TriangleFace(int x, int y, int z) { v[0] = x; v[1] = y; v[2] = z; }
+    };
+
+    struct TriangleMesh
+    {
+        std::vector<Vector3> vertex;
+        std::vector<TriangleFace> faces;
+        Vector3 bounding_box[2];
+    };
+
+    class ObjParser
+    {
+    private:
+        std::string  _filepath;
+        TriangleMesh _mesh;
+        ObjFile _objModel;
+
+        void loadObj();
+
+        void unitTriangle()
+        {
+            _mesh.vertex.push_back(Vector3(0,1,0));
+            _mesh.vertex.push_back(Vector3(-1,0,0));
+            _mesh.vertex.push_back(Vector3(0,0,1));
+            _mesh.vertex.push_back(Vector3(1,0,0));
+            _mesh.vertex.push_back(Vector3(0,0,-1));
+            //_mesh.faces.push_back(TriangleFace(0, 1, 2));
+            _mesh.faces.push_back({ 0, 1, 2 });
+            _mesh.faces.push_back({ 0, 2, 3 });
+            _mesh.faces.push_back({ 0, 3, 4 });
+            _mesh.faces.push_back({ 0, 4, 1 });
+        }
+
+    public :
+        ObjParser() :_filepath("")
+        {
+            unitTriangle();
+        }
+
+        ObjParser(std::string file) :_filepath(file)
+        {
+            loadObj();
+        }
+
+        const TriangleMesh& getTriangleMesh() const { return _mesh; }
+              TriangleMesh& getTriangleMesh()       { return _mesh; }
+    };
+
     class TriangleScene : public hitable
     {
     private:
@@ -570,8 +571,8 @@ namespace smallpt
 
     public:
 		Scene() : _initialized(false), _ior(1.5)
-			, _sphereScene(true)
-			, _triangleScene(false)
+			, _sphereScene(false)
+			, _triangleScene(true)
 		{ init(); }
 
 		bool init();
@@ -608,7 +609,7 @@ namespace smallpt
 
 		std::mutex _mutex;
 		std::condition_variable _condVar;
-		std::thread _renderThread;
+		std::thread *_renderThread;
         bool _exitRendering;
 		bool _isRendering; //< rendering thread responsible for this
 		bool _pauseRender;
@@ -619,7 +620,8 @@ namespace smallpt
 		~smallptTest()
 		{
             _exitRendering = true;
-            _renderThread.join(); //< wait render thread exit, then delete resource.
+            if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
+			delete _renderThread;
 			delete c;
 			delete data;
 		}
@@ -695,20 +697,29 @@ namespace smallpt
 
 		virtual void handleIORChange(float newIOR) override
 		{
-			std::lock_guard<std::mutex> lock(_sMutex);
+            _exitRendering = true;
+            if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
+			delete _renderThread;
 			scene._ior = newIOR;
 			memset(data, 0, sizeof(data[0])*w*h);
 			memset(c, 0, sizeof(c[0])*w*h);
 			iterates = 0;
+            _exitRendering = false;
+		    _renderThread = new std::thread(smallptTest::render, this);
 		}
 		virtual void handleSceneMaskChange(uint32_t newMask) override
 		{
-			std::lock_guard<std::mutex> lock(_sMutex);
+			Log("%s", __FUNCTION__);
+            _exitRendering = true;
+            if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
+			delete _renderThread;
 			scene._sphereScene = newMask & 0x1 ? true : false;
 			scene._triangleScene = newMask & 0x2 ? true : false;
 			memset(data, 0, sizeof(data[0])*w*h);
 			memset(c, 0, sizeof(c[0])*w*h);
 			iterates = 0;
+            _exitRendering = false;
+		    _renderThread = new std::thread(smallptTest::render, this);
 		}
 	};
 

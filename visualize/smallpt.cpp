@@ -67,9 +67,9 @@ namespace smallpt
 		 Sphere(1e5, Vector3(50,40.8,-1e5 + 170), Vector3(),Vector3(),           DIFF),//Frnt
 		 Sphere(1e5, Vector3(50, 1e5, 81.6),    Vector3(),Vector3(.75,.75,.75),DIFF),//Botm
 		 Sphere(1e5, Vector3(50,-1e5 + 81.6,81.6),Vector3(),Vector3(.75,.75,.75),DIFF),//Top
-		 Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
+		 //Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
 		 //Sphere(16.5,Vector3(40,16.5,58),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Place holder
-		 Sphere(16.5,Vector3(73,16.5,78),       Vector3(),Vector3(1,1,1)*.999, REFR),//Glas
+		 //Sphere(16.5,Vector3(73,16.5,78),       Vector3(),Vector3(1,1,1)*.999, REFR),//Glas
 		 Sphere(600, Vector3(50,681.6 - .27,81.6),Vector3(12,12,12),  Vector3(), DIFF) //Lite
 	};
 	
@@ -169,8 +169,8 @@ namespace smallpt
 	Vector3 Scene::myradiance(const Ray &r, int depth, unsigned short *Xi)
 	{
 		IntersectionInfo hitInfo;
-		if (!intersec(r, hitInfo)) return Vector3(); // if miss, return black
-#if 0
+		if (!intersec(r, hitInfo) || !hitInfo.object) return Vector3(); // if miss, return black
+#if 1
 		if (dynamic_cast<const Triangle*>(hitInfo.object))
 		{
 			return hitInfo.object->c;
@@ -251,7 +251,7 @@ namespace smallpt
 		: w(width), h(height), spp(sample), iterates(0)
 		, runTest(true)
 		, c(nullptr), data(nullptr)
-		, _renderThread(smallptTest::render, this)
+		, _renderThread(nullptr)
         , _exitRendering(false)
 		, _pauseRender(false)
         , _camera(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm(), w, h)
@@ -259,6 +259,7 @@ namespace smallpt
 	{
 		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
+		_renderThread = new std::thread(smallptTest::render, this);
 	}
 
     std::mutex smallptTest::_sMutex;

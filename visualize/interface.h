@@ -25,8 +25,8 @@ struct Setting
         , focusOffset(0.f, 0.f)
         , positionOffset(0.f)
 		, ior(1.5f)
-		, sphereScene(true)
-		, triangleScene(false)
+		, sphereScene(false)
+		, triangleScene(true)
 		, sceneMask(0x1)
     {}
 };
