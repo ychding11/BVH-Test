@@ -87,6 +87,11 @@ namespace smallpt
 		}
         _numTriangles = _triangles.size();
 
+		sceneSize   = _aabbMax - _aabbMin;
+		sceneCenter = (_aabbMin + _aabbMax) * 0.5;
+		lookfrom = sceneCenter + sceneSize.cmult(Vector3(0.3f, 0.6f, 1.2f));
+		lookat   = sceneCenter + sceneSize.cmult(Vector3(0, -0.1f, 0));
+
 		std::cout << "Total number of triangles in Scene :" << _numTriangles << std::endl;
 		std::cout << "min: " << _aabbMin.str() << "\nmax: " << _aabbMax.str() << std::endl;
 	}

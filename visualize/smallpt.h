@@ -503,6 +503,11 @@ namespace smallpt
         std::vector<Triangle> _triangles;
 
 	    void initTriangleScene();
+	public:
+		Vector3 sceneSize;
+		Vector3 sceneCenter;
+		Vector3 lookfrom;
+		Vector3 lookat;
 
     public:
         TriangleScene()
