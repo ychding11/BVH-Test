@@ -27,22 +27,10 @@ namespace smallpt
 
 #define Log printf
 
-#if 0
-	struct Vec
-	{
-		double x, y, z;  // position, also color (r,g,b)
-		Vec(double x_ = 0, double y_ = 0, double z_ = 0) { x = x_; y = y_; z = z_; }
-
-		Vec operator+(const Vec &b) const { return Vec(x + b.x, y + b.y, z + b.z); }
-		Vec operator-(const Vec &b) const { return Vec(x - b.x, y - b.y, z - b.z); }
-		Vec operator*(double b) const { return Vec(x*b, y*b, z*b); }
-		Vec mult(const Vec &b) const { return Vec(x*b.x, y*b.y, z*b.z); }
-		Vec& norm() { return *this = *this * (1 / sqrt(x*x + y * y + z * z)); }
-		double dot(const Vec &b) const { return x * b.x + y * b.y + z * b.z; }
-		Vec operator%(Vec&b) { return Vec(y*b.z - z * b.y, z*b.x - x * b.z, x*b.y - y * b.x); } // cross:
-	};
-#else
 	typedef double Float;
+
+	static const Float inf = 1e20;
+	static const Float eps = 1e-6;
 
 	struct Vector3
 	{
@@ -53,41 +41,24 @@ namespace smallpt
 
 		Vector3 operator+(const Vector3& b) const { return Vector3(x + b.x, y + b.y, z + b.z); }
 		Vector3 operator-(const Vector3& b) const { return Vector3(x - b.x, y - b.y, z - b.z); }
+
 		Vector3 operator*(Float b) const { return Vector3(x*b, y*b, z*b); }
 		Vector3 operator/(Float b) const { b = 1.f / b; return Vector3(x*b, y*b, z*b); }
 
-		Vector3 operator/(const Vector3 &b) const { return Vector3(x / b.x, y / b.y, z / b.z); }
+		//Vector3 operator/(const Vector3 &b) const { return Vector3(x / b.x, y / b.y, z / b.z); }
 
 		Vector3 operator+=(const Vector3& b) { return *this = Vector3(x + b.x, y + b.y, z + b.z); }
 		Vector3 operator*=(Float b) { return *this = Vector3(x*b, y*b, z*b); }
 
 		// Component-wise multiply and divide
-		Vector3 cmul(const Vector3& b) const { return Vector3(x*b.x, y*b.y, z*b.z); }
+		Vector3 cmult(const Vector3& b) const { return Vector3(x*b.x, y*b.y, z*b.z); }
 		Vector3 cdiv(const Vector3& b) const { return Vector3(x / b.x, y / b.y, z / b.z); }
-		Vector3 mult(const Vector3& b) const { return Vector3(x*b.x, y*b.y, z*b.z); }
 
 		// dot (inner) product
-		Float operator*(const Vector3& b) const { return x * b.x + y * b.y + z * b.z; }
 		Float dot(const Vector3& b) const { return x * b.x + y * b.y + z * b.z; }
 
 		// Cross Product	
-		Vector3 operator^(const Vector3& b) const
-		{
-			return Vector3(
-				y * b.z - z * b.y,
-				z * b.x - x * b.z,
-				x * b.y - y * b.x
-			);
-		}
 		Vector3 operator%(const Vector3& b) const
-		{
-			return Vector3(
-				y * b.z - z * b.y,
-				z * b.x - x * b.z,
-				x * b.y - y * b.x
-			);
-		}
-		Vector3 cross(const Vector3& b) const
 		{
 			return Vector3(
 				y * b.z - z * b.y,
@@ -102,41 +73,37 @@ namespace smallpt
 		Vector3& norm() { return *this = *this * (1.0 / sqrt(x*x + y * y + z * z)); }
 
 		// Handy component indexing 
-		Float& operator[](const unsigned int i) { return (&x)[i]; }
-
+		      Float& operator[](const unsigned int i)       { return (&x)[i]; }
 		const Float& operator[](const unsigned int i) const { return (&x)[i]; }
+
+		std::string str() const
+		{
+			std::ostringstream ss;
+			ss << std::setprecision(5) << "[" << x <<", " << y <<", " << z << "]";
+			return ss.str();
+		}
 	};
 
-	inline Vector3 operator*(Float a, const Vector3& b) { return b * a; }
+	inline Vector3 operator*(Float a, const Vector3& b)
+	{
+		return b * a;
+	}
 
-	// Component-wise min
-	inline Vector3 min(const Vector3& a, const Vector3& b)
+	// Component-wise cmin
+	inline Vector3 cmin(const Vector3& a, const Vector3& b)
 	{
 		return Vector3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
 	}
-
-	inline Vector3 minVector3(const Vector3& a, const Vector3& b)
-	{
-		return Vector3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
-	}
-
-	// Component-wise max
-	inline Vector3 max(const Vector3& a, const Vector3& b)
+	// Component-wise cmax
+	inline Vector3 cmax(const Vector3& a, const Vector3& b)
 	{
 		return Vector3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
 	}
-
-	// Component-wise max
-	inline Vector3 maxVector3(const Vector3& a, const Vector3& b)
-	{
-		return Vector3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
-	}
-
 
 	// Length of a vector
 	inline Float length(const Vector3& a)
 	{
-		return sqrt(a*a);
+		return sqrt(a.dot(a));
 	}
 
 	// Make a vector unit length
@@ -144,11 +111,6 @@ namespace smallpt
 	{
 		return in / length(in);
 	}
-#endif
-
-
-	static const Float inf = 1e20;
-	static const Float eps = 1e-6;
 
     //! Generate a random float in [0, 1)
     Float randomFloat();
@@ -263,14 +225,14 @@ namespace smallpt
 
 	struct AABB
 	{
-		inline AABB() { min = Vector3(inf, inf, inf); max = Vector3(-inf, -inf, -inf); }	// an empty interval
-		inline AABB(Vector3 min_, Vector3 max_) { min = min_; max = max_; }
-		inline bool unbounded() const { return min.x == -inf || min.y == -inf || min.z == -inf || max.x == inf || max.y == inf || max.z == inf; }
+		inline AABB() { cmin = Vector3(inf, inf, inf); cmax = Vector3(-inf, -inf, -inf); }	// an empty interval
+		inline AABB(Vector3 min_, Vector3 max_) { cmin = min_; cmax = max_; }
+		inline bool unbounded() const { return cmin.x == -inf || cmin.y == -inf || cmin.z == -inf || cmax.x == inf || cmax.y == inf || cmax.z == inf; }
 		inline size_t largestDimension() const
 		{
-			double dx = std::fabs(max.x - min.x);
-			double dy = std::fabs(max.y - min.y);
-			double dz = std::fabs(max.z - min.z);
+			double dx = std::fabs(cmax.x - cmin.x);
+			double dy = std::fabs(cmax.y - cmin.y);
+			double dz = std::fabs(cmax.z - cmin.z);
 			if (dx > dy && dx > dz)
 			{
 				return 0;
@@ -290,10 +252,10 @@ namespace smallpt
 			bool zDirNegative = ray.d.z < 0;
 
 			// check for ray intersection against x and y slabs
-			float tmin = ((xDirNegative ? max.x : min.x) - ray.o.x) * inverseDirection.x;
-			float tmax = ((xDirNegative ? min.x : max.x) - ray.o.x) * inverseDirection.x;
-			float tymin = ((yDirNegative ? max.y : min.y) - ray.o.y) * inverseDirection.y;
-			float tymax = ((yDirNegative ? min.y : max.y) - ray.o.y) * inverseDirection.y;
+			float tmin = ((xDirNegative ? cmax.x : cmin.x) - ray.o.x) * inverseDirection.x;
+			float tmax = ((xDirNegative ? cmin.x : cmax.x) - ray.o.x) * inverseDirection.x;
+			float tymin = ((yDirNegative ? cmax.y : cmin.y) - ray.o.y) * inverseDirection.y;
+			float tymax = ((yDirNegative ? cmin.y : cmax.y) - ray.o.y) * inverseDirection.y;
 			if (tmin > tymax || tymin > tmax) {
 				return false;
 			}
@@ -305,8 +267,8 @@ namespace smallpt
 			}
 
 			// check for ray intersection against z slab
-			float tzmin = ((zDirNegative ? max.z : min.z) - ray.o.z) * inverseDirection.z;
-			float tzmax = ((zDirNegative ? min.z : max.z) - ray.o.z) * inverseDirection.z;
+			float tzmin = ((zDirNegative ? cmax.z : cmin.z) - ray.o.z) * inverseDirection.z;
+			float tzmax = ((zDirNegative ? cmin.z : cmax.z) - ray.o.z) * inverseDirection.z;
 			if (tmin > tzmax || tzmin > tmax) {
 				return false;
 			}
@@ -319,8 +281,8 @@ namespace smallpt
 			return (tmin < closestKnownT) && (tmax > eps);
 		}
 
-		Vector3 min;
-		Vector3 max;
+		Vector3 cmin;
+		Vector3 cmax;
 	};
 
 	struct Object
@@ -354,7 +316,7 @@ namespace smallpt
 
 		Sphere(Float rad_, Vector3 p_, Vector3 e_, Vector3 c_, Refl_t refl_)
 			: Object(e_,c_,refl_)
-			,rad(rad_), p(p_)
+			, rad(rad_), p(p_)
 		{ }
 
 		// returns distance, 0 if nohit
@@ -437,21 +399,21 @@ namespace smallpt
         Float intersect(const Ray &r) const
         {
             Vector3 tvec = r.o - _v0;
-            Vector3 pvec = r.d.cross(_e2);
+            Vector3 pvec = r.d % _e2;
             Float  det = _e1.dot(pvec);
             //if (det < 1e-5) { return 0;  }//< parallel or backface 
             if (fabs(det) < 1e-5) { return 0;  }//< parallel
             //if (det < 1e-5) { return 0;  }//< parallel or backface 
             Float invdet = 1.0 / det;
 
-            Float u = tvec.dot(pvec) * invdet;
+            Float u = tvec.dot(pvec)* invdet;
             if (u < 0.0f || u > 1.0f) { return 0; }//< outside triangle
 
             Vector3 qvec = tvec % _e1;
-            Float v = r.d.dot(qvec) * invdet;
+            Float v = r.d.dot(qvec)* invdet;
             if (v < 0.0f || (u + v) > 1.0f) { return 0; } //< outside triangle
 
-            return _e2.dot(qvec) * invdet;
+            return _e2.dot(qvec)* invdet;
         }
 
 		bool getIntersection(const Ray& ray, IntersectionInfo* I) const override
@@ -490,7 +452,6 @@ namespace smallpt
     {
         std::vector<Vector3> vertex;
         std::vector<TriangleFace> faces;
-        Vector3 bounding_box[2];
     };
 
     class ObjParser
@@ -535,8 +496,8 @@ namespace smallpt
     {
     private:
 	    int     _numTriangles;
-	    Vector3	_aabb_min;
-	    Vector3	_aabb_max;
+	    Vector3	_aabbMin;
+	    Vector3	_aabbMax;
         Float   _scale;
         Vector3 _translate;
         std::vector<Triangle> _triangles;
@@ -545,12 +506,17 @@ namespace smallpt
 
     public:
         TriangleScene()
-            :_scale(16.1), _translate(5, 6, 9)
+            :_scale(1.), _translate(0, 0, 0)
+			,_aabbMin(inf, inf, inf)
+			,_aabbMax(-inf, -inf, -inf)
         {
 	        initTriangleScene();
         }
 
         bool intersec(const Ray& r, IntersectionInfo &hit) const override;
+
+		Vector3 aabbMin() const { return _aabbMin; }
+		Vector3 aabbMax() const { return _aabbMax; }
     };
 
 	class smallptTest;
@@ -571,8 +537,8 @@ namespace smallpt
 
     public:
 		Scene() : _initialized(false), _ior(1.5)
-			, _sphereScene(false)
-			, _triangleScene(true)
+			, _sphereScene(true)
+			, _triangleScene(false)
 		{ init(); }
 
 		bool init();

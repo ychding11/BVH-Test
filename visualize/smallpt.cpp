@@ -67,9 +67,9 @@ namespace smallpt
 		 Sphere(1e5, Vector3(50,40.8,-1e5 + 170), Vector3(),Vector3(),           DIFF),//Frnt
 		 Sphere(1e5, Vector3(50, 1e5, 81.6),    Vector3(),Vector3(.75,.75,.75),DIFF),//Botm
 		 Sphere(1e5, Vector3(50,-1e5 + 81.6,81.6),Vector3(),Vector3(.75,.75,.75),DIFF),//Top
-		 //Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
+		 Sphere(16.5,Vector3(27,16.5,47),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Mirr
 		 //Sphere(16.5,Vector3(40,16.5,58),       Vector3(),Vector3(1,1,1)*.999, SPEC),//Place holder
-		 //Sphere(16.5,Vector3(73,16.5,78),       Vector3(),Vector3(1,1,1)*.999, REFR),//Glas
+		 Sphere(16.5,Vector3(73,16.5,78),       Vector3(),Vector3(1,1,1)*.999, REFR),//Glas
 		 Sphere(600, Vector3(50,681.6 - .27,81.6),Vector3(12,12,12),  Vector3(), DIFF) //Lite
 	};
 	
@@ -196,11 +196,11 @@ namespace smallpt
 		{
             // Why converge slow with spp goes up ?
             // So how to let diffuse converges fast ?
-			return obj.e + f.mult(myradiance(Ray(x, cosWeightedSample(nl, Xi)), depth, Xi));
+			return obj.e + f.cmult(myradiance(Ray(x, cosWeightedSample(nl, Xi)), depth, Xi));
 		}
 		else if (obj.refl == SPEC) // Ideal SPECULAR reflection
 		{
-			return obj.e + f.mult(myradiance(Ray(x, reflect(r.d, n)), depth, Xi));
+			return obj.e + f.cmult(myradiance(Ray(x, reflect(r.d, n)), depth, Xi));
 		}
 		else // Ideal dielectric REFRACTION
 		{
@@ -215,7 +215,7 @@ namespace smallpt
 				  cos2t;
 			if ((cos2t = 1 - nnt * nnt*(1 - ddn * ddn)) < 0)    // Total internal reflection
 			{
-				return obj.e + f.mult(myradiance(reflRay, depth, Xi));
+				return obj.e + f.cmult(myradiance(reflRay, depth, Xi));
 			}
 			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
 
@@ -235,7 +235,7 @@ namespace smallpt
             Float P = .25 + .5 * Re,
 				  RP = Re / P,
 				  TP = Tr / (1 - P);
-			return obj.e + f.mult(depth > 2 ? (erand48(Xi) < P ?   // Russian roulette
+			return obj.e + f.cmult(depth > 2 ? (erand48(Xi) < P ?   // Russian roulette
 				myradiance(reflRay, depth, Xi)*RP : myradiance(Ray(x, tdir), depth, Xi)*TP) :
 				myradiance(reflRay, depth, Xi)*Re + myradiance(Ray(x, tdir), depth, Xi)*Tr);
 		}
@@ -323,6 +323,7 @@ namespace smallpt
 		}
 		_isRendering = false;
 	}
+
 #if 0
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -409,7 +410,7 @@ namespace smallpt
 			n = (x - obj.p).norm(),
 			nl = n.dot(r.d) < 0 ? n : n * -1,
 			f = obj.c;
-		Float p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+		Float p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // cmax refl
 
 		if (++depth > 4 && depth <= 6)
 		{
@@ -430,11 +431,11 @@ namespace smallpt
 				u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(),
 				v = w % u;
 			Vector3 d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2)).norm();
-			return obj.e + f.mult(radiance(Ray(x, d), depth, Xi));
+			return obj.e + f.cmult(radiance(Ray(x, d), depth, Xi));
 		}
 		else if (obj.refl == SPEC)            // Ideal SPECULAR reflection
 		{
-			return obj.e + f.mult(radiance(Ray(x, r.d - n * 2 * n.dot(r.d)), depth, Xi));
+			return obj.e + f.cmult(radiance(Ray(x, r.d - n * 2 * n.dot(r.d)), depth, Xi));
 		}
 		else
 		{
@@ -447,7 +448,7 @@ namespace smallpt
 				cos2t;
 			if ((cos2t = 1 - nnt * nnt*(1 - ddn * ddn)) < 0)    // Total internal reflection
 			{
-				return obj.e + f.mult(radiance(reflRay, depth, Xi));
+				return obj.e + f.cmult(radiance(reflRay, depth, Xi));
 			}
 			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
 			Float a = nt - nc,
@@ -459,7 +460,7 @@ namespace smallpt
 				P = .25 + .5*Re,
 				RP = Re / P,
 				TP = Tr / (1 - P);
-			return obj.e + f.mult(depth > 2 ? (randomFloat(Xi) < P ?   // Russian roulette
+			return obj.e + f.cmult(depth > 2 ? (randomFloat(Xi) < P ?   // Russian roulette
 				radiance(reflRay, depth, Xi)*RP : radiance(Ray(x, tdir), depth, Xi)*TP) :
 				radiance(reflRay, depth, Xi)*Re + radiance(Ray(x, tdir), depth, Xi)*Tr);
 		}

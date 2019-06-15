@@ -56,7 +56,7 @@ namespace smallpt
 
 	void TriangleScene::initTriangleScene()
 	{
-#if 1
+#if 0
         ObjParser objparser;
 #else
         ObjParser objparser("../data/bunny.obj");
@@ -79,11 +79,16 @@ namespace smallpt
 			v1 += _translate;
 			v2 += _translate;
 
+			_aabbMin = cmin(_aabbMin, v0); _aabbMax = cmax(_aabbMax, v0);
+			_aabbMin = cmin(_aabbMin, v1); _aabbMax = cmax(_aabbMax, v1);
+			_aabbMin = cmin(_aabbMin, v2); _aabbMax = cmax(_aabbMax, v2);
+
             _triangles.push_back(Triangle(v0, v1, v2));
 		}
         _numTriangles = _triangles.size();
 
 		std::cout << "Total number of triangles in Scene :" << _numTriangles << std::endl;
+		std::cout << "min: " << _aabbMin.str() << "\nmax: " << _aabbMax.str() << std::endl;
 	}
 
 	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit) const
