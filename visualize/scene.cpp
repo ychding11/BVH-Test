@@ -89,11 +89,13 @@ namespace smallpt
 
 		sceneSize   = _aabbMax - _aabbMin;
 		sceneCenter = (_aabbMin + _aabbMax) * 0.5;
-		lookfrom = sceneCenter + sceneSize.cmult(Vector3(0.3f, 0.6f, 1.2f));
-		lookat   = sceneCenter + sceneSize.cmult(Vector3(0, -0.1f, 0));
+		//lookfrom = sceneCenter + 0.5 * length(sceneSize)*(Vector3(0., 0., 1.));
+		lookfrom = sceneCenter + 0.5 * (sceneSize.y)*(Vector3(0., 0., 6.));
+		lookat   = sceneCenter;
 
 		std::cout << "Total number of triangles in Scene :" << _numTriangles << std::endl;
 		std::cout << "min: " << _aabbMin.str() << "\nmax: " << _aabbMax.str() << std::endl;
+		std::cout << "lookat: " << lookat.str() << "\nlookfrom: " << lookfrom.str() << std::endl;
 	}
 
 	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit) const
@@ -116,8 +118,9 @@ namespace smallpt
             hit.t = t;
 			hit.object = &_triangles[id];
 			hit.hit = r.o + r.d*t;
+			return true;
         }
-        return id == -1 && t == hit.t;
+        return false;
 	}
 
 	bool Scene::intersec(const Ray& r, IntersectionInfo &hit) const

@@ -179,6 +179,7 @@ namespace smallpt
 			, _w(w), _h(h)
 			, _vfov(vfov)
 		{
+			std::cout << "camera dir: " << _d.str() << "\ncamera pos:" << _p.str() << std::endl;
 			constructCoordinate();
 		}
 
@@ -203,7 +204,8 @@ namespace smallpt
             x = x * dW + double(u) / double(_w) - 0.5;
             y = y * dW + double(v) / double(_w) - 0.5;
             Vector3 d = _u * x + _v * y + _d;
-			Ray r(_p + d * 140, d.norm());
+			//Ray r(_p + d * 140, d.norm());
+			Ray r(_p, d.norm());
 			return r;
 		}
 	};
@@ -465,6 +467,7 @@ namespace smallpt
 
         void unitTriangle()
         {
+#if 0
             _mesh.vertex.push_back(Vector3(0,1,0));
             _mesh.vertex.push_back(Vector3(-1,0,0));
             _mesh.vertex.push_back(Vector3(0,0,1));
@@ -475,6 +478,15 @@ namespace smallpt
             _mesh.faces.push_back({ 0, 2, 3 });
             _mesh.faces.push_back({ 0, 3, 4 });
             _mesh.faces.push_back({ 0, 4, 1 });
+#endif
+            _mesh.vertex.push_back(Vector3(-1,1,0));
+            _mesh.vertex.push_back(Vector3(1,1,0));
+            _mesh.vertex.push_back(Vector3(1,-1,0));
+            _mesh.vertex.push_back(Vector3(-1,-1,0));
+            //_mesh.faces.push_back(TriangleFace(0, 1, 2));
+            _mesh.faces.push_back({ 0, 1, 2 });
+            _mesh.faces.push_back({ 0, 2, 3 });
+
         }
 
     public :
@@ -531,10 +543,11 @@ namespace smallpt
     private:
         bool _initialized;
 		SphereScene _spheres;
-		TriangleScene _triangles;
 		Float _ior;
 		bool _sphereScene;
 		bool _triangleScene;
+	public:
+		TriangleScene _triangles;
 
 	friend class smallptTest;
 
@@ -576,7 +589,7 @@ namespace smallpt
 		std::string progress;
 		Scene scene;
 
-        Camera _camera; // cam pos, dir
+        Camera *_camera; // cam pos, dir
 
 		std::mutex _mutex;
 		std::condition_variable _condVar;
@@ -627,7 +640,7 @@ namespace smallpt
 		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override
 		{
             std::lock_guard<std::mutex> lock(_sMutex);
-			_camera.setImageSize(newScreenSize.x, newScreenSize.y);
+			_camera->setImageSize(newScreenSize.x, newScreenSize.y);
             w = newScreenSize.x; h = newScreenSize.y;
 			delete c; delete data; //< delete nullptr is OK
 		    c = new Vector3[w * h]; data = new float[w * h * 3];

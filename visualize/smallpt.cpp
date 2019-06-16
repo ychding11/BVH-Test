@@ -169,7 +169,7 @@ namespace smallpt
 	Vector3 Scene::myradiance(const Ray &r, int depth, unsigned short *Xi)
 	{
 		IntersectionInfo hitInfo;
-		if (!intersec(r, hitInfo) || !hitInfo.object) return Vector3(); // if miss, return black
+		if (!intersec(r, hitInfo)) return Vector3(); // if miss, return black
 #if 1
 		if (dynamic_cast<const Triangle*>(hitInfo.object))
 		{
@@ -254,11 +254,14 @@ namespace smallpt
 		, _renderThread(nullptr)
         , _exitRendering(false)
 		, _pauseRender(false)
-        , _camera(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm(), w, h)
 		, _ior(1.5f)
 	{
+		//_camera = new Camera(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm(), w, h);
+		_camera = new Camera(scene._triangles.lookfrom, (scene._triangles.lookat - scene._triangles.lookfrom).norm(), w, h, 90.);
 		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
+
+		this->handleSceneMaskChange(0x2);
 		_renderThread = new std::thread(smallptTest::render, this);
 	}
 
@@ -303,7 +306,7 @@ namespace smallpt
                     for (uint32_t x = 0; x < w; x++)   // Loop cols
                     {
                         int i = (y)* w + x;
-                        Ray ray = _camera.getRay(x, y, Xi);
+                        Ray ray = _camera->getRay(x, y, Xi);
                         r = scene.myradiance(ray, 0, Xi);
 						{
                         c[i] = c[i] + r;
