@@ -173,7 +173,10 @@ namespace smallpt
 #if 1
 		if (dynamic_cast<const Triangle*>(hitInfo.object))
 		{
-			return hitInfo.object->c;
+			Vector3 c = hitInfo.object->c;
+		    Vector3 n = hitInfo.object->getNormal(hitInfo);
+			Float alph = std::fabs(n.dot(Vector3(1,1,0)));
+			return c * alph;
 		}
 #endif
 		const Object &obj = *hitInfo.object;        // the hit object
@@ -218,15 +221,6 @@ namespace smallpt
 				return obj.e + f.cmult(myradiance(reflRay, depth, Xi));
 			}
 			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
-
-#if 0
-            //! Schlick's approximation:
-            //!  https://en.wikipedia.org/wiki/Schlick%27s_approximation
-            //!
-			Float a = nt - nc, b = nt + nc, R0 = (a * a) / (b*b),
-				  c = 1 - (into ? -ddn : tdir.dot(n));  //! Term: 1 - cos(theta)
-			Float Re = R0 + (1 - R0)*c*c*c*c*c, Tr = 1 - Re; // Specular Relection & Transmission
-#endif
 
             Float Re = SchlickApproxim(nt, nc, into ? -ddn : tdir.dot(n)); //! Schlick's approximation
             Float Tr = 1 - Re;

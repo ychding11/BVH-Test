@@ -85,14 +85,32 @@ namespace smallpt
 
             _triangles.push_back(Triangle(v0, v1, v2));
 		}
-        _numTriangles = _triangles.size();
 
 		sceneSize   = _aabbMax - _aabbMin;
 		sceneCenter = (_aabbMin + _aabbMax) * 0.5;
+
+		Vector3 size = _aabbMax - _aabbMin;
+		Vector3 extra = size * 0.7f;
+
+		{
+		Vector3 v0 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMin.z - extra.z);
+		Vector3 v1 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMax.z + extra.z);
+		Vector3 v2 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMin.z - extra.z);
+            _triangles.push_back(Triangle(v0, v1, v2));
+		}
+
+		{
+		Vector3 v0 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMax.z + extra.z);
+		Vector3 v1 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMax.z + extra.z);
+		Vector3 v2 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMin.z - extra.z);
+            _triangles.push_back(Triangle(v0, v1, v2));
+		}
+
 		//lookfrom = sceneCenter + 0.5 * length(sceneSize)*(Vector3(0., 0., 1.));
 		lookfrom = sceneCenter + 0.5 * (sceneSize.y)*(Vector3(0., 0., 6.));
 		lookat   = sceneCenter;
 
+        _numTriangles = _triangles.size();
 		std::cout << "Total number of triangles in Scene :" << _numTriangles << std::endl;
 		std::cout << "min: " << _aabbMin.str() << "\nmax: " << _aabbMax.str() << std::endl;
 		std::cout << "lookat: " << lookat.str() << "\nlookfrom: " << lookfrom.str() << std::endl;

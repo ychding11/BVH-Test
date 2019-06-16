@@ -693,7 +693,7 @@ namespace smallpt
 		}
 		virtual void handleSceneMaskChange(uint32_t newMask) override
 		{
-			Log("%s", __FUNCTION__);
+			Log("%s()\n", __FUNCTION__);
             _exitRendering = true;
             if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
 			delete _renderThread;
