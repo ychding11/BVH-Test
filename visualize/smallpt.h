@@ -100,6 +100,16 @@ namespace smallpt
 		return Vector3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
 	}
 
+	inline Float maxComponet(const Vector3& a)
+	{
+		return std::max(a.x, std::max(a.y,a.z));
+	}
+
+	inline Float minComponet(const Vector3& a)
+	{
+		return std::min(a.x, std::min(a.y,a.z));
+	}
+
 	// Length of a vector
 	inline Float length(const Vector3& a)
 	{
@@ -227,64 +237,65 @@ namespace smallpt
 
 	struct AABB
 	{
-		inline AABB() { cmin = Vector3(inf, inf, inf); cmax = Vector3(-inf, -inf, -inf); }	// an empty interval
-		inline AABB(Vector3 min_, Vector3 max_) { cmin = min_; cmax = max_; }
-		inline bool unbounded() const { return cmin.x == -inf || cmin.y == -inf || cmin.z == -inf || cmax.x == inf || cmax.y == inf || cmax.z == inf; }
-		inline size_t largestDimension() const
+		Vector3 bmin;
+		Vector3 bmax;
+
+		inline AABB()
 		{
-			double dx = std::fabs(cmax.x - cmin.x);
-			double dy = std::fabs(cmax.y - cmin.y);
-			double dz = std::fabs(cmax.z - cmin.z);
-			if (dx > dy && dx > dz)
-			{
-				return 0;
-			}
-			if (dy > dz)
-			{
-				return 1;
-			}
-			return 2;
+			bmin = Vector3(inf, inf, inf);
+			bmax = Vector3(-inf, -inf, -inf);
 		}
 
-		// ray-slab tests, see PBRT 2nd edition, section 4.2.1
-		inline bool intersect(const Ray& ray, const Vector3& inverseDirection, double closestKnownT) const
+		inline AABB(Vector3 min_, Vector3 max_)
 		{
-			bool xDirNegative = ray.d.x < 0;
-			bool yDirNegative = ray.d.y < 0;
-			bool zDirNegative = ray.d.z < 0;
-
-			// check for ray intersection against x and y slabs
-			float tmin = ((xDirNegative ? cmax.x : cmin.x) - ray.o.x) * inverseDirection.x;
-			float tmax = ((xDirNegative ? cmin.x : cmax.x) - ray.o.x) * inverseDirection.x;
-			float tymin = ((yDirNegative ? cmax.y : cmin.y) - ray.o.y) * inverseDirection.y;
-			float tymax = ((yDirNegative ? cmin.y : cmax.y) - ray.o.y) * inverseDirection.y;
-			if (tmin > tymax || tymin > tmax) {
-				return false;
-			}
-			if (tymin > tmin) {
-				tmin = tymin;
-			}
-			if (tymax < tmax) {
-				tmax = tymax;
-			}
-
-			// check for ray intersection against z slab
-			float tzmin = ((zDirNegative ? cmax.z : cmin.z) - ray.o.z) * inverseDirection.z;
-			float tzmax = ((zDirNegative ? cmin.z : cmax.z) - ray.o.z) * inverseDirection.z;
-			if (tmin > tzmax || tzmin > tmax) {
-				return false;
-			}
-			if (tzmin > tmin) {
-				tmin = tzmin;
-			}
-			if (tzmax < tmax) {
-				tmax = tzmax;
-			}
-			return (tmin < closestKnownT) && (tmax > eps);
+			bmin = min_;
+			bmax = max_;
 		}
 
-		Vector3 cmin;
-		Vector3 cmax;
+		AABB Union(const AABB& b)
+		{
+			AABB res;
+			res.bmin = cmin(bmin, b.bmin);
+			res.bmax = cmax(bmax, b.bmax);
+			return res;
+		}
+
+		AABB Enclose(const Vector3& p)
+		{
+			AABB res;
+			res.bmin = cmin(bmin, p);
+			res.bmax = cmax(bmax, p);
+			return res;
+		}
+
+		bool hit(const Ray& r )
+		{
+			Vector3 t0 = (bmin - r.o).cdiv(r.d);
+			Vector3 t1 = (bmax - r.o).cdiv(r.d);
+
+			Vector3 tsmaller = cmin(t0, t1);
+			Vector3 tbigger  = cmax(t0, t1);
+
+			return maxComponet(tsmaller) < minComponet(tbigger);
+		}
+
+	private:
+		// from "A Ray-Box Intersection Algorithm and Efficient Dynamic Voxel Rendering"
+	    // http://jcgt.org/published/0007/03/04/
+	    // note: ray direction should be inverted, i.e 1.0/direction!
+		bool HitAABB(const Ray& r, Float tMin, Float tMax)
+		{
+			Vector3 t0 = (bmin - r.o).cdiv(r.d);
+			Vector3 t1 = (bmax - r.o).cdiv(r.d);
+
+			Vector3 tsmaller = cmin(t0, t1);
+			Vector3 tbigger  = cmax(t0, t1);
+
+			//tMin = std::max(tMin, maxComponet(tsmaller)); tMax = std::min(tMax, minComponet(tbigger));
+			//return tMin <= tMax;
+			return maxComponet(tsmaller) < minComponet(tbigger);
+		}
+
 	};
 
 	struct Object
