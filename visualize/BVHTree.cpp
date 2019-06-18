@@ -66,7 +66,7 @@ namespace smallpt
 		return nodeIndex;
 	}
 
-	int BVHTree::HitBVH(int index, const Ray& r, float tMax, IntersectionInfo* outHit)
+	int BVHTree::HitBVH(int index, const Ray& r, float tMax, IntersectionInfo* outHit) const
 	{
 		const BVHNode& node = s_BVH[index];
 		if (!node.box.hit(r))

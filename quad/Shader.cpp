@@ -38,7 +38,7 @@ namespace Quad
             delete[] info;
             glDeleteShader(_object);
             _object = 0;
-            printf("Shader compilation error %s\n", msg);
+            printf("Shader compilation error %s\n", msg.c_str());
             throw std::runtime_error(msg);
         }
     }

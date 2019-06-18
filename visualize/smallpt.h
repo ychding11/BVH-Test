@@ -581,10 +581,22 @@ namespace smallpt
             LOG_INFO("Create BVH done.");
         }
 
+    public:
+        bool intersec(const Ray& r, IntersectionInfo *hit) const
+        {
+            int i = HitBVH(0, r, inf, hit);
+            if (i != -1)
+            {
+                hit->hit = r.o + hit->t * r.d;
+                return true;
+            }
+            return false;
+        }
+
     private:
         int CreateBVH(int triStart, int triCount);
 
-        int HitBVH(int index, const Ray& r, float tMax, IntersectionInfo* outHit);
+        int HitBVH(int index, const Ray& r, float tMax, IntersectionInfo* outHit) const;
     };
 
     class TriangleScene : public hitable
@@ -616,6 +628,15 @@ namespace smallpt
         }
 
         bool intersec(const Ray& r, IntersectionInfo &hit) const override;
+        bool intersecTri(const Ray& r, IntersectionInfo &hit) const;
+
+        bool intersecBVH(const Ray& r, IntersectionInfo &hit) const
+        {
+            IntersectionInfo info;
+            bool ret = _bvh.intersec(r, &info);
+            hit = info;
+            return ret;
+        }
 
 		Vector3 aabbMin() const { return _aabbMin; }
 		Vector3 aabbMax() const { return _aabbMax; }

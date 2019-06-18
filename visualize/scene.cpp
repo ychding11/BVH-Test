@@ -117,7 +117,7 @@ namespace smallpt
         _bvh.InitTree(_triangles);
 	}
 
-	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit) const
+	bool TriangleScene::intersecTri(const Ray& r, IntersectionInfo &hit) const
 	{
         int id = -1;
         Float t = inf;
@@ -140,6 +140,12 @@ namespace smallpt
 			return true;
         }
         return false;
+	}
+
+	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit) const
+	{
+       // return intersecTri(r, hit);
+       return intersecBVH(r, hit);
 	}
 
 	bool Scene::intersec(const Ray& r, IntersectionInfo &hit) const
