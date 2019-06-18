@@ -59,12 +59,12 @@ namespace smallpt
 #if 0
         ObjParser objparser;
 #else
-        ObjParser objparser("../data/bunny.obj");
+        _sceneName = "../data/bunny.obj";
+        ObjParser objparser(_sceneName);
 #endif
         TriangleMesh& mesh = objparser.getTriangleMesh();
 		for (unsigned int i = 0; i < mesh.faces.size(); i++)
 		{
-			// make a local copy of the triangle vertices
 			Vector3 v0 = mesh.vertex[ mesh.faces[i].v[0] ];
 			Vector3 v1 = mesh.vertex[ mesh.faces[i].v[1] ];
 			Vector3 v2 = mesh.vertex[ mesh.faces[i].v[2] ];
@@ -89,20 +89,18 @@ namespace smallpt
 		sceneSize   = _aabbMax - _aabbMin;
 		sceneCenter = (_aabbMin + _aabbMax) * 0.5;
 
-		Vector3 size = _aabbMax - _aabbMin;
-		Vector3 extra = size * 0.7f;
-
+		Vector3 extra = sceneSize * 0.7f;
 		{
-		Vector3 v0 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMin.z - extra.z);
-		Vector3 v1 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMax.z + extra.z);
-		Vector3 v2 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMin.z - extra.z);
+		    Vector3 v0 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMin.z - extra.z);
+		    Vector3 v1 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMax.z + extra.z);
+		    Vector3 v2 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMin.z - extra.z);
             _triangles.push_back(Triangle(v0, v1, v2));
 		}
 
 		{
-		Vector3 v0 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMax.z + extra.z);
-		Vector3 v1 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMax.z + extra.z);
-		Vector3 v2 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMin.z - extra.z);
+		    Vector3 v0 = Vector3(_aabbMin.x - extra.x, _aabbMin.y, _aabbMax.z + extra.z);
+		    Vector3 v1 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMax.z + extra.z);
+		    Vector3 v2 = Vector3(_aabbMax.x + extra.x, _aabbMin.y, _aabbMin.z - extra.z);
             _triangles.push_back(Triangle(v0, v1, v2));
 		}
 
@@ -111,21 +109,24 @@ namespace smallpt
 		lookat   = sceneCenter;
 
         _numTriangles = _triangles.size();
-		std::cout << "Total number of triangles in Scene :" << _numTriangles << std::endl;
+		std::cout << "Scene Name:" << _sceneName << std::endl;
+		std::cout << "Number of triangles:" << _numTriangles << std::endl;
 		std::cout << "min: " << _aabbMin.str() << "\nmax: " << _aabbMax.str() << std::endl;
 		std::cout << "lookat: " << lookat.str() << "\nlookfrom: " << lookfrom.str() << std::endl;
+
+        _bvh.InitTree(_triangles);
 	}
 
 	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit) const
 	{
         int id = -1;
-        Float inf = 1e20, t = inf;
+        Float t = inf;
 		for (int i = 0; i < _numTriangles; i++)
 		{
 			const Triangle& triangle = _triangles[i];
             Float ct = triangle.intersect(r);
             {
-			    if (ct < t && ct > 1e-5 && ct < inf)
+			    if (ct < t && ct > eps && ct < inf)
 			    {
 			        t = ct; id = i;
 			    }
