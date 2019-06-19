@@ -18,7 +18,7 @@ struct Setting
 	uint32_t sceneMask;
 
     Setting()
-        : testIndex(0)
+        : testIndex(1)
         , objectNum(10)
 		, samples(4)
         , screenSize(768, 768)

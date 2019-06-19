@@ -1,10 +1,80 @@
 #ifndef BVH_TREE_H
 #define BVH_TREE_H 
 
-#include "smallpt.h"
+#include "Primitives.h"
 
 namespace smallpt
 {
+	struct BVHNode
+	{
+		int data1; // node: left index; leaf: start triangle index
+		int data2; // node: right index; leaf: triangle count
+		bool leaf;
+		AABB box;
+	};
+
+    class BVHTree
+    {
+    private:
+        int s_TriangleCount;
+        Triangle* s_Triangles;
+        int* s_TriIndices;
+
+        std::vector<BVHNode> s_BVH;
+        uint32_t _randSeed;
+
+        uint32_t XorShift32(uint32_t& state)
+        {
+            uint32_t x = state;
+            x ^= x << 13;
+            x ^= x >> 17;
+            x ^= x << 15;
+            state = x;
+            return x;
+        }
+
+        void cleanup()
+        {
+            delete[] s_Triangles;
+            delete[] s_TriIndices;
+            s_BVH.clear();
+        }
+
+    public:
+
+        BVHTree() :_randSeed(0x1234) {}
+        ~BVHTree() { cleanup(); }
+
+        void InitTree(const std::vector<Triangle> &triangles)
+        {
+            s_TriangleCount = triangles.size();
+            s_Triangles = new Triangle[s_TriangleCount];
+            memcpy(s_Triangles, &triangles[0], s_TriangleCount * sizeof(triangles[0]));
+
+            s_TriIndices = new int[s_TriangleCount];
+            for (int i = 0; i < s_TriangleCount; ++i)
+                s_TriIndices[i] = i;
+            CreateBVH(0, s_TriangleCount);
+            LOG_INFO("Create BVH done.");
+        }
+
+    public:
+        bool intersec(const Ray& r, IntersectionInfo *hit) const
+        {
+            int i = HitBVH(0, r, inf, hit);
+            if (i != -1)
+            {
+                hit->hit = r.o + hit->t * r.d;
+                return true;
+            }
+            return false;
+        }
+
+    private:
+        int CreateBVH(int triStart, int triCount);
+
+        int HitBVH(int index, const Ray& r, float tMax, IntersectionInfo* outHit) const;
+    };
 
 
 }

@@ -76,7 +76,7 @@ void frameBufferSizeCallback(GLFWwindow *window, int width, int height)
     settings.screenSize.x = width; settings.screenSize.y = height;
 }
 
-void main()
+int main()
 {
 	srand(unsigned int(time(0)));
 
@@ -277,4 +277,5 @@ void main()
 	ImGui::DestroyContext();
 
 	glfwTerminate();
+    return 0;
 }
