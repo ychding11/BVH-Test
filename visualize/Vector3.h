@@ -15,6 +15,10 @@
 
 namespace smallpt
 {
+
+#ifndef M_PI
+#define M_PI  3.1415926
+#endif
     typedef double Float;
 
     static const Float inf = 1e20;
@@ -109,6 +113,17 @@ namespace smallpt
     {
         return in / length(in);
     }
+
+	struct Ray
+	{
+		Vector3 o; // Ray Origin
+		Vector3 d; // Ray Direction
+		Vector3 inv_d; // Inverse of each Ray Direction component
+
+		Ray(const Vector3& o, const Vector3& d)
+			: o(o), d(d), inv_d(Vector3(1, 1, 1).cdiv(d)) { }
+	};
+
 
 }
 
