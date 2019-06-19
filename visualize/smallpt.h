@@ -1,9 +1,7 @@
 #ifndef SMALL_PT_H 
 #define SMALL_PT_H 
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <fstream>

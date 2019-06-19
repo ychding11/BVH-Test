@@ -7,7 +7,7 @@ namespace smallpt
 {
 	enum Refl_t { DIFF, SPEC, REFR };  // material types
 
-    class Object;
+    struct Object;
 
 	struct IntersectionInfo
 	{
