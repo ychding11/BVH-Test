@@ -3,6 +3,8 @@
 namespace smallpt
 {
 
+    const int cTrianglesInLeaf = 12;
+
 	int BVHTree::CreateBVH(int triStart, int triCount)
 	{
 		// sort input triangles by a randomly chosen axis
@@ -40,8 +42,8 @@ namespace smallpt
 		int nodeIndex = (int)s_BVH.size();
 		s_BVH.push_back(node);
 
-		// if we have less than N triangles, make this node a leaf that just has all of them
-		if (triCount <= 4)
+        //! Leaf
+		if (triCount <= cTrianglesInLeaf)
 		{
 			node.data1 = triStart;
 			node.data2 = triCount;
