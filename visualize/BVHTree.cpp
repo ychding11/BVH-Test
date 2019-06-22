@@ -8,37 +8,37 @@ namespace smallpt
 		// sort input triangles by a randomly chosen axis
 		int axis = XorShift32(_randSeed) % 3;
 		if (axis == 0)
-			std::sort(s_TriIndices + triStart, s_TriIndices + triStart + triCount, [this](int a, int b)
+			std::sort(_triangleIndices + triStart, _triangleIndices + triStart + triCount, [this](int a, int b)
 			{
-				assert(a >= 0 && a < s_TriangleCount);
-				assert(b >= 0 && b < s_TriangleCount);
-				AABB boxa = s_Triangles[a].getBBox();
-				AABB boxb = s_Triangles[b].getBBox();
+				assert(a >= 0 && a < _triangleCount);
+				assert(b >= 0 && b < _triangleCount);
+				AABB boxa = _triangles[a].getBBox();
+				AABB boxb = _triangles[b].getBBox();
 				return boxa.bmin.x < boxb.bmin.x;
 			});
 		else if (axis == 1)
-			std::sort(s_TriIndices + triStart, s_TriIndices + triStart + triCount, [this](int a, int b)
+			std::sort(_triangleIndices + triStart, _triangleIndices + triStart + triCount, [this](int a, int b)
 			{
-				assert(a >= 0 && a < s_TriangleCount);
-				assert(b >= 0 && b < s_TriangleCount);
-				AABB boxa = s_Triangles[a].getBBox();
-				AABB boxb = s_Triangles[b].getBBox();
+				assert(a >= 0 && a < _triangleCount);
+				assert(b >= 0 && b < _triangleCount);
+				AABB boxa = _triangles[a].getBBox();
+				AABB boxb = _triangles[b].getBBox();
 				return boxa.bmin.y < boxb.bmin.y;
 			});
 		else if (axis == 2)
-			std::sort(s_TriIndices + triStart, s_TriIndices + triStart + triCount, [this](int a, int b)
+			std::sort(_triangleIndices + triStart, _triangleIndices + triStart + triCount, [this](int a, int b)
 			{
-				assert(a >= 0 && a < s_TriangleCount);
-				assert(b >= 0 && b < s_TriangleCount);
-				AABB boxa = s_Triangles[a].getBBox();
-				AABB boxb = s_Triangles[b].getBBox();
+				assert(a >= 0 && a < _triangleCount);
+				assert(b >= 0 && b < _triangleCount);
+				AABB boxa = _triangles[a].getBBox();
+				AABB boxb = _triangles[b].getBBox();
 				return boxa.bmin.z < boxb.bmin.z;
 			});
 
 		// create the node
 		BVHNode node;
-		int nodeIndex = (int)s_BVH.size();
-		s_BVH.push_back(node);
+		int nodeIndex = (int)_nodes.size();
+		_nodes.push_back(node);
 
 		// if we have less than N triangles, make this node a leaf that just has all of them
 		if (triCount <= 4)
@@ -46,10 +46,10 @@ namespace smallpt
 			node.data1 = triStart;
 			node.data2 = triCount;
 			node.leaf = true;
-			node.box = s_Triangles[s_TriIndices[triStart]].getBBox();
+			node.box = _triangles[_triangleIndices[triStart]].getBBox();
 			for (int i = 1; i < triCount; ++i)
 			{
-				auto tribox = s_Triangles[s_TriIndices[triStart + i]].getBBox();
+				auto tribox = _triangles[_triangleIndices[triStart + i]].getBBox();
 				node.box = node.box.Union(tribox);
 			}
 		}
@@ -58,17 +58,17 @@ namespace smallpt
 			node.data1 = CreateBVH(triStart, triCount / 2);
 			node.data2 = CreateBVH(triStart + triCount / 2, triCount - triCount / 2);
 			node.leaf = false;
-			assert(node.data1 >= 0 && node.data1 < s_BVH.size());
-			assert(node.data2 >= 0 && node.data2 < s_BVH.size());
-			node.box = s_BVH[node.data1].box.Union(s_BVH[node.data2].box);
+			assert(node.data1 >= 0 && node.data1 < _nodes.size());
+			assert(node.data2 >= 0 && node.data2 < _nodes.size());
+			node.box = _nodes[node.data1].box.Union(_nodes[node.data2].box);
 		}
-		s_BVH[nodeIndex] = node;
+		_nodes[nodeIndex] = node;
 		return nodeIndex;
 	}
 
 	int BVHTree::HitBVH(int index, const Ray& r, float tMax, IntersectionInfo* outHit) const
 	{
-		const BVHNode& node = s_BVH[index];
+		const BVHNode& node = _nodes[index];
 		if (!node.box.hit(r))
 			return -1;
 
@@ -78,9 +78,9 @@ namespace smallpt
 			int hitID = -1;
 			for (int i = 0; i < node.data2; ++i)
 			{
-				int triIndex = s_TriIndices[node.data1 + i];
-				assert(triIndex >= 0 && triIndex < s_TriangleCount);
-				if (s_Triangles[triIndex].getIntersection(r, outHit) && outHit->t < tMax)
+				int triIndex = _triangleIndices[node.data1 + i];
+				assert(triIndex >= 0 && triIndex < _triangleCount);
+				if (_triangles[triIndex].getIntersection(r, outHit) && outHit->t < tMax)
 				{
 					hitID = triIndex;
 					tMax = outHit->t;

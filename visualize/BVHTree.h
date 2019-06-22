@@ -16,11 +16,12 @@ namespace smallpt
     class BVHTree
     {
     private:
-        int s_TriangleCount;
-        Triangle* s_Triangles;
-        int* s_TriIndices;
+        int _triangleCount;
+		//std::unique_ptr<Triangle> _triangles;
+        Triangle* _triangles;
+        int* _triangleIndices;
 
-        std::vector<BVHNode> s_BVH;
+        std::vector<BVHNode> _nodes;
         uint32_t _randSeed;
 
         uint32_t XorShift32(uint32_t& state)
@@ -35,9 +36,9 @@ namespace smallpt
 
         void cleanup()
         {
-            delete[] s_Triangles;
-            delete[] s_TriIndices;
-            s_BVH.clear();
+            //delete[] _triangles;
+            delete[] _triangleIndices;
+            _nodes.clear();
         }
 
     public:
@@ -47,14 +48,14 @@ namespace smallpt
 
         void InitTree(const std::vector<Triangle> &triangles)
         {
-            s_TriangleCount = triangles.size();
-            s_Triangles = new Triangle[s_TriangleCount];
-            memcpy(s_Triangles, &triangles[0], s_TriangleCount * sizeof(triangles[0]));
+            _triangleCount = triangles.size();
+            _triangles = new Triangle[_triangleCount];
+            memcpy(_triangles, &triangles[0], _triangleCount * sizeof(triangles[0]));
 
-            s_TriIndices = new int[s_TriangleCount];
-            for (int i = 0; i < s_TriangleCount; ++i)
-                s_TriIndices[i] = i;
-            CreateBVH(0, s_TriangleCount);
+            _triangleIndices = new int[_triangleCount];
+            for (int i = 0; i < _triangleCount; ++i)
+                _triangleIndices[i] = i;
+            CreateBVH(0, _triangleCount);
             LOG_INFO("Create BVH done.");
         }
 
