@@ -37,8 +37,7 @@ namespace smallpt
 		, _pauseRender(false)
 		, _ior(1.5f)
 	{
-		//_camera = new Camera(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm(), w, h);
-		_camera = new Camera(scene._triangles.lookfrom, (scene._triangles.lookat - scene._triangles.lookfrom).norm(), w, h, 90.);
+		_camera = std::unique_ptr<Camera>(new Camera(scene._triangles.lookfrom, (scene._triangles.lookat - scene._triangles.lookfrom).norm(), w, h, 90.));
 		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
 

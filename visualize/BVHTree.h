@@ -36,7 +36,7 @@ namespace smallpt
 
         void cleanup()
         {
-            //delete[] _triangles;
+            delete[] _triangles;
             delete[] _triangleIndices;
             _nodes.clear();
         }

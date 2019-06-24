@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <sstream>
+
 #include "randoms.h"
 #include "scene.h"
 #include "profiler.h"
@@ -66,7 +68,6 @@ namespace smallpt
 #endif
 	}
 
-
     // only read positon triangle data from obj file
     void ObjParser::loadObj()
     {
@@ -102,7 +103,9 @@ namespace smallpt
             _mesh.faces.push_back(TriangleFace(3*i, 3*i+1, 3*i+2));
         }
         
-        std::cout << "obj loaded: faces:" << _mesh.faces.size() << " vertices:" << _mesh.vertex.size() << std::endl;
+		std::ostringstream ss;
+		ss << "load obj:" << _filepath;
+		ss << "\n\tfaces:" << _mesh.faces.size() << " vertices:" << _mesh.vertex.size() << std::endl;
     }
 
 	void TriangleScene::initTriangleScene()
@@ -155,17 +158,15 @@ namespace smallpt
             _triangles.push_back(Triangle(v0, v1, v2));
 		}
 
-		//lookfrom = sceneCenter + 0.5 * length(sceneSize)*(Vector3(0., 0., 1.));
 		lookfrom = sceneCenter + 0.5 * (sceneSize.y)*(Vector3(0., 0., 6.));
 		lookat   = sceneCenter;
-
         _numTriangles = _triangles.size();
-		std::cout << "Scene Name:" << _sceneName << std::endl;
-		std::cout << "Number of triangles:" << _numTriangles << std::endl;
-		std::cout << "min: " << _aabbMin.str() << "\nmax: " << _aabbMax.str() << std::endl;
-		std::cout << "lookat: " << lookat.str() << "\nlookfrom: " << lookfrom.str() << std::endl;
 
-        _bvh.InitTree(_triangles);
+		std::ostringstream ss;
+		ss << "scene Name:" << _sceneName << std::endl;
+		ss << "\n\tnumber of triangles:" << _numTriangles << std::endl;
+		ss << "\n\tmin:    " << _aabbMin.str() << "\t max: " << _aabbMax.str() << std::endl;
+		ss << "\n\tlookat: " << lookat.str() << "\t lookfrom: " << lookfrom.str() << std::endl;
 	}
 
 	bool TriangleScene::intersecTri(const Ray& r, IntersectionInfo &hit) const

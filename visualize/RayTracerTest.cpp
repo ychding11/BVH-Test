@@ -9,6 +9,7 @@
 
 
 // third-party libraries
+#include <glog/logging.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>	
 #include <glm/glm.hpp>
@@ -22,10 +23,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include "BVH.h"
-#include "Sphere.h"
 #include "interface.h"
-#include "raytracer.h"
 #include "Renderer.h"
 #include "Stopwatch.h"
 
@@ -130,9 +128,7 @@ int main()
 
     std::ostringstream msgStream;
 
-    BVHTracer bvhTracer(settings.objectNum, settings.screenSize.x, settings.screenSize.y, msgStream);
     smallpt::smallptTest smallpter(settings.screenSize.x, settings.screenSize.y, settings.samples);
-    Observer *uiObserver = &bvhTracer;
     uiObserverSmallpt = &smallpter;
 
 	double lastTime = glfwGetTime();
@@ -161,15 +157,12 @@ int main()
 			{
 				if (ImGui::SliderInt("spp", &settings.samples, 1, 1024))
 				{
-					//uiObserverSmallpt->handleSampleCountChange(settings.samples);
 				}
 				if (ImGui::SliderFloat2("translate", &settings.focusOffset.x, -0.5f, 0.5f))
 				{
-					uiObserver->handleFocusOffsetChange(settings.focusOffset);
 				}
 				if (ImGui::SliderFloat("zoom", &settings.positionOffset, 0.0f, 10.f))
 				{
-					uiObserver->handlePositionOffsetChange(settings.positionOffset);
 				}
 			}
 			else if (settings.testIndex == 1)
@@ -235,8 +228,8 @@ int main()
             CPUProfiler profiler("Test Running");
             if (settings.testIndex == 0)
             {
-                bvhTracer.run();
-                quadRender.handleNewRenderResult(bvhTracer.getRenderResult(), sizeInBytes);
+                //bvhTracer.run();
+                //quadRender.handleNewRenderResult(bvhTracer.getRenderResult(), sizeInBytes);
             }
             else
             {

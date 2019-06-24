@@ -103,6 +103,7 @@ namespace smallpt
         BVHTree _bvh;
 
 	    void initTriangleScene();
+
 	public:
 		Vector3 sceneSize;
 		Vector3 sceneCenter;
@@ -116,9 +117,11 @@ namespace smallpt
 			,_aabbMax(-inf, -inf, -inf)
         {
 	        initTriangleScene();
+            _bvh.InitTree(_triangles);
         }
 
         bool intersec(const Ray& r, IntersectionInfo &hit) const override;
+		
         bool intersecTri(const Ray& r, IntersectionInfo &hit) const;
 
         bool intersecBVH(const Ray& r, IntersectionInfo &hit) const
@@ -139,10 +142,11 @@ namespace smallpt
     {
     private:
         bool _initialized;
-		SphereScene _spheres;
 		Float _ior;
 		bool _sphereScene;
 		bool _triangleScene;
+		SphereScene _spheres;
+
 	public:
 		TriangleScene _triangles;
 

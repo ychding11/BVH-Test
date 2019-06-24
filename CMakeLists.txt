@@ -7,6 +7,25 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Confi
 
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
 
+if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog")
+  message(FATAL_ERROR "The glog submodule directory is missing! "
+    "You probably did not clone the project with --recursive, or first checked out "
+    "before it was added. It is possible to recover by running "
+    "\"git submodule update --init --recursive\"")
+endif()
+
+set(BUILD_TESTING OFF CACHE BOOL "Build the glog unit test.")
+message(STATUS "OPT BEFORE =${BUILD_TESTING}")
+add_subdirectory(thirdparty/glog)
+message(STATUS "OPT AFTER=${BUILD_TESTING}")
+
+set_property(TARGET glog PROPERTY FOLDER "dependencies")
+
+include_directories (
+  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog/src
+  ${CMAKE_BINARY_DIR}/thirdparty/glog
+)
+
 file(GLOB SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.h
     ${CMAKE_SOURCE_DIR}/src/*.cpp
@@ -36,6 +55,12 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/thirdparty/glew/include
   ${CMAKE_SOURCE_DIR}/thirdparty/fastnoise
 )
+
+## Output include directory for debug
+get_property(includes DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${includes})
+  message(STATUS "include dir='${dir}'")
+endforeach()
 
 ## Here Should Set correct value based on Visual Studio Version
 link_directories(
@@ -137,9 +162,9 @@ endif()
 #--------------------------------------------------------------------
 # target 
 #--------------------------------------------------------------------
-SET(EXE_NAME "RayTracerTest")
+SET(EXE_NAME "OBJRender")
 ADD_EXECUTABLE(${EXE_NAME} ${SRC_FILES} ${EXT_FILES})
-TARGET_LINK_LIBRARIES(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS})
+TARGET_LINK_LIBRARIES(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} glog)
 
 #--------------------------------------------------------------------
 # output dirs

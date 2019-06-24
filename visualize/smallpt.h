@@ -38,7 +38,7 @@ namespace smallpt
 		std::string progress;
 		Scene scene;
 
-        Camera *_camera; // cam pos, dir
+        std::unique_ptr<Camera> _camera; 
 
 		std::mutex _mutex;
 		std::condition_variable _condVar;
@@ -50,6 +50,7 @@ namespace smallpt
 
 	public:
 		smallptTest(int width = 720, int height = 720, int sample = 1);
+
 		~smallptTest()
 		{
             _exitRendering = true;
