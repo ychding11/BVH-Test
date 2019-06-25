@@ -1,7 +1,7 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.6)
 project (BVHTest)
 
-SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
+
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Configuration types" FORCE)
 
@@ -14,21 +14,26 @@ if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog")
     "\"git submodule update --init --recursive\"")
 endif()
 
-set(WITH_GFLAGS OFF CACHE BOOL "Use gflags")
-set(BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
+
 if(WIN32)
   add_definitions( -D GOOGLE_GLOG_DLL_DECL= )
 endif()
+set(WITH_GFLAGS OFF CACHE BOOL "Use gflags")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
 set(BUILD_TESTING OFF CACHE BOOL "Build the glog unit test.")
 #message(STATUS "OPT BEFORE=${BUILD_TESTING}")
 add_subdirectory(thirdparty/glog)
 #message(STATUS "OPT AFTER=${BUILD_TESTING}")
-
 set_property(TARGET glog PROPERTY FOLDER "dependencies")
-
 include_directories (
   ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog/src
   ${CMAKE_BINARY_DIR}/thirdparty/glog
+)
+
+
+file(GLOB  EXE_SRC_FILES
+	${CMAKE_SOURCE_DIR}/src/main/*.cpp
 )
 
 file(GLOB SRC_FILES
@@ -60,6 +65,8 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/thirdparty/glew/include
   ${CMAKE_SOURCE_DIR}/thirdparty/fastnoise
 )
+
+
 
 ## Output include directory for debug
 #######################################################################################
@@ -98,6 +105,34 @@ foreach(f ${SRC_FILES})
     # then alter it (not compulsory)
     file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
     set(SRCGR "Sources/${SRCGR}")
+
+    # Extract the folder, ie remove the filename part
+    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
+
+    # Source_group expects \\ (double antislash), not / (slash)
+    string(REPLACE / \\ SRCGR ${SRCGR})
+    source_group("${SRCGR}" FILES ${f})
+endforeach()
+
+foreach(f ${EXT_FILES})
+    # Get the path of the file relative to ${DIRECTORY},
+    # then alter it (not compulsory)
+    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
+    set(SRCGR "External/${SRCGR}")
+
+    # Extract the folder, ie remove the filename part
+    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
+
+    # Source_group expects \\ (double antislash), not / (slash)
+    string(REPLACE / \\ SRCGR ${SRCGR})
+    source_group("${SRCGR}" FILES ${f})
+endforeach()
+
+foreach(f ${EXE_SRC_FILES})
+    # Get the path of the file relative to ${DIRECTORY},
+    # then alter it (not compulsory)
+    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
+    set(SRCGR "Render/${SRCGR}")
 
     # Extract the folder, ie remove the filename part
     string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
@@ -179,7 +214,7 @@ endmacro()
 # target 
 #--------------------------------------------------------------------
 set(EXE_NAME "OBJRender")
-add_executable(${EXE_NAME} ${SRC_FILES} ${EXT_FILES})
+add_executable(${EXE_NAME} ${EXE_SRC_FILES} ${SRC_FILES} ${EXT_FILES})
 target_link_libraries(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} glog)
 default_property(${EXE_NAME})
 
