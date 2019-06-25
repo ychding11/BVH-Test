@@ -25,12 +25,9 @@
 
 #include "interface.h"
 #include "Renderer.h"
-#include "Stopwatch.h"
 
 #include "smallpt.h"
-
-std::vector<ProfilerEntry> CPUProfiler::ProfilerData(16);
-std::vector<ProfilerEntry> CPUProfiler::ProfilerDataA;
+#include "profiler.h"
 
 struct Setting;
 static Setting settings;
@@ -134,7 +131,7 @@ int main()
 	double lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
 	{
-        FrameRateDetector frameratedetector;
+        smallpt::FrameRateDetector frameratedetector;
         frameratedetector.start();
 		glfwPollEvents();
 
@@ -145,9 +142,9 @@ int main()
 
 		ImGui::Begin("Settings");
 
-        CPUProfiler::begin();
+        smallpt::CPUProfiler::begin();
 		{
-            CPUProfiler profiler("ImGui");
+            smallpt::CPUProfiler profiler("ImGui");
 
 			if (ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0"))
 			{
@@ -225,7 +222,7 @@ int main()
 		std::string progress;
 		int sizeInBytes = (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3);
         {
-            CPUProfiler profiler("Test Running");
+            smallpt::CPUProfiler profiler("Test Running");
             if (settings.testIndex == 0)
             {
                 //bvhTracer.run();
@@ -240,16 +237,14 @@ int main()
         }
 		
         {
-            CPUProfiler profiler("Quad Render");
+            smallpt::CPUProfiler profiler("Quad Render");
             quadRender.render();
         }
-
-        CPUProfiler::end();
         frameratedetector.stop();
 
         ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
 		ImGui::Text("Frame time %.3f ms\t(%.1f FPS)", frameratedetector.frametime(), frameratedetector.framerate());
-        ImGui::Text("%s", CPUProfiler::end().c_str());
+        ImGui::Text("%s", smallpt::CPUProfiler::end().c_str());
         ImGui::Text("-------------------");
         ImGui::Text("%s", progress.c_str());
         ImGui::EndChild();
