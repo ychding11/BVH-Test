@@ -31,6 +31,8 @@ file(GLOB SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.cpp
     ${CMAKE_SOURCE_DIR}/visualize/*.h
     ${CMAKE_SOURCE_DIR}/visualize/*.cpp
+	${CMAKE_SOURCE_DIR}/visualize/core/*.h
+	${CMAKE_SOURCE_DIR}/visualize/core/*.cpp
     ${CMAKE_SOURCE_DIR}/quad/*.h
     ${CMAKE_SOURCE_DIR}/quad/*.cpp
 )
@@ -47,6 +49,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/
   ${CMAKE_SOURCE_DIR}/src/
   ${CMAKE_SOURCE_DIR}/visualize/
+  ${CMAKE_SOURCE_DIR}/visualize/core
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
   ${CMAKE_SOURCE_DIR}/thirdparty/glm
