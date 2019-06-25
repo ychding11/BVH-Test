@@ -35,14 +35,15 @@ include_directories (
 file(GLOB  EXE_SRC_FILES
 	${CMAKE_SOURCE_DIR}/src/main/*.cpp
 )
-
+file(GLOB  HW_SRC_FILES
+	 ${CMAKE_SOURCE_DIR}/quad/*.h
+    ${CMAKE_SOURCE_DIR}/quad/*.cpp
+)
 file(GLOB SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.h
     ${CMAKE_SOURCE_DIR}/src/*.cpp
 	${CMAKE_SOURCE_DIR}/src/core/*.h
 	${CMAKE_SOURCE_DIR}/src/core/*.cpp
-    ${CMAKE_SOURCE_DIR}/quad/*.h
-    ${CMAKE_SOURCE_DIR}/quad/*.cpp
 )
 
 file(GLOB EXT_FILES
@@ -65,8 +66,6 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/thirdparty/glew/include
   ${CMAKE_SOURCE_DIR}/thirdparty/fastnoise
 )
-
-
 
 ## Output include directory for debug
 #######################################################################################
@@ -133,6 +132,20 @@ foreach(f ${EXE_SRC_FILES})
     # then alter it (not compulsory)
     file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
     set(SRCGR "Render/${SRCGR}")
+
+    # Extract the folder, ie remove the filename part
+    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
+
+    # Source_group expects \\ (double antislash), not / (slash)
+    string(REPLACE / \\ SRCGR ${SRCGR})
+    source_group("${SRCGR}" FILES ${f})
+endforeach()
+
+foreach(f ${HW_SRC_FILES})
+    # Get the path of the file relative to ${DIRECTORY},
+    # then alter it (not compulsory)
+    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
+    set(SRCGR "HWRender/${SRCGR}")
 
     # Extract the folder, ie remove the filename part
     string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
@@ -214,9 +227,20 @@ endmacro()
 # target 
 #--------------------------------------------------------------------
 set(EXE_NAME "OBJRender")
-add_executable(${EXE_NAME} ${EXE_SRC_FILES} ${SRC_FILES} ${EXT_FILES})
+add_executable(${EXE_NAME} ${EXE_SRC_FILES} ${HW_SRC_FILES} ${SRC_FILES} ${EXT_FILES})
 target_link_libraries(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} glog)
 default_property(${EXE_NAME})
+
+file ( GLOB TEST_SOURCE
+    ${CMAKE_SOURCE_DIR}/tests/*.cpp
+    ${CMAKE_SOURCE_DIR}/tests/gtest/*.cc
+  )
+set(EXE_NAME "mytest")
+add_executable ( ${EXE_NAME} ${TEST_SOURCE} ${SRC_FILES})
+target_link_libraries( ${EXE_NAME} glog )
+default_property(${EXE_NAME})
+
+ADD_TEST ( pbrt_unit_test pbrt_test )
 
 if(ENABLE_HIDECONSOLE_BUILD)
 if(WINDOWS)
