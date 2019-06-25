@@ -11,8 +11,6 @@
 #include <fstream>
 #include <iomanip>
 
-#include "Log.h"
-
 namespace smallpt
 {
 

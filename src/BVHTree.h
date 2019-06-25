@@ -56,7 +56,6 @@ namespace smallpt
             for (int i = 0; i < _triangleCount; ++i)
                 _triangleIndices[i] = i;
             CreateBVH(0, _triangleCount);
-            LOG_INFO("Create BVH done.");
         }
 
     public:
