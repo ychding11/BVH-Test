@@ -5,7 +5,7 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Configuration types" FORCE)
 
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
 
 if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog")
   message(FATAL_ERROR "The glog submodule directory is missing! "
@@ -14,15 +14,15 @@ if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog")
     "\"git submodule update --init --recursive\"")
 endif()
 
-SET(WITH_GFLAGS OFF CACHE BOOL "Use gflags")
-SET(BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
-IF(WIN32)
-  ADD_DEFINITIONS( -D GOOGLE_GLOG_DLL_DECL= )
-ENDIF()
+set(WITH_GFLAGS OFF CACHE BOOL "Use gflags")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL " " FORCE)
+if(WIN32)
+  add_definitions( -D GOOGLE_GLOG_DLL_DECL= )
+endif()
 set(BUILD_TESTING OFF CACHE BOOL "Build the glog unit test.")
-message(STATUS "OPT BEFORE =${BUILD_TESTING}")
+#message(STATUS "OPT BEFORE=${BUILD_TESTING}")
 add_subdirectory(thirdparty/glog)
-message(STATUS "OPT AFTER=${BUILD_TESTING}")
+#message(STATUS "OPT AFTER=${BUILD_TESTING}")
 
 set_property(TARGET glog PROPERTY FOLDER "dependencies")
 
@@ -34,10 +34,8 @@ include_directories (
 file(GLOB SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.h
     ${CMAKE_SOURCE_DIR}/src/*.cpp
-    ${CMAKE_SOURCE_DIR}/visualize/*.h
-    ${CMAKE_SOURCE_DIR}/visualize/*.cpp
-	${CMAKE_SOURCE_DIR}/visualize/core/*.h
-	${CMAKE_SOURCE_DIR}/visualize/core/*.cpp
+	${CMAKE_SOURCE_DIR}/src/core/*.h
+	${CMAKE_SOURCE_DIR}/src/core/*.cpp
     ${CMAKE_SOURCE_DIR}/quad/*.h
     ${CMAKE_SOURCE_DIR}/quad/*.cpp
 )
@@ -53,8 +51,7 @@ file(GLOB EXT_FILES
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/
   ${CMAKE_SOURCE_DIR}/src/
-  ${CMAKE_SOURCE_DIR}/visualize/
-  ${CMAKE_SOURCE_DIR}/visualize/core
+  ${CMAKE_SOURCE_DIR}/src/core
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
   ${CMAKE_SOURCE_DIR}/thirdparty/glm
@@ -65,9 +62,10 @@ include_directories(
 )
 
 ## Output include directory for debug
+#######################################################################################
 get_property(includes DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 foreach(dir ${includes})
-  message(STATUS "include dir='${dir}'")
+    message(STATUS "include dir='${dir}'")
 endforeach()
 
 ## Here Should Set correct value based on Visual Studio Version
@@ -121,9 +119,9 @@ find_package(OpenMP)
 
 if(OPENMP_FOUND)
 if(MSVC)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /openmp")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /openmp")
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /openmp")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /openmp")
+    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 endif()
 
@@ -155,34 +153,35 @@ add_definitions(-DGLEW_STATIC)
 
 if(${ENABLE_HIDECONSOLE_BUILD})
 if(MSVC)
-add_definitions(-DWIN32)
-add_definitions(-D_WIN32)
-add_definitions(-DNOMINMAX)
+    add_definitions(-DWIN32)
+    add_definitions(-D_WIN32)
+    add_definitions(-DNOMINMAX)
 endif()
 endif()
 
 if(ENABLE_HIDECONSOLE_BUILD)
-MESSAGE(STATUS "Console is hidden")
+message(STATUS "Console is hidden")
 else()
-MESSAGE(STATUS "Console is visible")
+message(STATUS "Console is visible")
 endif()
+
+macro(default_property EXE_NAME)
+    message(STATUS "set default output property of target:${EXE_NAME}")
+    set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
+    set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
+    set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_SOURCE_DIR}/bin )
+    set_target_properties(${EXE_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+    set_target_properties(${EXE_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX "RelWithDebInfo")
+    set_target_properties(${EXE_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+endmacro()
 
 #--------------------------------------------------------------------
 # target 
 #--------------------------------------------------------------------
-SET(EXE_NAME "OBJRender")
-ADD_EXECUTABLE(${EXE_NAME} ${SRC_FILES} ${EXT_FILES})
-TARGET_LINK_LIBRARIES(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} glog)
-
-#--------------------------------------------------------------------
-# output dirs
-#--------------------------------------------------------------------
-set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
-set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
-set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_SOURCE_DIR}/bin )
-set_target_properties(${EXE_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-set_target_properties(${EXE_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX "RelWithDebInfo")
-set_target_properties(${EXE_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set(EXE_NAME "OBJRender")
+add_executable(${EXE_NAME} ${SRC_FILES} ${EXT_FILES})
+target_link_libraries(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} glog)
+default_property(${EXE_NAME})
 
 if(ENABLE_HIDECONSOLE_BUILD)
 if(WINDOWS)
