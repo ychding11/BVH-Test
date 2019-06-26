@@ -1,7 +1,7 @@
 ﻿
 #include "camera.h"
 
-namespace smallpt
+namespace mei
 {
 	void Camera::constructCoordinate()
 	{

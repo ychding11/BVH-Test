@@ -3,7 +3,7 @@
 
 #include "Primitives.h"
 
-namespace smallpt
+namespace mei
 {
 	struct BVHNode
 	{

@@ -77,7 +77,7 @@ int main()
 
 	GLFWwindow *window;
 	glfwInit();
-	window = glfwCreateWindow(settings.screenSize.x, settings.screenSize.y, "smallpt", 0, 0);
+	window = glfwCreateWindow(settings.screenSize.x, settings.screenSize.y, "mei", 0, 0);
 	glfwSetWindowPos(window, 300, 100);
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	//glfwSetCursorPos(window, 0, 0);
@@ -125,13 +125,13 @@ int main()
 
     std::ostringstream msgStream;
 
-    smallpt::smallptTest smallpter(settings.screenSize.x, settings.screenSize.y, settings.samples);
+    mei::smallptTest smallpter(settings.screenSize.x, settings.screenSize.y, settings.samples);
     uiObserverSmallpt = &smallpter;
 
 	double lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
 	{
-        smallpt::FrameRateDetector frameratedetector;
+        mei::FrameRateDetector frameratedetector;
         frameratedetector.start();
 		glfwPollEvents();
 
@@ -142,9 +142,9 @@ int main()
 
 		ImGui::Begin("Settings");
 
-        smallpt::CPUProfiler::begin();
+        mei::CPUProfiler::begin();
 		{
-            smallpt::CPUProfiler profiler("ImGui");
+            mei::CPUProfiler profiler("ImGui");
 
 			if (ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0"))
 			{
@@ -222,7 +222,7 @@ int main()
 		std::string progress;
 		int sizeInBytes = (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3);
         {
-            smallpt::CPUProfiler profiler("Test Running");
+            mei::CPUProfiler profiler("Test Running");
             if (settings.testIndex == 0)
             {
                 //bvhTracer.run();
@@ -237,14 +237,14 @@ int main()
         }
 		
         {
-            smallpt::CPUProfiler profiler("Quad Render");
+            mei::CPUProfiler profiler("Quad Render");
             quadRender.render();
         }
         frameratedetector.stop();
 
         ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
 		ImGui::Text("Frame time %.3f ms\t(%.1f FPS)", frameratedetector.frametime(), frameratedetector.framerate());
-        ImGui::Text("%s", smallpt::CPUProfiler::end().c_str());
+        ImGui::Text("%s", mei::CPUProfiler::end().c_str());
         ImGui::Text("-------------------");
         ImGui::Text("%s", progress.c_str());
         ImGui::EndChild();

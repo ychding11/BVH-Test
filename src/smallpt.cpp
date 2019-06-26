@@ -1,12 +1,12 @@
-﻿#include <math.h>   // smallpt, a Path Tracer by Kevin Beason, 2008
-#include <stdlib.h> // Make : g++ -O3 -fopenmp smallpt.cpp -o smallpt
+﻿#include <math.h> 
+#include <stdlib.h>
 #include <stdio.h>  
 #include <omp.h>
 
 #include "smallpt.h"
 #include "profiler.h"
 
-namespace smallpt
+namespace mei
 {
 
 #ifndef M_PI
@@ -113,7 +113,7 @@ namespace smallpt
 	//// 
 	//// https://docs.microsoft.com/en-us/cpp/build/reference/openmp-enable-openmp-2-0-support?view=vs-2019
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	void smallptTest::smallpt(void)
+	void smallptTest::mei(void)
 	{
 		Ray cam(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm()); // cam pos, dir
 		Vector3 cx = Vector3(w*.5135 / h),
@@ -250,7 +250,7 @@ namespace smallpt
 	}
 
 	//// https://docs.microsoft.com/en-us/cpp/build/reference/openmp-enable-openmp-2-0-support?view=vs-2019
-	float* smallpt(std::string &log, int w = 1024, int h = 768, int samps = 1)
+	float* mei(std::string &log, int w = 1024, int h = 768, int samps = 1)
 	{
 		Ray cam(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm()); // cam pos, dir
 		Vector3 cx = Vector3(w*.5135 / h),

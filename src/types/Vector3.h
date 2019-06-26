@@ -1,26 +1,17 @@
 #ifndef VECTOR3_H
 #define VECTOR3_H
 
+#include "mei.h"
+
 #include <cmath>
 #include <cstdlib>
-#include <cstdio>
-#include <cassert>
-#include <iostream>
 #include <sstream>
 #include <random>
 #include <fstream>
 #include <iomanip>
 
-namespace smallpt
+namespace mei
 {
-
-#ifndef M_PI
-#define M_PI  3.1415926
-#endif
-    typedef double Float;
-
-    static const Float inf = 1e20;
-    static const Float eps = 1e-6;
 
     struct Vector3
     {

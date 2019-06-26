@@ -17,10 +17,8 @@
 #include "camera.h"
 #include "randoms.h"
 
-namespace smallpt
+namespace mei
 {
-	// resize screen size
-	// reset sample number
 	class smallptTest : public Observer
 	{
 	public:

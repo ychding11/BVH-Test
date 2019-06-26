@@ -1,4 +1,4 @@
-#include <math.h>   // smallpt, a Path Tracer by Kevin Beason, 2008
+#include <math.h> 
 #include <stdlib.h>
 #include <stdio.h>  
 #include <omp.h>
@@ -7,7 +7,7 @@
 
 #include "randoms.h"
 
-namespace smallpt
+namespace mei
 {
 	static std::default_random_engine generator;
 	static std::uniform_real_distribution<Float> distr(0.0, 1.0);

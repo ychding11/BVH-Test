@@ -13,7 +13,7 @@
 
 #include "progressreporter.h"
 
-namespace smallpt
+namespace mei
 {
 
 	// This function is OS dependt

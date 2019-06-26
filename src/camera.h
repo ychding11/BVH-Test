@@ -10,7 +10,7 @@
 #include "Vector3.h"
 #include "randoms.h"
 
-namespace smallpt
+namespace mei
 {
 	class Camera
 	{

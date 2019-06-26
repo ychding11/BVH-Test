@@ -9,7 +9,7 @@
 #include <sstream>
 #include <iomanip>
 
-namespace smallpt
+namespace mei
 {
 
 // https://www.modernescpp.com/index.php/the-three-clocks

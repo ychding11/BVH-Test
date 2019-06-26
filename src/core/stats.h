@@ -13,7 +13,7 @@
 #include <string>
 #include <functional>
 
-namespace smallpt
+namespace mei
 {
 
 // Called by both Main Thread and Worker Thread

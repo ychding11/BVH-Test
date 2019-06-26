@@ -6,7 +6,7 @@
 #include <chrono>
 #include <string>
 
-namespace smallpt
+namespace mei
 {
 
 class ProgressReporter

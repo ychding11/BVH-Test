@@ -3,7 +3,7 @@
 
 #include "Vector3.h"
 
-namespace smallpt
+namespace mei
 {
 	enum Refl_t { DIFF, SPEC, REFR };  // material types
 

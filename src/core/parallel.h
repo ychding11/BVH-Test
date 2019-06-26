@@ -3,15 +3,14 @@
 
 #include <functional>
 
-namespace smallpt
+namespace mei
 {
 
+// Called in Main Thread
+void ParallelInit(void);
 
 // Called in Main Thread
-void parallelInit(void);
-
-// Called in Main Thread
-void parallelCleanup(void);
+void ParallelCleanup(void);
 
 // PUBLIC interface
 // Called by Main Thread

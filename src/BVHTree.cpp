@@ -1,6 +1,6 @@
 #include "BVHTree.h"
 
-namespace smallpt
+namespace mei
 {
 
     const int cTrianglesInLeaf = 12;

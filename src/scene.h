@@ -9,7 +9,7 @@
 
 extern double erand48(unsigned short xseed[3]);
 
-namespace smallpt
+namespace mei
 {
     //! only position needed 
     struct TriangleFace

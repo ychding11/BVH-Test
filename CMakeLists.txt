@@ -44,6 +44,10 @@ file(GLOB SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.cpp
 	${CMAKE_SOURCE_DIR}/src/core/*.h
 	${CMAKE_SOURCE_DIR}/src/core/*.cpp
+    ${CMAKE_SOURCE_DIR}/src/random/*.h
+	${CMAKE_SOURCE_DIR}/src/random/*.cpp
+    ${CMAKE_SOURCE_DIR}/src/types/*.h
+	${CMAKE_SOURCE_DIR}/src/types/*.cpp
 )
 
 file(GLOB EXT_FILES
@@ -58,6 +62,8 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/
   ${CMAKE_SOURCE_DIR}/src/
   ${CMAKE_SOURCE_DIR}/src/core
+  ${CMAKE_SOURCE_DIR}/src/random
+  ${CMAKE_SOURCE_DIR}/src/types
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
   ${CMAKE_SOURCE_DIR}/thirdparty/glm
@@ -103,7 +109,7 @@ foreach(f ${SRC_FILES})
     # Get the path of the file relative to ${DIRECTORY},
     # then alter it (not compulsory)
     file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
-    set(SRCGR "Sources/${SRCGR}")
+    set(SRCGR "Mei/${SRCGR}")
 
     # Extract the folder, ie remove the filename part
     string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})

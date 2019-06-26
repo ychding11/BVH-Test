@@ -13,7 +13,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-namespace smallpt
+namespace mei
 {
 
 #ifdef __GNUG__

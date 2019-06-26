@@ -10,7 +10,7 @@
 #include "stringprint.h"
 
 
-namespace smallpt
+namespace mei
 {
 
 // Statistics Local Variables

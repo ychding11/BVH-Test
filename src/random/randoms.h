@@ -6,7 +6,7 @@
 
 extern double erand48(unsigned short xseed[3]);
 
-namespace smallpt
+namespace mei
 {
 
     //! Generate a random float in [0, 1)

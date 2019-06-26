@@ -11,7 +11,7 @@
 #include "scene.h"
 #include "profiler.h"
 
-namespace smallpt
+namespace mei
 {
 
 #ifndef M_PI

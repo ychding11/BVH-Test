@@ -1,12 +1,11 @@
-#include <thread>
 #include <vector>
-#include <mutex>
-#include <atomic>
 #include <iostream>
 #include <cstdio>
+#include <thread>
+#include <mutex>
+#include <atomic>
 #include <condition_variable>
 #include <cmath>
-#include <cstdio>
 #include <algorithm>
 
 #include "parallel.h"
@@ -15,7 +14,7 @@
 //logger https://github.com/gabime/spdlog
 //format syntax  http://fmtlib.net/latest/syntax.html
 
-namespace smallpt
+namespace mei
 {
 
 	class ParallelForLoop; // forward declare.
@@ -174,7 +173,7 @@ namespace smallpt
 	}
 
 	// Called in Main Thread
-	void parallelInit(void)
+	void ParallelInit(void)
 	{
 		if (threads.size() > 0) return;
 		int nThreads = maxThreadIndex();
@@ -188,7 +187,7 @@ namespace smallpt
 
 	// Called in Main Thread
 	// Main Thread would wait for all worker to exit.
-	void parallelCleanup(void)
+	void ParallelCleanup(void)
 	{
 		if (threads.size() == 0) return;
 
