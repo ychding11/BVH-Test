@@ -1,6 +1,8 @@
 #ifndef PROGRESS_REPORT_H_
 #define PROGRESS_REPORT_H_
 
+#include "mei.h"
+
 #include <atomic>
 #include <thread>
 #include <chrono>
@@ -43,32 +45,6 @@ private:
     void printBar(void);
 };
 
-
-#ifdef __GNUG__
-#define RUN_ON_LINUX
-#else
-#endif  // __GNUG__
-
-typedef float Float;
-#define Infinity std::numeric_limits<Float>::infinity()
-
-// Check OS & Platform
-#if defined(_WIN32) || defined(_WIN64)
-#define OS_IS_WINDOWS
-#if defined(__MINGW32__)  // Defined for both 32 bit/64 bit MinGW
-#define ENV_IS_MINGW
-#elif defined(_MSC_VER)
-#define ENV_IS_MSVC
-#endif
-#elif defined(__linux__)
-#define OS_IS_LINUX
-#elif defined(__APPLE__)
-#define OS_IS_OSX
-#elif defined(__OpenBSD__)
-#define OS_IS_OPENBSD
-#elif defined(__FreeBSD__)
-#define OS_IS_FREEBSD
-#endif
 
 }
 #endif

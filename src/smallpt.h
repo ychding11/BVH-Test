@@ -2,9 +2,7 @@
 #define SMALL_PT_H 
 
 #include <cmath>
-#include <iostream>
 #include <sstream>
-#include <fstream>
 
 #include <thread>
 #include <mutex>
@@ -19,6 +17,8 @@
 
 namespace mei
 {
+	void Render(std::shared_ptr<Camera> camera, std::shared_ptr<Scene> scene);
+
 	class smallptTest : public Observer
 	{
 	public:
@@ -154,6 +154,7 @@ namespace mei
 		}
 	};
 
+	
 }
 
 #endif

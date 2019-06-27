@@ -263,5 +263,134 @@ namespace mei
 		: x(p.x), y(p.y) {
 		DCHECK(!HasNaNs());
 	}
+
+	typedef Vector2<Float> Vector2f;
+	typedef Vector2<int> Vector2i;
+
+
+	// Bounds Declarations
+	template <typename T>
+	class Bounds2 {
+	public:
+		// Bounds2 Public Methods
+		Bounds2() {
+			T minNum = std::numeric_limits<T>::lowest();
+			T maxNum = std::numeric_limits<T>::max();
+			pMin = Point2<T>(maxNum, maxNum);
+			pMax = Point2<T>(minNum, minNum);
+		}
+		explicit Bounds2(const Point2<T> &p) : pMin(p), pMax(p) {}
+		Bounds2(const Point2<T> &p1, const Point2<T> &p2) {
+			pMin = Point2<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y));
+			pMax = Point2<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y));
+		}
+		template <typename U>
+		explicit operator Bounds2<U>() const {
+			return Bounds2<U>((Point2<U>)pMin, (Point2<U>)pMax);
+		}
+
+		Vector2<T> Diagonal() const { return pMax - pMin; }
+		T Area() const {
+			Vector2<T> d = pMax - pMin;
+			return (d.x * d.y);
+		}
+		int MaximumExtent() const {
+			Vector2<T> diag = Diagonal();
+			if (diag.x > diag.y)
+				return 0;
+			else
+				return 1;
+		}
+		inline const Point2<T> &operator[](int i) const {
+			DCHECK(i == 0 || i == 1);
+			return (i == 0) ? pMin : pMax;
+		}
+		inline Point2<T> &operator[](int i) {
+			DCHECK(i == 0 || i == 1);
+			return (i == 0) ? pMin : pMax;
+		}
+		bool operator==(const Bounds2<T> &b) const {
+			return b.pMin == pMin && b.pMax == pMax;
+		}
+		bool operator!=(const Bounds2<T> &b) const {
+			return b.pMin != pMin || b.pMax != pMax;
+		}
+		Point2<T> Lerp(const Point2f &t) const {
+			return Point2<T>(pbrt::Lerp(t.x, pMin.x, pMax.x),
+				pbrt::Lerp(t.y, pMin.y, pMax.y));
+		}
+		Vector2<T> Offset(const Point2<T> &p) const {
+			Vector2<T> o = p - pMin;
+			if (pMax.x > pMin.x) o.x /= pMax.x - pMin.x;
+			if (pMax.y > pMin.y) o.y /= pMax.y - pMin.y;
+			return o;
+		}
+		void BoundingSphere(Point2<T> *c, Float *rad) const {
+			*c = (pMin + pMax) / 2;
+			*rad = Inside(*c, *this) ? Distance(*c, pMax) : 0;
+		}
+
+		std::string str() const
+		{
+			return pMin.str() + pMax.str();
+		}
+
+		// Bounds2 Public Data
+		Point2<T> pMin, pMax;
+	};
+
+	typedef Bounds2<Float> Bounds2f;
+	typedef Bounds2<int> Bounds2i;
+
+	class Bounds2iIterator : public std::forward_iterator_tag {
+	public:
+		Bounds2iIterator(const Bounds2i &b, const Point2i &pt)
+			: p(pt), bounds(&b) {}
+		Bounds2iIterator operator++() {
+			advance();
+			return *this;
+		}
+		Bounds2iIterator operator++(int) {
+			Bounds2iIterator old = *this;
+			advance();
+			return old;
+		}
+		bool operator==(const Bounds2iIterator &bi) const {
+			return p == bi.p && bounds == bi.bounds;
+		}
+		bool operator!=(const Bounds2iIterator &bi) const {
+			return p != bi.p || bounds != bi.bounds;
+		}
+
+		Point2i operator*() const { return p; }
+
+	private:
+		void advance() {
+			++p.x;
+			if (p.x == bounds->pMax.x) {
+				p.x = bounds->pMin.x;
+				++p.y;
+			}
+		}
+		Point2i p;
+		const Bounds2i *bounds;
+	};
+
+	inline Bounds2iIterator begin(const Bounds2i &b) {
+		return Bounds2iIterator(b, b.pMin);
+	}
+
+	inline Bounds2iIterator end(const Bounds2i &b) {
+		// Normally, the ending point is at the minimum x value and one past
+		// the last valid y value.
+		Point2i pEnd(b.pMin.x, b.pMax.y);
+		// However, if the bounds are degenerate, override the end point to
+		// equal the start point so that any attempt to iterate over the bounds
+		// exits out immediately.
+		if (b.pMin.x >= b.pMax.x || b.pMin.y >= b.pMax.y)
+			pEnd = b.pMin;
+		return Bounds2iIterator(b, pEnd);
+	}
+
 }
 #endif

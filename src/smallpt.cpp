@@ -3,6 +3,8 @@
 #include <stdio.h>  
 #include <omp.h>
 
+#include "parallel.h"
+#include "progressreporter.h"
 #include "smallpt.h"
 #include "profiler.h"
 
@@ -12,9 +14,6 @@ namespace mei
 #ifndef M_PI
 #define M_PI  3.1415926
 #endif
-
-//#define	USE_BVH
-
 
 	std::vector<ProfilerEntry> CPUProfiler::ProfilerData(16);
 	std::vector<ProfilerEntry> CPUProfiler::ProfilerDataA;
@@ -107,210 +106,40 @@ namespace mei
 		_isRendering = false;
 	}
 
-#if 0
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	//// 
-	//// https://docs.microsoft.com/en-us/cpp/build/reference/openmp-enable-openmp-2-0-support?view=vs-2019
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	void smallptTest::mei(void)
+	void Render(std::shared_ptr<Camera> camera, std::shared_ptr<Scene> scene)
 	{
-		Ray cam(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm()); // cam pos, dir
-		Vector3 cx = Vector3(w*.5135 / h),
-			cy = (cx%cam.d).norm()*.5135,
-			r;
+		// Compute number of tiles, _nTiles_, to use for parallel rendering
+		Bounds2i sampleBounds = camera->sampleBound();
+		Vector2i sampleExtent = camera->filmSize();
+		const int tileSize = 16;
+		Point2i nTiles((sampleExtent.x + tileSize - 1) / tileSize,
+			           (sampleExtent.y + tileSize - 1) / tileSize);
 
-		const int samps = 1;
 
-		std::unique_lock<std::mutex> lock(_mutex);
-		_condVar.wait(lock);
+		ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
 
-		while (!_exitRendering)
 		{
-			CPUProfiler profiler("Render time",true);
-			#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
-			for (int y = 0; y < h; y++) // Loop over image rows
-			{
-				#if 0
-				#pragma omp critical
-				{
-					ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
+			ParallelFor2D([&](Point2i tile) {
+				// Render section of image corresponding to _tile_
+
+				// Get sampler instance for tile
+				int seed = tile.y * nTiles.x + tile.x;
+
+				// Compute sample bounds for tile
+				int x0 = sampleBounds.pMin.x + tile.x * tileSize;
+				int x1 = std::min(x0 + tileSize, sampleBounds.pMax.x);
+				int y0 = sampleBounds.pMin.y + tile.y * tileSize;
+				int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
+				Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
+
+				// Loop over pixels in tile to render them
+				for (Point2i pixel : tileBounds) {
 				}
-				#endif
-				unsigned short Xi[] = { y*y*y,0, iterates*iterates*iterates };
-				for (uint32_t x = 0; x < w; x++)   // Loop cols
-					for (int sy = 0, i = (y)* w + x; sy < 2; sy++)     // 2x2 subpixel rows
-						for (int sx = 0; sx < 2; sx++, r = Vector3())  // 2x2 subpixel cols
-						{
-							for (int s = 0; s < samps; s++)
-							{
-								Float r1 = 2 * erand48(Xi), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-								Float r2 = 2 * erand48(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-								//assert(r1 != r2);
-								Vector3 d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
-									cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
-								Ray ray(cam.o + d * 140, d.norm());
-								r = r + scene.myradiance(ray, 0, Xi) * (1. / samps);
-							}
-							//c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
-							c[i] = c[i] + r;
-						}
-			}
-			++iterates;
-			ss.str(""); ss.clear();
-			ss << "[Iterate: " << iterates << "] ssp:" << iterates * 4 << std::endl;
-			progress = ss.str();
-			Float invSPP = 1. / (iterates * 4);
 
-			// Convert to float
-			#pragma omp parallel for schedule(static, 1)      // OpenMP
-			for (int i = 0; i < w * h; i++ )
-			{
-				data[i*3 + 0] = clamp(c[i].x * invSPP);
-				data[i*3 + 1] = clamp(c[i].y * invSPP);
-				data[i*3 + 2] = clamp(c[i].z * invSPP);
-			}
-			this->runTest = true;
+				reporter.update();
+			}, nTiles);
+			reporter.done();
 		}
 	}
-
-	inline bool intersectScene(const Ray &r, Float &t, int &id)
-	{
-		Float n = sizeof(spheres) / sizeof(Sphere),
-			  d,
-			  inf = t = 1e20;
-		for (int i = int(n); i--;) if ((d = spheres[i].intersect(r)) && d < t) { t = d; id = i; }
-		return t < inf;
-	}
-
-	Vector3 radiance(const Ray &r, int depth, uint32_t &Xi)
-	{
-		Float t;                               // distance to intersection
-		int id = 0;                               // id of intersected object
-		if (!intersectScene(r, t, id)) return Vector3(); // if miss, return black
-		const Sphere &obj = spheres[id];        // the hit object
-		Vector3 x = r.o + r.d*t,
-			n = (x - obj.p).norm(),
-			nl = n.dot(r.d) < 0 ? n : n * -1,
-			f = obj.c;
-		Float p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // cmax refl
-
-		if (++depth > 4 && depth <= 6)
-		{
-			if (randomFloat(Xi) < p) f = f * (1 / p);
-			else return obj.e;
-		}
-		else if (depth > 6)
-		{
-			return obj.e;
-		}
-
-		if (obj.refl == DIFF) // Ideal DIFFUSE reflection
-		{
-			Float r1 = 2 * M_PI*randomFloat(Xi),
-				r2 = randomFloat(Xi),
-				r2s = sqrt(r2);
-			Vector3 w = nl,
-				u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(),
-				v = w % u;
-			Vector3 d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2)).norm();
-			return obj.e + f.cmult(radiance(Ray(x, d), depth, Xi));
-		}
-		else if (obj.refl == SPEC)            // Ideal SPECULAR reflection
-		{
-			return obj.e + f.cmult(radiance(Ray(x, r.d - n * 2 * n.dot(r.d)), depth, Xi));
-		}
-		else
-		{
-			Ray reflRay(x, r.d - n * 2 * n.dot(r.d));     // Ideal dielectric REFRACTION
-			bool into = n.dot(nl) > 0;                // Ray from outside going in?
-			Float nc = 1,       // Air
-				nt = 1.3,   // IOR  Glass
-				nnt = into ? nc / nt : nt / nc,
-				ddn = r.d.dot(nl),
-				cos2t;
-			if ((cos2t = 1 - nnt * nnt*(1 - ddn * ddn)) < 0)    // Total internal reflection
-			{
-				return obj.e + f.cmult(radiance(reflRay, depth, Xi));
-			}
-			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
-			Float a = nt - nc,
-				b = nt + nc,
-				R0 = a * a / (b*b),
-				c = 1 - (into ? -ddn : tdir.dot(n));
-			Float Re = R0 + (1 - R0)*c*c*c*c*c,
-				Tr = 1 - Re,
-				P = .25 + .5*Re,
-				RP = Re / P,
-				TP = Tr / (1 - P);
-			return obj.e + f.cmult(depth > 2 ? (randomFloat(Xi) < P ?   // Russian roulette
-				radiance(reflRay, depth, Xi)*RP : radiance(Ray(x, tdir), depth, Xi)*TP) :
-				radiance(reflRay, depth, Xi)*Re + radiance(Ray(x, tdir), depth, Xi)*Tr);
-		}
-	}
-
-	//// https://docs.microsoft.com/en-us/cpp/build/reference/openmp-enable-openmp-2-0-support?view=vs-2019
-	float* mei(std::string &log, int w = 1024, int h = 768, int samps = 1)
-	{
-		Ray cam(Vector3(50, 52, 295.6), Vector3(0, -0.042612, -1).norm()); // cam pos, dir
-		Vector3 cx = Vector3(w*.5135 / h),
-			cy = (cx%cam.d).norm()*.5135,
-			r;
-
-		static Vector3  *c = new Vector3[w * h];
-		static float *data = new float[w * h * 3];
-		static uint64_t count = 0;
-		std::ostringstream ss;
-
-		ss << " Sample Number: " << count << "\n";
-		log = ss.str();
-
-		if (count >= samps) // render done 
-		{
-			return data;
-		}
-
-#pragma omp parallel for schedule(static, 1) private(r) private(ss)       // OpenMP
-		for (int y = 0; y < h; y++) // Loop over image rows
-		{
-#if 0 
-			ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
-#pragma omp critical
-			{
-				log += ss.str();
-			}
-#endif
-			for (unsigned short x = 0, Xi[3] = { 0,0,y*y*y }; x < w; x++)   // Loop cols
-				for (int sy = 0, i = (y)* w + x; sy < 2; sy++)     // 2x2 subpixel rows
-					for (int sx = 0; sx < 2; sx++, r = Vector3())			  // 2x2 subpixel cols
-					{
-						//for (int s = 0; s < samps; s++)
-						{
-							Float r1 = 2 * randomFloat(Xi), dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-							Float r2 = 2 * randomFloat(Xi), dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2);
-							Vector3 d = cx * (((sx + .5 + dx) / 2 + x) / w - .5) +
-								cy * (((sy + .5 + dy) / 2 + y) / h - .5) + cam.d;
-							//r = r + radiance(Ray(cam.o+d*140, d.norm()), 0, Xi) * (1./samps);
-							r = r + radiance(Ray(cam.o + d * 140, d.norm()), 0, Xi);
-						} // Camera rays are pushed ^^^^^ forward to start in interior
-						c[i] = c[i] + Vector3(clamp(r.x), clamp(r.y), clamp(r.z)) * .25;
-					}
-		}
-
-		++count;
-
-		// Convert to float
-		for (int i = 0, j = 0; i < w * h * 3 && j < w * h; i += 3, j += 1)
-		{
-			data[i + 0] = c[j].x / count;
-			data[i + 1] = c[j].y / count;
-			data[i + 2] = c[j].z / count;
-		}
-
-		return data;
-	}
-#endif
-
-
     
 }

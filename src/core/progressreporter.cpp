@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 
-#ifdef RUN_ON_LINUX
+#ifdef ON_LINUX
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -102,7 +102,7 @@ namespace mei
 	// This function is OS dependt
 	static int terminalWidth(void)
 	{
-#ifdef RUN_ON_LINUX
+#ifdef ON_LINUX
 		struct winsize w;
 		if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) < 0)
 		{

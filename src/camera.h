@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "points.h"
 #include "Vector3.h"
 #include "randoms.h"
 
@@ -47,6 +48,16 @@ namespace mei
 				_w = w; _h = h;
 				constructCoordinate();
 			}
+		}
+
+		Vector2i filmSize() const
+		{
+			return Vector2i(_w, _h);
+		}
+
+		Bounds2i sampleBound() const
+		{
+			return Bounds2i(Point2i(0,0), Point2i(_w, _h));
 		}
 
 		Float aspect() const { return double(_w) / double(_h); };
