@@ -57,22 +57,28 @@ namespace mei
 	{
 	public:
 		ParallelForLoop(std::function<void(int64_t)> func, int64_t maxIndex, int chunkSize)
-			:mFunc(func)
+			: mFunc(std::move(func))
 			, mMaxIndex(maxIndex)
 			, mChunkSize(chunkSize)
 		{
 			//std::cout << "ParallelForLoop, max idex=" << mMaxIndex << " Constructed.\n";
 		}
-
+        ParallelForLoop(const std::function<void(Point2i)> &f, const Point2i &count)
+            : mFunc2D(f),
+            mMaxIndex(count.x * count.y),
+            mChunkSize(1){
+            mX = count.x;
+        }
 	public:
-
 		const int64_t mMaxIndex;
 		const int mChunkSize;
 
 		int64_t mNextIndex = 0;
 		int mActiveWorkers = 0;
 		std::function<void(int64_t)> mFunc;
+        std::function<void(Point2i)> mFunc2D;
 		ParallelForLoop *next = nullptr;
+        int mX = -1;
 
 	public:
 		bool Finished(void) const
@@ -120,6 +126,7 @@ namespace mei
 				for (uint64_t i = indexStart; i < indexEnd; ++i)
 				{
 					if (loop.mFunc) loop.mFunc(i);
+                    else if (loop.mFunc2D) loop.mFunc2D(Point2i(i% loop.mX, i/ loop.mX));
 				}
 				lock.lock();
 				loop.mActiveWorkers--;
@@ -172,6 +179,45 @@ namespace mei
 		}
 	}
 
+    void ParallelFor2D(std::function<void(Point2i)> func, const Point2i &count)
+    {
+		// Parallel is not available or no need.
+        if (threads.empty() || count.x * count.y <= 1)
+        {
+            for (int y = 0; y < count.y; ++y)
+                for (int x = 0; x < count.x; ++x) func(Point2i(x, y));
+            return;
+        }
+
+		// Create ParallelFor object, Add it into work list.
+		ParallelForLoop loop(std::move(func), count);
+		workListMutex.lock();
+		loop.next = workList;
+		workList = &loop;
+		workListMutex.unlock();
+
+		std::unique_lock<std::mutex> lock(workListMutex);
+		workListCondition.notify_all();
+
+		while (!loop.Finished())
+		{
+			int64_t indexStart = loop.mNextIndex;
+			int64_t indexEnd = std::min(indexStart + loop.mChunkSize, loop.mMaxIndex);
+			loop.mNextIndex = indexEnd;
+			if (loop.mNextIndex == loop.mMaxIndex) workList = loop.next;
+			loop.mActiveWorkers++;
+
+			lock.unlock(); // release lock after update loop parameter.
+
+			//std::cout << "Main Thread " << "starts work on [" << indexStart << ", " << indexEnd << "]\n";
+			for (uint64_t i = indexStart; i < indexEnd; ++i)
+			{
+                if (loop.mFunc2D) loop.mFunc2D(Point2i(i % loop.mX, i / loop.mX));
+			}
+			lock.lock();
+			loop.mActiveWorkers--;
+		}
+	}
 	// Called in Main Thread
 	void ParallelInit(void)
 	{
