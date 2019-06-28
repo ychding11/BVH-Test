@@ -255,6 +255,26 @@ namespace mei
 		T x, y;
 	};
 
+	template <typename T>
+	Point2<T> Min(const Point2<T> &pa, const Point2<T> &pb) {
+		return Point2<T>(std::min(pa.x, pb.x), std::min(pa.y, pb.y));
+	}
+
+	template <typename T>
+	Point2<T> Max(const Point2<T> &pa, const Point2<T> &pb) {
+		return Point2<T>(std::max(pa.x, pb.x), std::max(pa.y, pb.y));
+	}
+
+	template <typename T>
+	Point2<T> Floor(const Point2<T> &p) {
+		return Point2<T>(std::floor(p.x), std::floor(p.y));
+	}
+
+	template <typename T>
+	Point2<T> Ceil(const Point2<T> &p) {
+		return Point2<T>(std::ceil(p.x), std::ceil(p.y));
+	}
+
     typedef Point2<Float> Point2f;
     typedef Point2<int> Point2i;
 
@@ -338,6 +358,13 @@ namespace mei
 		// Bounds2 Public Data
 		Point2<T> pMin, pMax;
 	};
+
+
+	template <typename T>
+	bool InsideExclusive(const Point2<T> &pt, const Bounds2<T> &b) {
+		return (pt.x >= b.pMin.x && pt.x < b.pMax.x && pt.y >= b.pMin.y &&
+			pt.y < b.pMax.y);
+	}
 
 	typedef Bounds2<Float> Bounds2f;
 	typedef Bounds2<int> Bounds2i;
