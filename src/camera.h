@@ -110,6 +110,7 @@ namespace mei
 		Float getSample(unsigned short *X = nullptr);
         
 	public:
+        Film *pFilm;
 		Camera() = delete; //< No default constructor allowed
 		//Camera(uint32_t w, uint32_t _h, Float vfov);
 
@@ -121,6 +122,7 @@ namespace mei
 			, _vfov(vfov)
 		{
 			constructCoordinate();
+            pFilm = new Film(Point2i(_w,_h), Bounds2f(Point2f(0,0),Point2f(1.,1.)), "temp", 1.0);
 			_ss << "camera creation.\t dir:" << _d.str() << "\t pos:" << _p.str() << std::endl;
 		}
 

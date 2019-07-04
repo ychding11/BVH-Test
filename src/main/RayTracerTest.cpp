@@ -146,73 +146,19 @@ int main()
 		{
             mei::CPUProfiler profiler("ImGui");
 
-			if (ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0"))
-			{
-				//uiObserver->handleTestIndexChange(settings.testIndex);
-			}
-			if (settings.testIndex == 0)
-			{
-				if (ImGui::SliderInt("spp", &settings.samples, 1, 1024))
-				{
-				}
-				if (ImGui::SliderFloat2("translate", &settings.focusOffset.x, -0.5f, 0.5f))
-				{
-				}
-				if (ImGui::SliderFloat("zoom", &settings.positionOffset, 0.0f, 10.f))
-				{
-				}
-			}
-			else if (settings.testIndex == 1)
+			ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0");
 			{
 				ImGui::BeginGroup();
 
-				if (ImGui::Button("Save"))
-				{
-					stbi_write_png("output.png", settings.screenSize.x, settings.screenSize.y, 4, smallpter.getRenderResult(), settings.screenSize.x * 4);
-				}
+                ImGui::Button("Save");
 				ImGui::SameLine();
-				if (ImGui::Button("Pause"))
-				{
-				}
-
-				uint32_t sceneMask = settings.sceneMask;
-				if (ImGui::SliderFloat("IOR", &settings.ior, 1.0f, 2.2f))
-				{
-					uiObserverSmallpt->handleIORChange(settings.ior);
-				}
-				if (ImGui:: Checkbox("Sphere Scene", &settings.sphereScene))
-				{
-					if (settings.sphereScene)
-					{
-						sceneMask |= 0x1;
-					}
-					else
-					{
-						sceneMask &= ~0x1;
-					}
-				}
+				ImGui::Button("Pause");
 				ImGui::SameLine();
-				if (ImGui:: Checkbox("Triangle Scene", &settings.triangleScene))
-				{
-					if (settings.triangleScene)
-					{
-						sceneMask |= 0x2;
-					}
-					else
-					{
-						sceneMask &= ~0x2;
-					}
-				}
 				ImGui::ColorEdit4("clear color", gClearColor);
+                
 				ImGui::EndGroup();
-				if (sceneMask != settings.sceneMask)
-				{
-					settings.sceneMask = sceneMask;
-					uiObserverSmallpt->handleSceneMaskChange(settings.sceneMask);
-				}
 			}
 		}
-
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		double presentTime = glfwGetTime();
@@ -223,23 +169,15 @@ int main()
 		int sizeInBytes = (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3);
         {
             mei::CPUProfiler profiler("Test Running");
-            if (settings.testIndex == 0)
-            {
-                //bvhTracer.run();
-                //quadRender.handleNewRenderResult(bvhTracer.getRenderResult(), sizeInBytes);
-            }
-            else
-            {
-				smallpter.run();
-				progress = smallpter.getRenderProgress();
-                quadRender.handleNewRenderResult(smallpter.getRenderResult(), sizeInBytes);
-            }
+			smallpter.run();
+			progress = smallpter.getRenderProgress();
+            quadRender.handleNewRenderResult(smallpter.getRenderResult(), sizeInBytes);
         }
-		
         {
             mei::CPUProfiler profiler("Quad Render");
             quadRender.render();
         }
+        
         frameratedetector.stop();
 
         ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
@@ -255,8 +193,7 @@ int main()
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		// glfw swap Front & Back Buffers
-		glfwSwapBuffers(window);
+		glfwSwapBuffers(window); // glfw swap Front & Back Buffers
 	}
 
 	// Cleanup

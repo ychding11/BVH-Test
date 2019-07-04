@@ -1,7 +1,7 @@
 ﻿#include <math.h> 
 #include <stdlib.h>
 #include <stdio.h>  
-#include <omp.h>
+//#include <omp.h>
 
 #include "parallel.h"
 #include "progressreporter.h"
@@ -24,7 +24,8 @@ namespace mei
 	void smallptTest::render(void *data)
 	{
 		smallptTest &test = *(smallptTest*)data;
-		test.newsmallpt();
+		//test.newsmallpt();
+        test.renderTile();
 	}
 
 	smallptTest::smallptTest(int width, int height, int sample)
@@ -36,7 +37,8 @@ namespace mei
 		, _pauseRender(false)
 		, _ior(1.5f)
 	{
-		_camera = std::unique_ptr<Camera>(new Camera(scene._triangles.lookfrom, (scene._triangles.lookat - scene._triangles.lookfrom).norm(), w, h, 90.));
+        _scene = std::shared_ptr<Scene>(new Scene);
+		_camera = std::shared_ptr<Camera>(new Camera(_scene->_triangles.lookfrom, (_scene->_triangles.lookat - _scene->_triangles.lookfrom).norm(), w, h, 90.));
 		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
 
@@ -72,7 +74,7 @@ namespace mei
 
             {
 				std::lock_guard<std::mutex> lock(_sMutex);
-			    #pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
+			    //#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
 			    for (int y = 0; y < h; y++) // Loop over image rows
 			    {
 				    #if 0
@@ -86,7 +88,7 @@ namespace mei
                     {
                         int i = (y)* w + x;
                         Ray ray = _camera->getRay(x, y, Xi);
-                        r = scene.myradiance(ray, 0, Xi);
+                        r = _scene->myradiance(ray, 0, Xi);
 						{
                         c[i] = c[i] + r;
 						// Convert to float
@@ -116,7 +118,7 @@ namespace mei
 			           (sampleExtent.y + tileSize - 1) / tileSize);
 
 
-		ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
+		//ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
 
 		{
 			ParallelFor2D([&](Point2i tile) {
@@ -124,6 +126,7 @@ namespace mei
 
 				// Get sampler instance for tile
 				int seed = tile.y * nTiles.x + tile.x;
+                unsigned short Xi[] = { seed*seed*seed, 0, 0 };
 
 				// Compute sample bounds for tile
 				int x0 = sampleBounds.pMin.x + tile.x * tileSize;
@@ -132,13 +135,23 @@ namespace mei
 				int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
 				Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
 
+                std::unique_ptr<FilmTile> filmTile = camera->pFilm->GetFilmTile(tileBounds);
+
 				// Loop over pixels in tile to render them
 				for (Point2i pixel : tileBounds) {
+                    Ray ray = camera->getRay(pixel.x, pixel.y, Xi);
+                    Vector3 L = scene->myradiance(ray, 0, Xi);
+
+                    // Add camera ray's contribution to image
+                    filmTile->AddSample(pixel, L);
 				}
 
-				reporter.update();
+                // Merge image tile into _Film_
+                camera->pFilm->MergeFilmTile(std::move(filmTile));
+
+			//	reporter.update();
 			}, nTiles);
-			reporter.done();
+		//	reporter.done();
 		}
 	}
     

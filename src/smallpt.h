@@ -34,9 +34,10 @@ namespace mei
 		int runTest;
 		std::ostringstream ss;
 		std::string progress;
-		Scene scene;
+		//Scene scene;
 
-        std::unique_ptr<Camera> _camera; 
+        std::shared_ptr<Scene>  _scene; 
+        std::shared_ptr<Camera> _camera; 
 
 		std::mutex _mutex;
 		std::condition_variable _condVar;
@@ -83,6 +84,11 @@ namespace mei
 		}
 	private:
 		void newsmallpt();
+
+        void renderTile()
+        {
+            Render(_camera, _scene);
+        }
 
 	public:
 		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override
@@ -132,7 +138,7 @@ namespace mei
             _exitRendering = true;
             if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
 			delete _renderThread;
-			scene._ior = newIOR;
+			_scene->_ior = newIOR;
 			memset(data, 0, sizeof(data[0])*w*h);
 			memset(c, 0, sizeof(c[0])*w*h);
 			iterates = 0;
@@ -144,8 +150,8 @@ namespace mei
             _exitRendering = true;
             if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
 			delete _renderThread;
-			scene._sphereScene = newMask & 0x1 ? true : false;
-			scene._triangleScene = newMask & 0x2 ? true : false;
+			_scene->_sphereScene = newMask & 0x1 ? true : false;
+			_scene->_triangleScene = newMask & 0x2 ? true : false;
 			memset(data, 0, sizeof(data[0])*w*h);
 			memset(c, 0, sizeof(c[0])*w*h);
 			iterates = 0;
