@@ -95,8 +95,8 @@ namespace mei
 			
 			//< get rendering process
 			ss.str(""); ss.clear();
-			ss << "[width: " << _imageWidth << ",height: " << _imageHeight <<  "]" << std::endl;
-			ss << "[current: " << _curSPP << "] spp:" << _spp << std::endl;
+			ss << "[width: " << _imageWidth << ",height: " << _imageHeight <<  "]\t";
+			ss << "[spp: " << _curSPP << "/" << _spp << "]" << std::endl;
 			progress = ss.str();
 
 			//< spp reached, exit rendering thread

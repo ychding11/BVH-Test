@@ -2,17 +2,18 @@ cmake_minimum_required (VERSION 3.6)
 project (BVHTest)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Configuration types" FORCE)
-
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
 
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
+
+## 3rd party moudle
+#######################################################################################
 if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog")
   message(FATAL_ERROR "The glog submodule directory is missing! "
     "You probably did not clone the project with --recursive, or first checked out "
     "before it was added. It is possible to recover by running "
     "\"git submodule update --init --recursive\"")
 endif()
-
-SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
 
 if(WIN32)
   add_definitions( -D GOOGLE_GLOG_DLL_DECL= )
@@ -160,6 +161,11 @@ foreach(f ${HW_SRC_FILES})
 endforeach()
 
 set(ENABLE_HIDECONSOLE_BUILD FALSE CACHE BOOL "TRUE to hide console for Windows sys" FORCE)
+if(ENABLE_HIDECONSOLE_BUILD)
+	message(STATUS "Console is hidden")
+else()
+	message(STATUS "Console is visible")
+endif()
 
 if(WINDOWS)
   set(GUI_TYPE WIN32)
@@ -168,19 +174,20 @@ elseif(MACOSX)
 endif()
 
 find_package(OpenMP)
-
 if(OPENMP_FOUND)
-if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /openmp")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /openmp")
-    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif()
-endif()
-
-if(MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+	if(MSVC)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /openmp")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /openmp")
+		#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+	endif()
 endif()
 
+if(MSVC)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
+
+## Linker Options
+#######################################################################################
 if(MSVC)
     if(ENABLE_HIDECONSOLE_BUILD)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
@@ -190,12 +197,10 @@ if(MSVC)
         set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE")
     endif()
 endif(MSVC)
-
 SET(LINK_OPTIONS " ")
 
-#--------------------------------------------------------------------
-# preproc
-#--------------------------------------------------------------------
+## Macro Defines
+#######################################################################################
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 add_definitions(-D__STDC_FORMAT_MACROS)
 add_definitions(-DBX_CONFIG_ENABLE_MSVC_LEVEL4_WARNINGS=1)
@@ -204,20 +209,14 @@ add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 add_definitions(-DUSE_DL_PREFIX)
 add_definitions(-DGLEW_STATIC)
-
 if(${ENABLE_HIDECONSOLE_BUILD})
-if(MSVC)
-    add_definitions(-DWIN32)
-    add_definitions(-D_WIN32)
-    add_definitions(-DNOMINMAX)
-endif()
+	if(MSVC)
+		add_definitions(-DWIN32)
+		add_definitions(-D_WIN32)
+		add_definitions(-DNOMINMAX)
+	endif()
 endif()
 
-if(ENABLE_HIDECONSOLE_BUILD)
-message(STATUS "Console is hidden")
-else()
-message(STATUS "Console is visible")
-endif()
 
 macro(default_property EXE_NAME)
     message(STATUS "set default output property of target:${EXE_NAME}")
@@ -227,6 +226,12 @@ macro(default_property EXE_NAME)
     set_target_properties(${EXE_NAME} PROPERTIES DEBUG_POSTFIX "_d")
     set_target_properties(${EXE_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX "RelWithDebInfo")
     set_target_properties(${EXE_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+	if(ENABLE_HIDECONSOLE_BUILD)
+		if(WINDOWS)
+			set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
+			set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+		endif()
+	endif()
 endmacro()
 
 #--------------------------------------------------------------------
@@ -246,14 +251,7 @@ add_executable ( ${EXE_NAME} ${TEST_SOURCE} ${SRC_FILES})
 target_link_libraries( ${EXE_NAME} glog )
 default_property(${EXE_NAME})
 
-#ADD_TEST ( pbrt_unit_test pbrt_test )
 
-if(ENABLE_HIDECONSOLE_BUILD)
-if(WINDOWS)
-set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-endif()
-endif()
 #######################################################################################
 ##For reference
 ##https://cmake.org/cmake/help/latest/manual/cmake-properties.7.html#target-properties

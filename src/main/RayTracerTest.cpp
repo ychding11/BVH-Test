@@ -93,7 +93,7 @@ static inline void DrawSettingsImGUI(void)
 
 	mei::CPUProfiler::begin();
 	{
-		mei::CPUProfiler profiler("ImGui");
+		mei::CPUProfiler profiler("GUI Pass");
 		{
 			ImGui::BeginGroup();
 
@@ -113,9 +113,9 @@ static inline void DrawLogsImGUI(const std::string &report)
 {
 	ImGui::Begin("Logs");
 
-	ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
+	//ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
 	ImGui::Text("%s", report.c_str());
-	ImGui::EndChild();
+	//ImGui::EndChild();
 
 	ImGui::End();
 }
@@ -186,30 +186,7 @@ int main()
 
 		BeginFrameImGUI();
 
-		ImGui::Begin("Settings");
-
-        mei::CPUProfiler::begin();
-		{
-            mei::CPUProfiler profiler("ImGui");
-
-			ImGui::Combo("Scene", &settings.testIndex, "bvhTest\0smallpt\0");
-			{
-				ImGui::BeginGroup();
-
-                ImGui::Button("Save");
-				ImGui::SameLine();
-				ImGui::Button("Pause");
-				ImGui::SameLine();
-				ImGui::ColorEdit4("clear color", gClearColor);
-                
-				ImGui::EndGroup();
-			}
-		}
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
-			glfwSetWindowShouldClose(window, GL_TRUE);
-		double presentTime = glfwGetTime();
-		update((float)(presentTime - lastTime), window);
-		lastTime = presentTime;
+		DrawSettingsImGUI(); //< draw GUI here
 
 		std::string progress;
 		int sizeInBytes = (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3);
@@ -220,21 +197,28 @@ int main()
             quadRender.handleNewRenderResult(smallpter.getRenderResult(), sizeInBytes);
         }
         {
-            mei::CPUProfiler profiler("Quad Render");
+            //mei::CPUProfiler profiler("Quad Render");
             quadRender.render();
         }
         
         frameratedetector.stop();
 
+		msgStream.str("");
 		msgStream.clear();
 		msgStream << "FPS:" << frameratedetector.framerate() << "\n";
 		msgStream << mei::CPUProfiler::end().c_str();
 		msgStream << progress.c_str();
 		DrawLogsImGUI(msgStream.str());
         
-		EndFrameImGUI();
+		EndFrameImGUI(); //< draw GUI as final pass
 
 		glfwSwapBuffers(window); // glfw swap Front & Back Buffers
+
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE))
+			glfwSetWindowShouldClose(window, GL_TRUE);
+		double presentTime = glfwGetTime();
+		update((float)(presentTime - lastTime), window);
+		lastTime = presentTime;
 	}
 
 	// Cleanup
