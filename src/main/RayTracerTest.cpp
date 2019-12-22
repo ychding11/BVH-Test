@@ -71,6 +71,55 @@ void frameBufferSizeCallback(GLFWwindow *window, int width, int height)
     settings.screenSize.x = width; settings.screenSize.y = height;
 }
 
+
+static inline void BeginFrameImGUI(void)
+{
+	// Start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+}
+
+static inline void EndFrameImGUI(void)
+{
+	// ImGui Rendering
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+static inline void DrawSettingsImGUI(void)
+{
+	ImGui::Begin("Settings");
+
+	mei::CPUProfiler::begin();
+	{
+		mei::CPUProfiler profiler("ImGui");
+		{
+			ImGui::BeginGroup();
+
+			ImGui::Button("Save");
+			ImGui::SameLine();
+			ImGui::Button("Pause");
+			ImGui::SameLine();
+			ImGui::ColorEdit4("clear color", gClearColor);
+
+			ImGui::EndGroup();
+		}
+	}
+	ImGui::End();
+}
+
+static inline void DrawLogsImGUI(const std::string &report)
+{
+	ImGui::Begin("Logs");
+
+	ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
+	ImGui::Text("%s", report.c_str());
+	ImGui::EndChild();
+
+	ImGui::End();
+}
+
 int main()
 {
 	srand(unsigned int(time(0)));
@@ -135,10 +184,7 @@ int main()
         frameratedetector.start();
 		glfwPollEvents();
 
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+		BeginFrameImGUI();
 
 		ImGui::Begin("Settings");
 
@@ -180,18 +226,13 @@ int main()
         
         frameratedetector.stop();
 
-        ImGui::BeginChild("Profiler&Log", ImVec2(0, 0), true);
-		ImGui::Text("Frame time %.3f ms\t(%.1f FPS)", frameratedetector.frametime(), frameratedetector.framerate());
-        ImGui::Text("%s", mei::CPUProfiler::end().c_str());
-        ImGui::Text("-------------------");
-        ImGui::Text("%s", progress.c_str());
-        ImGui::EndChild();
-
-		ImGui::End();
-
-		// ImGui Rendering
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		msgStream.clear();
+		msgStream << "FPS:" << frameratedetector.framerate() << "\n";
+		msgStream << mei::CPUProfiler::end().c_str();
+		msgStream << progress.c_str();
+		DrawLogsImGUI(msgStream.str());
+        
+		EndFrameImGUI();
 
 		glfwSwapBuffers(window); // glfw swap Front & Back Buffers
 	}
