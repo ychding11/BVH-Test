@@ -19,6 +19,7 @@ namespace mei
 {
 	void Render(std::shared_ptr<Camera> camera, std::shared_ptr<Scene> scene);
 
+	// smallptTest as a basic Test
 	class smallptTest : public Observer
 	{
 	public:
@@ -26,14 +27,18 @@ namespace mei
         static std::mutex _sMutex;
 
 	private:
-		int w, h;
-		int spp;
-		int iterates;
-		Vector3 *c;
-		float *data;
-		int runTest;
-		std::ostringstream ss;
-		std::string progress;
+		uint32_t _imageWidth;
+		uint32_t _imageHeight;
+		uint32_t _imageSizeInPixel;
+		uint32_t _spp;
+		uint32_t _curSPP = 0;
+		float _ior;
+		Vector3 *_cumulativePixels = nullptr;
+		float *_pixels = nullptr;
+		float *_renderResult = nullptr;
+		bool _renderSettingIsDirty = true;
+		bool _renderTargetIsDirty = true;
+
 		//Scene scene;
 
         std::shared_ptr<Scene>  _scene; 
@@ -41,28 +46,69 @@ namespace mei
 
 		std::mutex _mutex;
 		std::condition_variable _condVar;
-		std::thread *_renderThread;
-        bool _exitRendering;
-		bool _isRendering; //< rendering thread responsible for this
+		std::thread *_renderThread = nullptr;
+        bool _exitRendering = false; //< tell rendering thread to exit
+		bool _isRendering = false; //< rendering thread is working 
 		bool _pauseRender;
-		float _ior;
+
+		std::ostringstream ss;
+		std::string progress;
+
+	private:
+		void startRenderingThread(void)
+		{
+			CHECK(_renderThread == nullptr); //< only one rendering thread is allowed
+			_exitRendering = false;
+			_isRendering = false;
+			_renderThread = new std::thread(smallptTest::render, this);
+		}
+		void exitRenderingThread(void)
+		{
+			if (_renderThread == nullptr) return;
+			{
+				_exitRendering = true;
+				if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
+			    _isRendering = false;
+			}
+			CHECK(_renderThread->joinable()==false);
+			delete _renderThread;
+			_renderThread = nullptr;
+		}
+
+		void clearRenderTargets()
+		{
+			memset(_pixels, 0, sizeof(_pixels[0]) * _imageSizeInPixel);
+			memset(_cumulativePixels, 0, sizeof(_cumulativePixels[0]) * _imageSizeInPixel);
+			memset(_renderResult, 0, sizeof(_renderResult[0]) * _imageSizeInPixel);
+		}
+
+		void reclaimRenderTargets()
+		{
+			_cumulativePixels = new Vector3[_imageSizeInPixel];
+			_pixels           = new float[_imageSizeInPixel * 3];
+			_renderResult     = new float[_imageSizeInPixel * 3];
+		}
+
+		void destroyRenderTargets()
+		{
+			delete _cumulativePixels;
+			delete _pixels;
+			delete _renderResult;
+		}
 
 	public:
 		smallptTest(int width = 720, int height = 720, int sample = 1);
 
 		~smallptTest()
 		{
-            _exitRendering = true;
-            if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
-			delete _renderThread;
-			delete c;
-			delete data;
+			exitRenderingThread();
+			destroyRenderTargets();
 		}
 
 		virtual void* getRenderResult() const override
 		{
-            std::lock_guard<std::mutex> lock(_sMutex);
-            return data;
+            //std::lock_guard<std::mutex> lock(_sMutex);
+            return _pixels;
 		}
 
 		std::string renderLog() const { return ss.str(); }
@@ -77,11 +123,13 @@ namespace mei
 
 		void run()
 		{
-			if (runTest)
+			if (_renderSettingIsDirty)
 			{
-				_condVar.notify_one();
+				startRenderingThread();
+				_renderSettingIsDirty = false;
 			}
 		}
+
 	private:
 		void newsmallpt();
 
@@ -91,18 +139,68 @@ namespace mei
         }
 
 	public:
+
+		//< Render Target change:
+		//< 1. Exit current rendering thread.
+		//< 2. Set new settings, reclaim memory.
+		//< 3. Set flag to tell render setting is dirty
 		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override
 		{
-            std::lock_guard<std::mutex> lock(_sMutex);
+            //std::lock_guard<std::mutex> lock(_sMutex);
+			exitRenderingThread();
 			_camera->setImageSize(newScreenSize.x, newScreenSize.y);
-            w = newScreenSize.x; h = newScreenSize.y;
-			delete c; delete data; //< delete nullptr is OK
-		    c = new Vector3[w * h]; data = new float[w * h * 3];
-			assert((c && data));
-			memset(data, 0, sizeof(data[0])*w*h);
-			memset(c, 0, sizeof(c[0])*w*h);
-			iterates = 0;
+            _imageWidth  = newScreenSize.x;
+			_imageHeight = newScreenSize.y;
+			_imageSizeInPixel = _imageWidth * _imageHeight;
+			_renderSettingIsDirty = true;
+			destroyRenderTargets();
+			reclaimRenderTargets();
+			clearRenderTargets();
 		}
+
+		//< Render ssp change:
+		//< 1. Exit current rendering thread.
+		//< 2. Set new settings, clear render memory.
+		//< 3. Set flag to tell render setting is dirty
+		virtual void handleSampleCountChange(int sample) override
+		{
+			if (this->_spp != sample)
+			{
+				exitRenderingThread();
+
+				this->_spp = sample;
+				_renderSettingIsDirty = true;
+				clearRenderTargets();
+			}
+		}
+
+		//< Render Target change:
+		//< 1. Exit current rendering thread.
+		//< 2. Set new settings, clear memory.
+		//< 3. Set flag to tell render setting is dirty
+		virtual void handleIORChange(float newIOR) override
+		{
+			if (_scene->_ior == newIOR) return;
+
+			exitRenderingThread();
+			_scene->_ior = newIOR;
+			_renderSettingIsDirty = true;
+			clearRenderTargets();
+		}
+
+		//< Render Target change:
+		//< 1. Exit current rendering thread.
+		//< 2. Set new settings, clear render memory.
+		//< 3. Set flag to tell render setting is dirty
+		virtual void handleSceneMaskChange(uint32_t newMask) override
+		{
+			exitRenderingThread();
+			_scene->_sphereScene = newMask & 0x1 ? true : false;
+			_scene->_triangleScene = newMask & 0x2 ? true : false;
+			_renderSettingIsDirty = true;
+			clearRenderTargets();
+		}
+
 		virtual void handleFocusOffsetChange(const glm::fvec2 &newFocusOffset)
 		{
 			assert(0 && "This function should NOT be called before override !!!");
@@ -118,45 +216,6 @@ namespace mei
 		virtual void handleTestIndexChange(int newTestIndex)
 		{
 			assert(0 && "This function should NOT be called before override !!!");
-		}
-		virtual void handleSampleCountChange(int sample) override
-		{
-			if (this->spp != sample / 4)
-			{
-				// signal rendering thread stop
-				// wait for rendering thread's signal
-				this->spp = sample / 4;
-				memset(data, 0, sizeof(data[0])*w*h);
-				memset(c, 0, sizeof(c[0])*w*h);
-				iterates = 0;
-				runTest = true;
-			}
-		}
-
-		virtual void handleIORChange(float newIOR) override
-		{
-            _exitRendering = true;
-            if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
-			delete _renderThread;
-			_scene->_ior = newIOR;
-			memset(data, 0, sizeof(data[0])*w*h);
-			memset(c, 0, sizeof(c[0])*w*h);
-			iterates = 0;
-            _exitRendering = false;
-		    _renderThread = new std::thread(smallptTest::render, this);
-		}
-		virtual void handleSceneMaskChange(uint32_t newMask) override
-		{
-            _exitRendering = true;
-            if (_renderThread) _renderThread->join(); //< wait render thread exit, then delete resource.
-			delete _renderThread;
-			_scene->_sphereScene = newMask & 0x1 ? true : false;
-			_scene->_triangleScene = newMask & 0x2 ? true : false;
-			memset(data, 0, sizeof(data[0])*w*h);
-			memset(c, 0, sizeof(c[0])*w*h);
-			iterates = 0;
-            _exitRendering = false;
-		    _renderThread = new std::thread(smallptTest::render, this);
 		}
 	};
 

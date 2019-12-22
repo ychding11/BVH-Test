@@ -24,58 +24,51 @@ namespace mei
 	void smallptTest::render(void *data)
 	{
 		smallptTest &test = *(smallptTest*)data;
-		//test.newsmallpt();
-        test.renderTile();
+		test.newsmallpt();
+        //test.renderTile();
 	}
 
 	smallptTest::smallptTest(int width, int height, int sample)
-		: w(width), h(height), spp(sample), iterates(0)
-		, runTest(true)
-		, c(nullptr), data(nullptr)
+		: _imageWidth(width), _imageHeight(height), _spp(sample) 
 		, _renderThread(nullptr)
         , _exitRendering(false)
 		, _pauseRender(false)
 		, _ior(1.5f)
 	{
+		_imageSizeInPixel = _imageHeight * _imageWidth;
         _scene = std::shared_ptr<Scene>(new Scene);
-		_camera = std::shared_ptr<Camera>(new Camera(_scene->_triangles.lookfrom, (_scene->_triangles.lookat - _scene->_triangles.lookfrom).norm(), w, h, 90.));
+		_camera = std::shared_ptr<Camera>(new Camera(_scene->_triangles.lookfrom, (_scene->_triangles.lookat - _scene->_triangles.lookfrom).norm(), _imageWidth, _imageHeight, 90.));
+		//_camera = std::shared_ptr<Camera>(new Camera(Vector3(50,52,295.6), Vector3(0, -0.042612, -1).norm(), _imageWidth, _imageHeight, 90.));
 		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
 
 		this->handleSceneMaskChange(0x2);
-		_renderThread = new std::thread(smallptTest::render, this);
 	}
 
     std::mutex smallptTest::_sMutex;
 
+	//< 1. Start Rendering Thread When Test Created.
+	//< 2. When ssp reached, Exit Rendering Thread.
+	//< 3. When in Rendering, Only shadow data can be accessed.
 	void smallptTest::newsmallpt(void)
 	{
 		Vector3 r;
-		_isRendering = false;
-		std::unique_lock<std::mutex> lock(_mutex);
-		_condVar.wait(lock);
+
+		CHECK(_isRendering == false);
 
 		while (!_exitRendering)
 		{
-			CPUProfiler profiler("Render time",true);
+			CPUProfiler profiler("Render Time",true);
 			
-			if (_pauseRender)
-			{
-				_isRendering = false;
-		        _condVar.wait(lock);
-			}
-			else
-			{
-				_isRendering = true;
-			}
+			_isRendering = true;
 
-			++iterates;
-			Float invSPP = 1. / double(iterates);
+			++_curSPP;
+			Float invSPP = 1. / double(_spp);
 
             {
-				std::lock_guard<std::mutex> lock(_sMutex);
-			    //#pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
-			    for (int y = 0; y < h; y++) // Loop over image rows
+				//std::lock_guard<std::mutex> lock(_sMutex);
+			    #pragma omp parallel for schedule(static, 1) private(r)       // OpenMP
+			    for (int y = 0; y < _imageHeight; y++) // Loop over image rows
 			    {
 				    #if 0
 				    #pragma omp critical
@@ -83,28 +76,36 @@ namespace mei
 					    ss << " Thread Number: " << omp_get_num_threads() << "\t Thread ID: " << omp_get_thread_num() << "\n";
 				    }
 				    #endif
-				    unsigned short Xi[] = { y*y*y,0, iterates*iterates*iterates };
-                    for (uint32_t x = 0; x < w; x++)   // Loop cols
+				    unsigned short Xi[] = { y*y*y, 0, _curSPP*_curSPP*_curSPP}; // random seed is important
+                    for (uint32_t x = 0; x < _imageWidth; x++)   // Loop cols
                     {
-                        int i = (y)* w + x;
+                        int i = y * _imageWidth + x;
                         Ray ray = _camera->getRay(x, y, Xi);
                         r = _scene->myradiance(ray, 0, Xi);
 						{
-                        c[i] = c[i] + r;
-						// Convert to float
-						data[i*3 + 0] = clamp(c[i].x * invSPP);
-						data[i*3 + 1] = clamp(c[i].y * invSPP);
-						data[i*3 + 2] = clamp(c[i].z * invSPP);
+							_cumulativePixels[i] = _cumulativePixels[i] + r*invSPP;
+							// Convert to float
+							_pixels[i*3 + 0] = clamp(_cumulativePixels[i].x );
+							_pixels[i*3 + 1] = clamp(_cumulativePixels[i].y );
+							_pixels[i*3 + 2] = clamp(_cumulativePixels[i].z );
 						}
                     }
 			    }
             }
+			
+			//< get rendering process
 			ss.str(""); ss.clear();
-			ss << "[width: " << w << ",height: " << h <<  "]" << std::endl;
-			ss << "[Iterate: " << iterates << "] ssp:" << iterates << std::endl;
+			ss << "[width: " << _imageWidth << ",height: " << _imageHeight <<  "]" << std::endl;
+			ss << "[current: " << _curSPP << "] spp:" << _spp << std::endl;
 			progress = ss.str();
-			runTest = true;
-		}
+
+			//< spp reached, exit rendering thread
+			if (_curSPP == _spp)
+			{
+				_isRendering = false;
+				break;
+			}
+		}// while end
 		_isRendering = false;
 	}
 

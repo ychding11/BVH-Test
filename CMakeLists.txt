@@ -1,8 +1,6 @@
 cmake_minimum_required (VERSION 3.6)
 project (BVHTest)
 
-
-
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Configuration types" FORCE)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
@@ -248,7 +246,7 @@ add_executable ( ${EXE_NAME} ${TEST_SOURCE} ${SRC_FILES})
 target_link_libraries( ${EXE_NAME} glog )
 default_property(${EXE_NAME})
 
-ADD_TEST ( pbrt_unit_test pbrt_test )
+#ADD_TEST ( pbrt_unit_test pbrt_test )
 
 if(ENABLE_HIDECONSOLE_BUILD)
 if(WINDOWS)

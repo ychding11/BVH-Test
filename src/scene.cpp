@@ -196,8 +196,8 @@ namespace mei
 
 	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit) const
 	{
-       // return intersecTri(r, hit);
-       return intersecBVH(r, hit);
+       return intersecTri(r, hit);
+       //return intersecBVH(r, hit);
 	}
 
 	bool Scene::init()
@@ -221,6 +221,7 @@ namespace mei
 
 	bool Scene::intersec(const Ray& r, IntersectionInfo &hit) const
 	{
+#if 1
 		bool a = false;
 		if (_sphereScene)
 		{
@@ -231,6 +232,9 @@ namespace mei
 			a = _triangles.intersec(r, hit) || a;
 		}
 		return a;
+#else
+		return _spheres.intersec(r, hit);
+#endif
 	}
 
     //! caculate reflected ray direction. dot(in, n) < 0
@@ -287,7 +291,7 @@ namespace mei
 		Vector3 x = hitInfo.hit, n = hitInfo.object->getNormal(hitInfo);
 		Vector3 nl = n.dot(r.d) < 0 ? n : n * -1;
 		Vector3 f = obj.c;
-		const Float p = .2; //< RR stop Pr
+		const Float p = .1; //< RR stop Pr
 
 		if (++depth > 4 && depth <= 6)
 		{

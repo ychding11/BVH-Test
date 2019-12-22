@@ -21,7 +21,7 @@ struct Setting
         : testIndex(1)
         , objectNum(10)
 		, samples(4)
-        , screenSize(768, 768)
+        , screenSize(500, 500)
         , focusOffset(0.f, 0.f)
         , positionOffset(0.f)
 		, ior(1.5f)
