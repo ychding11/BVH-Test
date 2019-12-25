@@ -1,26 +1,65 @@
 #ifndef PRIMITIVES_H
 #define PRIMITIVES_H
 
-#include "Vector3.h"
+#include "3d.h"
+#include "interactions.h"
 
 namespace mei
 {
 	enum Refl_t { DIFF, SPEC, REFR };  // material types
-
-    struct Object;
-
-	struct IntersectionInfo
+	// Primitive Declarations
+	class Primitive
 	{
-		Float t; //< hit distance along the ray
-		const Object* object; //< hit object
-		Vector3 hit; //< hit point
-		IntersectionInfo() : t(inf), object(nullptr), hit() {}
+	public:
+		// Primitive Interface
+		virtual ~Primitive();
+		virtual Bounds3f WorldBound() const = 0;
+		virtual bool Intersect(const Ray &r, SurfaceInteraction *) const = 0;
+		virtual bool IntersectP(const Ray &r) const = 0;
+
+#if 0
+		virtual const AreaLight *GetAreaLight() const = 0;
+		virtual const Material *GetMaterial() const = 0;
+		virtual void ComputeScatteringFunctions(SurfaceInteraction *isect,
+			MemoryArena &arena,
+			TransportMode mode,
+			bool allowMultipleLobes) const = 0;
+#endif
 	};
 
+	// GeometricPrimitive Declarations
+	class GeometricPrimitive : public Primitive
+	{
+	public:
+		// GeometricPrimitive Public Methods
+		virtual Bounds3f WorldBound() const;
+		virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
+		virtual bool IntersectP(const Ray &r) const;
+
+		GeometricPrimitive(const std::shared_ptr<Shape> &shape);
+#if 0
+		const AreaLight *GetAreaLight() const;
+		const Material *GetMaterial() const;
+		void ComputeScatteringFunctions(SurfaceInteraction *isect,
+			MemoryArena &arena, TransportMode mode,
+			bool allowMultipleLobes) const;
+#endif
+
+	private:
+		// GeometricPrimitive Private Data
+		std::shared_ptr<Shape> shape;
+#if 0
+		std::shared_ptr<Material> material;
+		std::shared_ptr<AreaLight> areaLight;
+		MediumInterface mediumInterface;
+#endif
+	};
+
+#if 0
     struct AABB
     {
-        Vector3 bmin;
-        Vector3 bmax;
+        Vector3f bmin;
+        Vector3f bmax;
 
         AABB()
         {
@@ -79,31 +118,6 @@ namespace mei
         }
 
     };
-
-    struct Object
-    {
-    public:
-        Vector3 e; //< emission
-        Vector3 c; //< color
-        Refl_t refl; //< reflection type (DIFFuse, SPECular, REFRactive)
-
-    public:
-        Object(Vector3 emi = Vector3(), Vector3 color = Vector3(0.5, 0.5, 0.5), Refl_t type = DIFF)
-            : e(emi), c(color), refl(type) { }
-    public:
-        //! All "Objects" must be able to test for intersections with rays.
-        virtual bool getIntersection(const Ray& ray, IntersectionInfo* intersection) const = 0;
-
-        //! Return an object normal based on an intersection
-        virtual Vector3 getNormal(const IntersectionInfo& I) const = 0;
-
-        //! Return a bounding box for this object
-        virtual AABB getBBox() const = 0;
-
-        //! Return the centroid for this object. (Used in BVH Sorting)
-        virtual Vector3 getCentroid() const = 0;
-    };
-
 
     struct Sphere : public Object
     {
@@ -221,7 +235,7 @@ namespace mei
 			return (_v0+_v1+_v2) / 3.;
 		}
     };
-
+#endif
 
 }
 

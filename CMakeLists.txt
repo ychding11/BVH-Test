@@ -234,10 +234,9 @@ macro(default_property EXE_NAME)
 	endif()
 endmacro()
 
-#--------------------------------------------------------------------
-# target 
-#--------------------------------------------------------------------
-set(EXE_NAME "OBJRender")
+## Target
+#######################################################################################
+set(EXE_NAME "MeiRender")
 add_executable(${EXE_NAME} ${EXE_SRC_FILES} ${HW_SRC_FILES} ${SRC_FILES} ${EXT_FILES})
 target_link_libraries(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} glog)
 default_property(${EXE_NAME})

@@ -170,6 +170,17 @@ namespace mei
 		//! used for hit algorithms test.
 		Vector3 hittest(const Ray &r);
 
+		//< used for something like shadow ray. It's supposed to be high efficiency 
+		bool HitAny(const Ray &r);
+
+	public:
+		const Bounds3f &WorldBound() const { return worldBound; }
+		bool Intersect(const Ray &ray, SurfaceInteraction *isect) const;
+		bool IntersectP(const Ray &ray) const;
+	private:
+		// Scene Private Data
+		std::shared_ptr<Primitive> aggregate;
+		Bounds3f worldBound;
     };
 
 }//namespace
