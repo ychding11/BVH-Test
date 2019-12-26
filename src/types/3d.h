@@ -552,6 +552,13 @@ namespace mei
 			(v1x * v2y) - (v1y * v2x));
 	}
 
+    template <typename T>
+    inline T Dot(const Normal3<T> &n1, const Normal3<T> &n2) {
+        DCHECK(!n1.HasNaNs() && !n2.HasNaNs());
+        return n1.x * n2.x + n1.y * n2.y + n1.z * n2.z;
+    }
+
+
 	template <typename T>
 	inline Vector3<T> Normalize(const Vector3<T> &v) {
 		return v / v.Length();

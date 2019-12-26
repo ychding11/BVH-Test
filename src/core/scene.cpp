@@ -14,10 +14,29 @@
 namespace mei
 {
 
+	static int64_t nIntersectionTests; 
+	static int64_t nShadowTests;
+
+	// Scene Method Definitions
+	bool Scene::Intersect(const Ray &ray, SurfaceInteraction *isect) const
+	{
+		++nIntersectionTests;
+		DCHECK_NE(ray.d, Vector3f(0, 0, 0));
+		return aggregate->Intersect(ray, isect);
+	}
+
+	bool Scene::IntersectP(const Ray &ray) const
+	{
+		++nShadowTests;
+		DCHECK_NE(ray.d, Vector3f(0, 0, 0));
+		return aggregate->IntersectP(ray);
+    }
+
 #ifndef M_PI
 #define M_PI  3.1415926
 #endif
 
+#if 0
 	static Sphere spheres[] =
 	{
 		//Scene: radius, position, emission, color, material
@@ -33,40 +52,7 @@ namespace mei
 		 Sphere(600, Vector3(50,681.6 - .27,81.6),Vector3(12,12,12),  Vector3(), DIFF) //Lite
 	};
 
-	void SphereScene::init()
-	{
-		int n = sizeof(spheres) / sizeof(Sphere);
-		for (int i = n; i--; )
-		{
-			_prims.push_back(&spheres[i]);
-		}
-		_initialized = true;
-	}
 
-	bool SphereScene::intersec(const Ray&r, IntersectionInfo& hit) const
-	{
-#if defined(USE_BVH)
-		//! wait for BVH implement
-#else
-		Float  d, t = inf;
-		int n = _prims.size(), id = -1;
-		for (int i = n; i--;)
-		{
-			Sphere& sphere = *(Sphere*)_prims[i];
-			if ((d = sphere.intersect(r)) && d < t)
-			{
-				t = d; id = i;
-			}
-		}
-		if (t < inf && t < hit.t)
-		{
-			hit.t = t;
-			hit.hit = r.o + r.d*t;
-			hit.object = _prims[id];
-		}
-		return t < inf && t == hit.t;
-#endif
-	}
 
     // only read positon triangle data from obj file
     void ObjParser::loadObj()
@@ -194,86 +180,10 @@ namespace mei
         return false;
 	}
 
-	bool TriangleScene::intersec(const Ray& r, IntersectionInfo &hit) const
-	{
-       return intersecTri(r, hit);
-       //return intersecBVH(r, hit);
-	}
-
-	bool Scene::init()
-	{
-		_initialized = true;
-		return true;
-	}
-
-	//! used for hit algorithms test.
-	Vector3 Scene::hittest(const Ray &r)
-	{
-		IntersectionInfo hitInfo;
-		if (!intersec(r, hitInfo)) return Vector3(); // if miss, return black
-		const Object &obj = *hitInfo.object;        // the hit object
-		Vector3 x = hitInfo.hit,
-			n = hitInfo.object->getNormal(hitInfo),
-			nl = n.dot(r.d) < 0 ? n : n * -1,
-			f = obj.c;
-		return f;
-	}
-
-	bool Scene::intersec(const Ray& r, IntersectionInfo &hit) const
-	{
-#if 1
-		bool a = false;
-		if (_sphereScene)
-		{
-			a = _spheres.intersec(r, hit) || a;
-		}
-		if (_triangleScene)
-		{
-			a = _triangles.intersec(r, hit) || a;
-		}
-		return a;
-#else
-		return _spheres.intersec(r, hit);
 #endif
-	}
+	
 
-    //! caculate reflected ray direction. dot(in, n) < 0
-    //! in is unit vector, n is unit vector, result is unit vector
-	inline Vector3 reflect(const Vector3 &in, const Vector3 &n)
-	{
-		return in - n * 2 * n.dot(in);
-	}
-
-    //! Schlick's approximation:
-    //!  https://en.wikipedia.org/wiki/Schlick%27s_approximation
-    //!
-    inline Float SchlickApproxim(Float n1, Float n2, Float cosTheta)
-    {
-		Float a = n1 - n2, b = n1 + n2, R0 = (a * a) / (b*b),
-			  c = 1 - cosTheta;  //! Term: 1 - cos(theta)
-		Float Re = R0 + (1 - R0)*c*c*c*c*c; // Specular Relection & Transmission
-        return Re;
-    }
-
-    //! put an attention to normal n
-    //! consine weighed hemisphere sample
-    inline Vector3 cosWeightedSample(const Vector3 &n, unsigned short *Xi = nullptr)
-    {
-        Float r1 , r2 ;
-        if (Xi)
-        {
-            r1 = 2 * M_PI * erand48(Xi); r2 = erand48(Xi);
-        }
-        else
-        {
-            r1 = 2 * M_PI * randomFloat(); r2 = randomFloat();
-        }
-        Float r2s = sqrt(r2);
-        Vector3 w = n, u = ((fabs(w.x) > .1 ? Vector3(0, 1) : Vector3(1)) % w).norm(), v = w % u;
-        Vector3 d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2)).norm();
-        return d;
-    }
-
+#if 0
 	Vector3 Scene::myradiance(const Ray &r, int depth, unsigned short *Xi)
 	{
 		IntersectionInfo hitInfo;
@@ -342,6 +252,7 @@ namespace mei
 				myradiance(reflRay, depth, Xi)*Re + myradiance(Ray(x, tdir), depth, Xi)*Tr);
 		}
 	}
+#endif
 
 }//namespace
 

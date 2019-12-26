@@ -2,7 +2,7 @@
 #define PARALLEL_H_
 
 #include <functional>
-#include "points.h" 
+#include "2d.h" 
 
 namespace mei
 {

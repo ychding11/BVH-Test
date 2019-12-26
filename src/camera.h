@@ -7,15 +7,15 @@
 #include <iostream>
 #include <sstream>
 
-#include "points.h"
-#include "Vector3.h"
+#include "2d.h"
+#include "3d.h"
 #include "randoms.h"
 
 namespace mei
 {
 	// FilmTilePixel Declarations
 	struct FilmTilePixel {
-		Vector3 contribSum;
+		Vector3f contribSum;
 	};
 
 	class FilmTile;
@@ -60,7 +60,8 @@ namespace mei
 		}
 	};
 
-	class FilmTile {
+	class FilmTile
+	{
 	public:
 		// FilmTile Public Methods
 		FilmTile(const Bounds2i &pixelBounds, Float maxSampleLuminance)
@@ -68,7 +69,8 @@ namespace mei
 			maxSampleLuminance(maxSampleLuminance) {
 			pixels = std::vector<FilmTilePixel>(std::max(0, pixelBounds.Area()));
 		}
-		void AddSample(const Point2i &p, Vector3 L, Float sampleWeight = 1.) {
+		void AddSample(const Point2i &p, Vector3f L, Float sampleWeight = 1.)
+		{
 			FilmTilePixel &pixel = GetPixel(p);
 			pixel.contribSum += L;
 		}
@@ -101,7 +103,7 @@ namespace mei
 	private:
 		Float _vfov;
 		uint32_t _w, _h;
-		Vector3 _p, _u, _v, _d; //< coordiate & position
+		Vector3f _p, _u, _v, _d; //< coordiate & position
 		std::ostringstream _ss;
 
 		void constructCoordinate();
@@ -123,7 +125,7 @@ namespace mei
 		{
 			constructCoordinate();
             pFilm = new Film(Point2i(_w,_h), Bounds2f(Point2f(0,0),Point2f(1.,1.)), "temp", 1.0);
-			_ss << "camera creation.\t dir:" << _d.str() << "\t pos:" << _p.str() << std::endl;
+			//_ss << "camera creation.\t dir:" << _d.str() << "\t pos:" << _p.str() << std::endl;
 		}
 
 		void setImageSize(uint32_t w, uint32_t h)

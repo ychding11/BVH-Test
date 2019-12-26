@@ -31,12 +31,15 @@ namespace mei
 	class GeometricPrimitive : public Primitive
 	{
 	public:
-		// GeometricPrimitive Public Methods
-		virtual Bounds3f WorldBound() const;
-		virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
-		virtual bool IntersectP(const Ray &r) const;
-
 		GeometricPrimitive(const std::shared_ptr<Shape> &shape);
+
+		// GeometricPrimitive Public Methods
+        virtual Bounds3f WorldBound() const;
+
+        virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
+        
+        virtual bool IntersectP(const Ray &r) const;
+
 #if 0
 		const AreaLight *GetAreaLight() const;
 		const Material *GetMaterial() const;
@@ -55,6 +58,7 @@ namespace mei
 #endif
 	};
 
+    //< the following will be deleted later
 #if 0
     struct AABB
     {
