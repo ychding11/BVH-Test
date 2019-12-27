@@ -4,6 +4,7 @@
 
 namespace mei
 {
+    static int64_t nCameraRays;
 
 	void SamplerIntegrator::Render(const Scene &scene)
 	{
@@ -46,11 +47,18 @@ namespace mei
 					if (!InsideExclusive(pixel, pixelBounds))
 						continue;
 
-					Ray ray = camera->getRay(pixel.x, pixel.y, Xi);
-					Vector3 L = Li(ray, scene, *tileSampler);
+                    do {
 
-					// Add camera ray's contribution to image
-					filmTile->AddSample(pixel, L);
+                        Ray ray;
+                        CameraSample cameraSample = tileSampler->GetCameraSample(pixel);
+                        Float rayWeight = camera->GenerateRay(cameraSample, &ray);
+                        nCameraRays++;
+
+					    Vector3f L = Li(ray, scene, *tileSampler);
+
+					    // Add camera ray's contribution to image
+					    filmTile->AddSample(pixel, L);
+                    } while (tileSampler->StartNextSample());
 				}
 
 				// Merge image tile into _Film_
@@ -60,5 +68,5 @@ namespace mei
 			}, nTiles);
 			//	reporter.done();
 		}
-	}
+	} // end render
 }

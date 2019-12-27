@@ -674,16 +674,18 @@ namespace mei
 
 	struct Ray
 	{
-		Point3f o; // Ray Origin
+		Point3f  o; // Ray Origin
 		Vector3f d; // Ray Direction
 		Vector3f inv_d; // Inverse of each Ray Direction component
 		mutable Float tMax;
 		Float time;
 
 	public:
+		Ray() : o(), d(), tMax(Infinity), time(0.f){ }
 		Ray(const Point3f& o, const Vector3f& d)
 			: o(o), d(d), tMax(Infinity), time(0.f){ }
 
+        //< Let it behavior like a function object
 		Point3f operator()(Float t) const { return o + d * t; }
 	};
 }// namespace

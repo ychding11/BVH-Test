@@ -13,6 +13,13 @@
 
 namespace mei
 {
+    struct CameraSample
+    {
+        Point2f pFilm;
+        Point2f pLens;
+        Float time;
+    };
+
 	// FilmTilePixel Declarations
 	struct FilmTilePixel {
 		Vector3f contribSum;
@@ -100,12 +107,17 @@ namespace mei
 
 	class Camera
 	{
-	private:
+	protected:
 		Float _vfov;
 		uint32_t _w, _h;
-		Vector3f _p, _u, _v, _d; //< coordiate & position
+		Point3f  _p; //< coordiate & position
+		Vector3f _u, _v, _d; //< coordiate & position
+
 		std::ostringstream _ss;
 
+	/*******************************************************************************
+    *  coordinate is tightly coupled with width and height of image
+	********************************************************************************/
 		void constructCoordinate();
 		
         //! get a sample in [0,0), support subpixel;
@@ -118,7 +130,7 @@ namespace mei
 
 		//! \param position is in world space
 		//! \param dir is in world space and is normalized
-		Camera(Vector3 position, Vector3 dir, uint32_t w = 1024, uint32_t h = 1024, Float vfov = 55.)
+		Camera(Point3f position, Vector3f dir, uint32_t w = 1024, uint32_t h = 1024, Float vfov = 55.)
 			: _p(position), _d(dir)
 			, _w(w), _h(h)
 			, _vfov(vfov)
@@ -151,7 +163,15 @@ namespace mei
 
 		//! get a random ray based on (u, v) in image plane
 		Ray getRay(uint32_t u, uint32_t v, unsigned short *X = nullptr);
-		
+
+        Float GenerateRay(const CameraSample &sample, Ray *ray) const
+        {
+            // Compute raster and camera sample positions
+            Point3f pFilm = Point3f(sample.pFilm.x, sample.pFilm.y, 0);
+            Point3f pCamera = RasterToCamera(pFilm);
+            *ray = Ray(Point3f(0, 0, 0), Normalize(Vector3f(pCamera)));
+            return 1;
+        }
 	};
 
 }

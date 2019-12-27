@@ -53,15 +53,16 @@ namespace mei
 		}
 	}
 
-	//////////////////////////////////////
-	//////////////////////////////////////
+	/*******************************************************************************
+    *  coordinate is tightly coupled with width and height of image
+	********************************************************************************/
 	void Camera::constructCoordinate()
 	{
 		Float halfVfov = _vfov * 0.5 * (M_PI / 180.);
         Float h = std::tanf(halfVfov);
 		Float aspect = double(_w) / double(_h);
-		_u = Vector3(aspect * h, 0, 0);
-		_v = (_u%_d).norm()*h;
+		_u = Vector3f(aspect * h, 0, 0);
+		_v = Normalize(Cross(_u, _d)) * h;
 	}
 
     //! get a sample in [0,0), support subpixel;
@@ -94,9 +95,9 @@ namespace mei
         Float dH = 1. / double(_h);
         x = x * dW + double(u) / double(_w) - 0.5;
         y = y * dW + double(v) / double(_w) - 0.5;
-        Vector3 d = _u * x + _v * y + _d;
+        Vector3f d = _u * x + _v * y + _d;
 		//Ray r(_p + d * 140, d.norm());
-		Ray r(_p, d.norm());
+		Ray r(_p, Normalize(d));
 		return r;
 	}
 
