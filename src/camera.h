@@ -21,24 +21,30 @@ namespace mei
     };
 
 	// FilmTilePixel Declarations
-	struct FilmTilePixel {
+	struct FilmTilePixel
+	{
 		Vector3f contribSum;
 	};
 
 	class FilmTile;
 
 	// Film Declarations
-	class Film {
+	class Film
+	{
 	public:
 		// Film Public Methods
 		Film(const Point2i &resolution, const Bounds2f &cropWindow,
 			const std::string &filename, Float scale,
 			Float maxSampleLuminance = Infinity);
+
 		Bounds2i GetSampleBounds() const;
+
 		std::unique_ptr<FilmTile> GetFilmTile(const Bounds2i &sampleBounds);
+
 		void MergeFilmTile(std::unique_ptr<FilmTile> tile);
-		void WriteImage(Float splatScale = 1)
-		{ }
+
+		void WriteImage(Float splatScale = 1) { }
+
 		void Clear();
 
 		// Film Public Data
@@ -48,7 +54,8 @@ namespace mei
 
 	private:
 		// Film Private Data
-		struct Pixel {
+		struct Pixel
+		{
 			Pixel() { xyz[0] = xyz[1] = xyz[2] = 0; }
 			Float xyz[3];
 			Float pad;
@@ -59,7 +66,8 @@ namespace mei
 		const Float maxSampleLuminance;
 
 		// Film Private Methods
-		Pixel &GetPixel(const Point2i &p) {
+		Pixel &GetPixel(const Point2i &p)
+		{
 			CHECK(InsideExclusive(p, croppedPixelBounds));
 			int width = croppedPixelBounds.pMax.x - croppedPixelBounds.pMin.x;
 			int offset = (p.x - croppedPixelBounds.pMin.x) + (p.y - croppedPixelBounds.pMin.y) * width;
@@ -72,8 +80,8 @@ namespace mei
 	public:
 		// FilmTile Public Methods
 		FilmTile(const Bounds2i &pixelBounds, Float maxSampleLuminance)
-			: pixelBounds(pixelBounds),
-			maxSampleLuminance(maxSampleLuminance) {
+			: pixelBounds(pixelBounds), maxSampleLuminance(maxSampleLuminance)
+		{
 			pixels = std::vector<FilmTilePixel>(std::max(0, pixelBounds.Area()));
 		}
 		void AddSample(const Point2i &p, Vector3f L, Float sampleWeight = 1.)
@@ -81,18 +89,18 @@ namespace mei
 			FilmTilePixel &pixel = GetPixel(p);
 			pixel.contribSum += L;
 		}
-		FilmTilePixel &GetPixel(const Point2i &p) {
+		FilmTilePixel& GetPixel(const Point2i &p)
+		{
 			CHECK(InsideExclusive(p, pixelBounds));
 			int width = pixelBounds.pMax.x - pixelBounds.pMin.x;
-			int offset =
-				(p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
+			int offset = (p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
 			return pixels[offset];
 		}
-		const FilmTilePixel &GetPixel(const Point2i &p) const {
+		const FilmTilePixel& GetPixel(const Point2i &p) const
+		{
 			CHECK(InsideExclusive(p, pixelBounds));
 			int width = pixelBounds.pMax.x - pixelBounds.pMin.x;
-			int offset =
-				(p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
+			int offset = (p.x - pixelBounds.pMin.x) + (p.y - pixelBounds.pMin.y) * width;
 			return pixels[offset];
 		}
 		Bounds2i GetPixelBounds() const { return pixelBounds; }
@@ -166,10 +174,13 @@ namespace mei
 
         Float GenerateRay(const CameraSample &sample, Ray *ray) const
         {
-            // Compute raster and camera sample positions
-            Point3f pFilm = Point3f(sample.pFilm.x, sample.pFilm.y, 0);
-            Point3f pCamera = RasterToCamera(pFilm);
-            *ray = Ray(Point3f(0, 0, 0), Normalize(Vector3f(pCamera)));
+			Float xOffset = _w / 2.;
+			Float yOffset = _h / 2.;
+
+            // adjust original point 
+            Point3f pFilm = Point3f(sample.pFilm.x-xOffset, sample.pFilm.y-yOffset, 0);
+			Vector3f d = _u * pFilm.x + _v * pFilm.y + _d;
+            *ray = Ray(_p, Normalize(d));
             return 1;
         }
 	};

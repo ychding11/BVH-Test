@@ -7,10 +7,8 @@ namespace mei
 	// Film Method Definitions
 	Film::Film(const Point2i &resolution, const Bounds2f &cropWindow,
 		const std::string &filename, Float scale, Float maxSampleLuminance)
-		: fullResolution(resolution),
-		filename(filename),
-		scale(scale),
-		maxSampleLuminance(maxSampleLuminance) {
+		: fullResolution(resolution), filename(filename), scale(scale), maxSampleLuminance(maxSampleLuminance)
+	{
 		// Compute film image bounds
 		croppedPixelBounds =
 			Bounds2i(Point2i(std::ceil(fullResolution.x * cropWindow.pMin.x),
@@ -18,38 +16,47 @@ namespace mei
 							 Point2i(std::ceil(fullResolution.x * cropWindow.pMax.x),
 					std::ceil(fullResolution.y * cropWindow.pMax.y)));
 		LOG(INFO) << "Created film with full resolution " << resolution.str() <<
-			". Crop window of " << cropWindow.str() << " -> croppedPixelBounds " <<
-			croppedPixelBounds.str();
+			". Crop window of " << cropWindow.str() << " -> croppedPixelBounds " << croppedPixelBounds.str();
 
 		// Allocate film image storage
 		pixels = std::unique_ptr<Pixel[]>(new Pixel[croppedPixelBounds.Area()]);
 		//filmPixelMemory += croppedPixelBounds.Area() * sizeof(Pixel);
 	}
 
-	Bounds2i Film::GetSampleBounds() const {
+	Bounds2i Film::GetSampleBounds() const
+	{
 		return croppedPixelBounds;
 	}
 
-	std::unique_ptr<FilmTile> Film::GetFilmTile(const Bounds2i &sampleBounds) {
+	std::unique_ptr<FilmTile> Film::GetFilmTile(const Bounds2i &sampleBounds)
+	{
 		return std::unique_ptr<FilmTile>(new FilmTile(sampleBounds, maxSampleLuminance));
 	}
 
-	void Film::Clear() {
-		for (Point2i p : croppedPixelBounds) {
+	void Film::Clear()
+	{
+		for (Point2i p : croppedPixelBounds)
+		{
 			Pixel &pixel = GetPixel(p);
-			for (int c = 0; c < 3; ++c)
-				pixel.xyz[c] = 0;
+			pixel.xyz[0] = 0;
+			pixel.xyz[1] = 0;
+			pixel.xyz[2] = 0;
 		}
 	}
 
-	void Film::MergeFilmTile(std::unique_ptr<FilmTile> tile) {
-		VLOG(1) << "Merging film tile " << tile->pixelBounds.str();
-		std::lock_guard<std::mutex> lock(mutex);
-		for (Point2i pixel : tile->GetPixelBounds()) {
+	void Film::MergeFilmTile(std::unique_ptr<FilmTile> tile)
+	{
+		//VLOG(1) << "Merging film tile " << tile->pixelBounds.str();
+		//std::lock_guard<std::mutex> lock(mutex);
+		for (Point2i pixel : tile->GetPixelBounds())
+		{
 			const FilmTilePixel &tilePixel = tile->GetPixel(pixel);
 			Pixel &mergePixel = GetPixel(pixel);
-			Vector3 rgb = tilePixel.contribSum;
-			for (int i = 0; i < 3; ++i) mergePixel.xyz[i] += rgb[i];
+			Vector3f rgb = tilePixel.contribSum;
+			//for (int i = 0; i < 3; ++i) mergePixel.xyz[i] += rgb[i];
+			mergePixel.xyz[0] += rgb[0];
+			mergePixel.xyz[1] += rgb[1];
+			mergePixel.xyz[2] += rgb[2];
 		}
 	}
 

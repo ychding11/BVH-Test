@@ -4,6 +4,7 @@
 #include "2d.h"
 #include "3d.h"
 #include "randoms.h"
+#include "camera.h"
 
 namespace mei
 {
