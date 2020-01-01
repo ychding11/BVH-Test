@@ -98,60 +98,10 @@ namespace mei
 			return Vector3f(0,0,0);
 		}
 
-		const Object &obj = *hitInfo.object;        // the hit object
-		Vector3 x = hitInfo.hit, n = hitInfo.object->getNormal(hitInfo);
-		Vector3 nl = n.dot(r.d) < 0 ? n : n * -1;
-		Vector3 f = obj.c;
-		const Float p = .1; //< RR stop Pr
-
-		if (++depth > 4 && depth <= 6)
-		{
-			if (erand48(Xi) < p) return obj.e;
-			else f = f * (1 / (1. - p));
-		}
-		else if (depth > 6)
-		{
-			return obj.e;
-		}
-
-		if (obj.refl == DIFF) // Ideal DIFFUSE reflection
-		{
-			// Why converge slow with spp goes up ?
-			// So how to let diffuse converges fast ?
-			return obj.e + f.cmult(myradiance(Ray(x, cosWeightedSample(nl, Xi)), depth, Xi));
-		}
-		else if (obj.refl == SPEC) // Ideal SPECULAR reflection
-		{
-			return obj.e + f.cmult(myradiance(Ray(x, reflect(r.d, n)), depth, Xi));
-		}
-		else // Ideal dielectric REFRACTION
-		{
-			//! Maybe write a single function to do this things.
-			//! Input: IOR1, IOR2, incomming direction(source->shading point), normal
-			Ray reflRay(x, reflect(r.d, n));
-			bool into = n.dot(nl) > 0;     // Ray from outside going in
-			Float nc = 1.;   // Air
-			Float nt = 1.5;  // IOR  Glass
-			Float nnt = into ? nc / nt : nt / nc,
-				ddn = r.d.dot(nl),
-				cos2t;
-			if ((cos2t = 1 - nnt * nnt*(1 - ddn * ddn)) < 0)    // Total internal reflection
-			{
-				return obj.e + f.cmult(myradiance(reflRay, depth, Xi));
-			}
-			Vector3 tdir = (r.d*nnt - n * ((into ? 1 : -1) * (ddn*nnt + sqrt(cos2t)))).norm();
-
-			Float Re = SchlickApproxim(nt, nc, into ? -ddn : tdir.dot(n)); //! Schlick's approximation
-			Float Tr = 1 - Re;
-
-			// Russian roulette weight
-			Float P = .25 + .5 * Re,
-				RP = Re / P,
-				TP = Tr / (1 - P);
-			return obj.e + f.cmult(depth > 2 ? (erand48(Xi) < P ?   // Russian roulette
-				myradiance(reflRay, depth, Xi)*RP : myradiance(Ray(x, tdir), depth, Xi)*TP) :
-				myradiance(reflRay, depth, Xi)*Re + myradiance(Ray(x, tdir), depth, Xi)*Tr);
-		}
+		// Compute scattering functions for surface interaction
+		isect.ComputeScatteringFunctions(ray, arena);
+		if (!isect.bsdf)
+			return Li(isect.SpawnRay(ray.d), scene, sampler, arena, depth);
 		return L;
 	}
 
