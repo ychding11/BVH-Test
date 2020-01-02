@@ -1,9 +1,8 @@
 #ifndef SCENES_H_
 #define SCENES_H_
 
-#include <vector>
 
-#include "objparser.h"
+//#include "objparser.h"
 #include "Primitives.h"
 
 extern double erand48(unsigned short xseed[3]);

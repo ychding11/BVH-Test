@@ -3,12 +3,14 @@
 
 #include "2d.h"
 #include "3d.h"
-#include "interactions.h"
 
 namespace mei
 {
+    class SurfaceInteraction;
+
 	// Shape Declarations
-	class Shape {
+	class Shape
+    {
 	public:
 		// Shape Interface
 		Shape()
@@ -53,7 +55,8 @@ namespace mei
 
 
 	// Triangle Declarations
-	struct TriangleMesh {
+	struct TriangleMesh
+    {
 		// TriangleMesh Public Methods
 		TriangleMesh(int nTriangles, const int *vertexIndices,
 			int nVertices, const Point3f *P, const Normal3f *N );
@@ -74,7 +77,7 @@ namespace mei
 	class Triangle :public Shape 
 	{
 	private:
-		Vector3 _v0, _v1, _v2, _e1, _e2;
+		Vector3f _v0, _v1, _v2, _e1, _e2;
 
 		// Triangle Private Data
 		std::shared_ptr<TriangleMesh> mesh;

@@ -1,3 +1,9 @@
+
+#if defined(_MSC_VER)
+#define NOMINMAX
+#pragma once
+#endif
+
 #ifndef POINTS_H 
 #define POINTS_H
 
@@ -12,26 +18,26 @@
 
 namespace mei
 {
+    template <typename T>
+    class Vector2;
+    template <typename T>
+    class Point2;
 
-	template <typename T>
-	inline bool isNaN(const T x) {
-		return std::isnan(x);
-	}
-	template <>
-	inline bool isNaN(const int x) {
-		return false;
-	}
 
 	// Vector Declarations
 	template <typename T>
-	class Vector2 {
+	class Vector2
+    {
 	public:
 		// Vector2 Public Methods
 		Vector2() { x = y = 0; }
 		Vector2(T xx, T yy) : x(xx), y(yy) { DCHECK(!HasNaNs()); }
+
 		bool HasNaNs() const { return isNaN(x) || isNaN(y); }
+
 		explicit Vector2(const Point2<T> &p);
 		//explicit Vector2(const Point3<T> &p);
+
 #ifndef NDEBUG
 		// The default versions of these are fine for release builds; for debug
 		// we define them so that we can add the Assert checks.
@@ -48,23 +54,27 @@ namespace mei
 		}
 #endif  // !NDEBUG
 		
-		Vector2<T> operator+(const Vector2<T> &v) const {
+		Vector2<T> operator+(const Vector2<T> &v) const
+        {
 			DCHECK(!v.HasNaNs());
 			return Vector2(x + v.x, y + v.y);
 		}
 
-		Vector2<T> &operator+=(const Vector2<T> &v) {
+		Vector2<T> &operator+=(const Vector2<T> &v)
+        {
 			DCHECK(!v.HasNaNs());
 			x += v.x;
 			y += v.y;
 			return *this;
 		}
-		Vector2<T> operator-(const Vector2<T> &v) const {
+		Vector2<T> operator-(const Vector2<T> &v) const
+        {
 			DCHECK(!v.HasNaNs());
 			return Vector2(x - v.x, y - v.y);
 		}
 
-		Vector2<T> &operator-=(const Vector2<T> &v) {
+		Vector2<T> &operator-=(const Vector2<T> &v)
+        {
 			DCHECK(!v.HasNaNs());
 			x -= v.x;
 			y -= v.y;
@@ -72,27 +82,32 @@ namespace mei
 		}
 		bool operator==(const Vector2<T> &v) const { return x == v.x && y == v.y; }
 		bool operator!=(const Vector2<T> &v) const { return x != v.x || y != v.y; }
+
 		template <typename U>
-		Vector2<T> operator*(U f) const {
+		Vector2<T> operator*(U f) const
+        {
 			return Vector2<T>(f * x, f * y);
 		}
 
 		template <typename U>
-		Vector2<T> &operator*=(U f) {
+		Vector2<T>& operator*=(U f)
+        {
 			DCHECK(!isNaN(f));
 			x *= f;
 			y *= f;
 			return *this;
 		}
 		template <typename U>
-		Vector2<T> operator/(U f) const {
+		Vector2<T> operator/(U f) const
+        {
 			CHECK_NE(f, 0);
 			Float inv = (Float)1 / f;
 			return Vector2<T>(x * inv, y * inv);
 		}
 
 		template <typename U>
-		Vector2<T> &operator/=(U f) {
+		Vector2<T> &operator/=(U f)
+        {
 			CHECK_NE(f, 0);
 			Float inv = (Float)1 / f;
 			x *= inv;
@@ -100,13 +115,16 @@ namespace mei
 			return *this;
 		}
 		Vector2<T> operator-() const { return Vector2<T>(-x, -y); }
-		T operator[](int i) const {
+
+		T operator[](int i) const
+        {
 			DCHECK(i >= 0 && i <= 1);
 			if (i == 0) return x;
 			return y;
 		}
 
-		T &operator[](int i) {
+		T &operator[](int i)
+        {
 			DCHECK(i >= 0 && i <= 1);
 			if (i == 0) return x;
 			return y;
@@ -127,7 +145,8 @@ namespace mei
 
 	// Point Declarations
 	template <typename T>
-	class Point2 {
+	class Point2
+    {
 	public:
 		// Point2 Public Methods
 		//explicit Point2(const Point3<T> &p) : x(p.x), y(p.y) { DCHECK(!HasNaNs()); }
@@ -135,21 +154,24 @@ namespace mei
 		Point2(T xx, T yy) : x(xx), y(yy) { DCHECK(!HasNaNs()); }
 
 		template <typename U>
-		explicit Point2(const Point2<U> &p) {
+		explicit Point2(const Point2<U> &p)
+        {
 			x = (T)p.x;
 			y = (T)p.y;
 			DCHECK(!HasNaNs());
 		}
 
 		template <typename U>
-		explicit Point2(const Vector2<U> &p) {
+		explicit Point2(const Vector2<U> &p)
+        {
 			x = (T)p.x;
 			y = (T)p.y;
 			DCHECK(!HasNaNs());
 		}
 
 		template <typename U>
-		explicit operator Vector2<U>() const {
+		explicit operator Vector2<U>() const
+        {
 			return Vector2<U>(x, y);
 		}
 
@@ -256,22 +278,26 @@ namespace mei
 	};
 
 	template <typename T>
-	Point2<T> Min(const Point2<T> &pa, const Point2<T> &pb) {
+	Point2<T> Min(const Point2<T> &pa, const Point2<T> &pb)
+    {
 		return Point2<T>(std::min(pa.x, pb.x), std::min(pa.y, pb.y));
 	}
 
 	template <typename T>
-	Point2<T> Max(const Point2<T> &pa, const Point2<T> &pb) {
+	Point2<T> Max(const Point2<T> &pa, const Point2<T> &pb)
+    {
 		return Point2<T>(std::max(pa.x, pb.x), std::max(pa.y, pb.y));
 	}
 
 	template <typename T>
-	Point2<T> Floor(const Point2<T> &p) {
+	Point2<T> Floor(const Point2<T> &p)
+    {
 		return Point2<T>(std::floor(p.x), std::floor(p.y));
 	}
 
 	template <typename T>
-	Point2<T> Ceil(const Point2<T> &p) {
+	Point2<T> Ceil(const Point2<T> &p)
+    {
 		return Point2<T>(std::ceil(p.x), std::ceil(p.y));
 	}
 
@@ -280,7 +306,8 @@ namespace mei
 
 	template <typename T>
 	Vector2<T>::Vector2(const Point2<T> &p)
-		: x(p.x), y(p.y) {
+		: x(p.x), y(p.y)
+    {
 		DCHECK(!HasNaNs());
 	}
 
@@ -290,17 +317,20 @@ namespace mei
 
 	// Bounds Declarations
 	template <typename T>
-	class Bounds2 {
+	class Bounds2
+    {
 	public:
 		// Bounds2 Public Methods
-		Bounds2() {
+		Bounds2()
+        {
 			T minNum = std::numeric_limits<T>::lowest();
 			T maxNum = std::numeric_limits<T>::max();
 			pMin = Point2<T>(maxNum, maxNum);
 			pMax = Point2<T>(minNum, minNum);
 		}
 		explicit Bounds2(const Point2<T> &p) : pMin(p), pMax(p) {}
-		Bounds2(const Point2<T> &p1, const Point2<T> &p2) {
+		Bounds2(const Point2<T> &p1, const Point2<T> &p2)
+        {
 			pMin = Point2<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y));
 			pMax = Point2<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y));
 		}
@@ -359,17 +389,33 @@ namespace mei
 		Point2<T> pMin, pMax;
 	};
 
-
 	template <typename T>
-	bool InsideExclusive(const Point2<T> &pt, const Bounds2<T> &b) {
-		return (pt.x >= b.pMin.x && pt.x < b.pMax.x && pt.y >= b.pMin.y &&
-			pt.y < b.pMax.y);
+	bool InsideExclusive(const Point2<T> &pt, const Bounds2<T> &b)
+    {
+		return (pt.x >= b.pMin.x && pt.x < b.pMax.x && pt.y >= b.pMin.y && pt.y < b.pMax.y);
 	}
+
+
+    template <typename T>
+    Bounds2<T> Intersect(const Bounds2<T> &b1, const Bounds2<T> &b2)
+    {
+        // Important: assign to pMin/pMax directly and don't run the Bounds2()
+        // constructor, since it takes min/max of the points passed to it.  In
+        // turn, that breaks returning an invalid bound for the case where we
+        // intersect non-overlapping bounds (as we'd like to happen).
+        Bounds2<T> ret;
+        ret.pMin = Max(b1.pMin, b2.pMin);
+        ret.pMax = Min(b1.pMax, b2.pMax);
+        return ret;
+    }
+
 
 	typedef Bounds2<Float> Bounds2f;
 	typedef Bounds2<int> Bounds2i;
 
-	class Bounds2iIterator : public std::forward_iterator_tag {
+    //< define how to visit all points in a 2D Bounds.
+	class Bounds2iIterator : public std::forward_iterator_tag
+    {
 	public:
 		Bounds2iIterator(const Bounds2i &b, const Point2i &pt)
 			: p(pt), bounds(&b) {}
@@ -403,11 +449,13 @@ namespace mei
 		const Bounds2i *bounds;
 	};
 
-	inline Bounds2iIterator begin(const Bounds2i &b) {
+	inline Bounds2iIterator begin(const Bounds2i &b)
+    {
 		return Bounds2iIterator(b, b.pMin);
 	}
 
-	inline Bounds2iIterator end(const Bounds2i &b) {
+	inline Bounds2iIterator end(const Bounds2i &b)
+    {
 		// Normally, the ending point is at the minimum x value and one past
 		// the last valid y value.
 		Point2i pEnd(b.pMin.x, b.pMax.y);

@@ -1,15 +1,9 @@
-#include <math.h>  
-#include <stdlib.h>
-#include <stdio.h>  
-#include <omp.h>
-#include <iostream>
-#include <fstream>
+//#include <math.h>  
+//#include <stdlib.h>
+//#include <stdio.h>  
+//#include <omp.h>
 
-#include <sstream>
-
-#include "randoms.h"
 #include "scene.h"
-#include "profiler.h"
 
 namespace mei
 {
@@ -32,9 +26,6 @@ namespace mei
 		return aggregate->IntersectP(ray);
     }
 
-#ifndef M_PI
-#define M_PI  3.1415926
-#endif
 
 #if 0
 	static Sphere spheres[] =

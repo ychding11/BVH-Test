@@ -1,4 +1,5 @@
 #include "shapes.h"
+#include "interactions.h"
 
 namespace mei
 {
@@ -42,7 +43,7 @@ namespace mei
 	/******************************************************************************
 	 * http://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
 	******************************************************************************/
-	bool Triangle::Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect, bool testAlphaTexture = true) const
+	bool Triangle::Intersect(const Ray &ray, Float *tHit, SurfaceInteraction *isect, bool testAlphaTexture) const
 	{
 		const Point3f &v0 = mesh->p[v[0]];
 		const Point3f &v1 = mesh->p[v[1]];
@@ -68,7 +69,7 @@ namespace mei
 		return true;
 	}
 
-	bool Triangle::IntersectP(const Ray &ray, bool testAlphaTexture = true) const 
+	bool Triangle::IntersectP(const Ray &ray, bool testAlphaTexture) const 
 	{
 		// Get triangle vertices in _p0_, _p1_, and _p2_
 		const Point3f &v0 = mesh->p[v[0]];

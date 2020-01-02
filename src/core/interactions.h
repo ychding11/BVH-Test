@@ -3,11 +3,12 @@
 
 #include "2d.h"
 #include "3d.h"
-#include "primitives.h"
-#include "shapes.h"
 
 namespace mei
 {
+    class Shape;
+    class Primitive;
+
 	// Interaction Declarations
 	struct Interaction
 	{

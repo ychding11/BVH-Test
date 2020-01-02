@@ -2,11 +2,15 @@
 #define PRIMITIVES_H
 
 #include "3d.h"
-#include "interactions.h"
+
 
 namespace mei
 {
-	enum Refl_t { DIFF, SPEC, REFR };  // material types
+
+    //< forward declare
+    class SurfaceInteraction;
+    class Shape;
+
 	// Primitive Declarations
 	class Primitive
 	{
@@ -241,6 +245,6 @@ namespace mei
     };
 #endif
 
-}
+} //namespace
 
 #endif
