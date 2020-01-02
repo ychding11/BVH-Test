@@ -3,14 +3,16 @@
 
 #include "2d.h"
 #include "3d.h"
-#include "samplers.h"
-#include "camera.h"
+
 
 namespace mei
 {
 
 	class Material;
 	class Scene;
+    class Sampler;
+    class Camera;
+
 	//< It determines how to render
 	class Integrator
 	{
@@ -45,7 +47,7 @@ namespace mei
 	};
 
 
-
+#if 0
     //! caculate reflected ray direction. dot(in, n) < 0
     //! in is unit vector, n is unit vector, result is unit vector
 	inline Vector3f reflect(const Vector3f &in, const Vector3f &n)
@@ -83,13 +85,14 @@ namespace mei
         Vector3f d = (u*cos(r1)*r2s + v * sin(r1)*r2s + w * sqrt(1 - r2));
         return Normalize(d);
     }
+#endif
 
 	//< define a "test integrator" to test algorithms
-	class MyIntegrator : public SamplerIntegrator
+	class NaiveIntegrator : public SamplerIntegrator
 	{
 	public:
 		// AOIntegrator Public Methods
-		MyIntegrator(bool cosSample, int nSamples,
+		NaiveIntegrator(bool cosSample, int nSamples,
 			std::shared_ptr<const Camera> camera,
 			std::shared_ptr<Sampler> sampler,
 			const Bounds2i &pixelBounds);
@@ -98,7 +101,8 @@ namespace mei
 	private:
 		bool cosSample;
 		int  nSamples;
-	}
-}
+    };
+
+} //namespace
 
 #endif

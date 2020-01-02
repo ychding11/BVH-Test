@@ -1,5 +1,6 @@
-
 #include "samplers.h"
+
+#include "camera.h"
 
 namespace mei
 {

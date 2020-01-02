@@ -3,10 +3,13 @@
 #include <stdio.h>  
 //#include <omp.h>
 
-#include "parallel.h"
-#include "progressreporter.h"
 #include "smallpt.h"
 #include "profiler.h"
+
+#include "scene.h"
+#include "camera.h"
+#include "integrators.h"
+//#include "randoms.h"
 
 namespace mei
 {
@@ -24,8 +27,7 @@ namespace mei
 	void smallptTest::render(void *data)
 	{
 		smallptTest &test = *(smallptTest*)data;
-		test.newsmallpt();
-        //test.renderTile();
+        test._integrator->Render(*test._scene);
 	}
 
 	smallptTest::smallptTest(int width, int height, int sample)
@@ -33,20 +35,16 @@ namespace mei
 		, _renderThread(nullptr)
         , _exitRendering(false)
 		, _pauseRender(false)
-		, _ior(1.5f)
 	{
 		_imageSizeInPixel = _imageHeight * _imageWidth;
-        _scene = std::shared_ptr<Scene>(new Scene);
-		_camera = std::shared_ptr<Camera>(new Camera(_scene->_triangles.lookfrom, (_scene->_triangles.lookat - _scene->_triangles.lookfrom).norm(), _imageWidth, _imageHeight, 90.));
-		//_camera = std::shared_ptr<Camera>(new Camera(Vector3(50,52,295.6), Vector3(0, -0.042612, -1).norm(), _imageWidth, _imageHeight, 90.));
+        _scene  = std::unique_ptr<Scene>(new Scene);
+		_camera = std::unique_ptr<Camera>(new Camera(_scene->_triangles.lookfrom, (_scene->_triangles.lookat - _scene->_triangles.lookfrom).norm(), _imageWidth, _imageHeight, 90.));
+
 		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
-
-		this->handleSceneMaskChange(0x2);
 	}
 
-    std::mutex smallptTest::_sMutex;
-
+#if 0
 	//< 1. Start Rendering Thread When Test Created.
 	//< 2. When ssp reached, Exit Rendering Thread.
 	//< 3. When in Rendering, Only shadow data can be accessed.
@@ -108,52 +106,6 @@ namespace mei
 		}// while end
 		_isRendering = false;
 	}
+#endif
 
-	void Render(std::shared_ptr<Camera> camera, std::shared_ptr<Scene> scene)
-	{
-		// Compute number of tiles, _nTiles_, to use for parallel rendering
-		Bounds2i sampleBounds = camera->sampleBound();
-		Vector2i sampleExtent = camera->filmSize();
-		const int tileSize = 16;
-		Point2i nTiles((sampleExtent.x + tileSize - 1) / tileSize,
-			           (sampleExtent.y + tileSize - 1) / tileSize);
-
-
-		//ProgressReporter reporter(nTiles.x * nTiles.y, "Rendering");
-
-		{
-			ParallelFor2D([&](Point2i tile) {
-				// Render section of image corresponding to _tile_
-
-				// Get sampler instance for tile
-				int seed = tile.y * nTiles.x + tile.x;
-                unsigned short Xi[] = { seed*seed*seed, 0, 0 };
-
-				// Compute sample bounds for tile
-				int x0 = sampleBounds.pMin.x + tile.x * tileSize;
-				int x1 = std::min(x0 + tileSize, sampleBounds.pMax.x);
-				int y0 = sampleBounds.pMin.y + tile.y * tileSize;
-				int y1 = std::min(y0 + tileSize, sampleBounds.pMax.y);
-				Bounds2i tileBounds(Point2i(x0, y0), Point2i(x1, y1));
-
-                std::unique_ptr<FilmTile> filmTile = camera->pFilm->GetFilmTile(tileBounds);
-
-				// Loop over pixels in tile to render them
-				for (Point2i pixel : tileBounds) {
-                    Ray ray = camera->getRay(pixel.x, pixel.y, Xi);
-                    Vector3 L = scene->myradiance(ray, 0, Xi);
-
-                    // Add camera ray's contribution to image
-                    filmTile->AddSample(pixel, L);
-				}
-
-                // Merge image tile into _Film_
-                camera->pFilm->MergeFilmTile(std::move(filmTile));
-
-			//	reporter.update();
-			}, nTiles);
-		//	reporter.done();
-		}
-	}
-    
 }

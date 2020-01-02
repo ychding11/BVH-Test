@@ -1,38 +1,61 @@
-#ifndef VECTOR3_H
-#define VECTOR3_H
+#ifndef _3D_TYPE_H_ 
+#define _3D_TYPE_H_ 
 
 #include "mei.h"
 
-#include <cmath>
-#include <cstdlib>
-#include <sstream>
-#include <random>
-#include <fstream>
-#include <iomanip>
+//#include <cstdlib>
+//#include <iomanip>
+
+#include "stringprint.h" 
 
 namespace mei
 {
 
+    //< Forward declare
+    template <typename T>
+    class Point3;
+
+    template <typename T>
+    class Normal3;
+
+    struct Ray;
+
+
 	template <typename T>
-	class Vector3 {
+	class Vector3
+    {
 	public:
 		// Vector3 Public Methods
-		T operator[](int i) const {
+		T operator[](int i) const
+        {
 			DCHECK(i >= 0 && i <= 2);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			return z;
 		}
-		T &operator[](int i) {
+		T &operator[](int i)
+        {
 			DCHECK(i >= 0 && i <= 2);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			return z;
 		}
-		Vector3() { x = y = z = 0; }
-		Vector3(T x, T y, T z) : x(x), y(y), z(z) { DCHECK(!HasNaNs()); }
+
+		Vector3()
+        { x = y = z = 0; }
+
+		Vector3(T x, T y, T z) : x(x), y(y), z(z)
+        {
+            DCHECK(!HasNaNs());
+        }
+
+        explicit Vector3(const Point3<T> &p);
+
+        explicit Vector3(const Normal3<T> &n);
+
 		bool HasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
-		explicit Vector3(const Point3<T> &p);
+
+
 #ifndef NDEBUG
 		// The default versions of these are fine for release builds; for debug
 		// we define them so that we can add the Assert checks.
@@ -51,7 +74,9 @@ namespace mei
 			return *this;
 		}
 #endif  // !NDEBUG
-		Vector3<T> operator+(const Vector3<T> &v) const {
+
+		Vector3<T> operator+(const Vector3<T> &v) const
+        {
 			DCHECK(!v.HasNaNs());
 			return Vector3(x + v.x, y + v.y, z + v.z);
 		}
@@ -110,27 +135,30 @@ namespace mei
 		Vector3<T> operator-() const { return Vector3<T>(-x, -y, -z); }
 		Float LengthSquared() const { return x * x + y * y + z * z; }
 		Float Length() const { return std::sqrt(LengthSquared()); }
-		explicit Vector3(const Normal3<T> &n);
 
 		// Vector3 Public Data
 		T x, y, z;
 	};
-#if 0
+
+#if 1
 	template <typename T>
-	inline std::ostream &operator<<(std::ostream &os, const Vector3<T> &v) {
+	inline std::ostream &operator<<(std::ostream &os, const Vector3<T> &v)
+    {
 		os << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
 		return os;
 	}
 
 	template <>
-	inline std::ostream &operator<<(std::ostream &os, const Vector3<Float> &v) {
+	inline std::ostream &operator<<(std::ostream &os, const Vector3<Float> &v)
+    {
 		os << StringPrintf("[ %f, %f, %f ]", v.x, v.y, v.z);
 		return os;
 	}
 #endif
 
 	template <typename T>
-	class Point3 {
+	class Point3
+    {
 	public:
 		// Point3 Public Methods
 		Point3() { x = y = z = 0; }
@@ -144,6 +172,7 @@ namespace mei
 		explicit operator Vector3<U>() const {
 			return Vector3<U>(x, y, z);
 		}
+
 #ifndef NDEBUG
 		Point3(const Point3<T> &p) {
 			DCHECK(!p.HasNaNs());
@@ -248,15 +277,18 @@ namespace mei
 		// Point3 Public Data
 		T x, y, z;
 	};
-#if 0
+
+#if 1
 	template <typename T>
-	inline std::ostream &operator<<(std::ostream &os, const Point3<T> &v) {
+	inline std::ostream &operator<<(std::ostream &os, const Point3<T> &v)
+    {
 		os << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
 		return os;
 	}
 
 	template <>
-	inline std::ostream &operator<<(std::ostream &os, const Point3<Float> &v) {
+	inline std::ostream &operator<<(std::ostream &os, const Point3<Float> &v)
+    {
 		os << StringPrintf("[ %f, %f, %f ]", v.x, v.y, v.z);
 		return os;
 	}
@@ -267,58 +299,71 @@ namespace mei
 
 	// Normal Declarations
 	template <typename T>
-	class Normal3 {
+	class Normal3
+    {
 	public:
 		// Normal3 Public Methods
 		Normal3() { x = y = z = 0; }
 		Normal3(T xx, T yy, T zz) : x(xx), y(yy), z(zz) { DCHECK(!HasNaNs()); }
+
 		Normal3<T> operator-() const { return Normal3(-x, -y, -z); }
-		Normal3<T> operator+(const Normal3<T> &n) const {
+
+		Normal3<T> operator+(const Normal3<T> &n) const
+        {
 			DCHECK(!n.HasNaNs());
 			return Normal3<T>(x + n.x, y + n.y, z + n.z);
 		}
-
-		Normal3<T> &operator+=(const Normal3<T> &n) {
+		Normal3<T> &operator+=(const Normal3<T> &n)
+        {
 			DCHECK(!n.HasNaNs());
 			x += n.x;
 			y += n.y;
 			z += n.z;
 			return *this;
 		}
-		Normal3<T> operator-(const Normal3<T> &n) const {
+
+		Normal3<T> operator-(const Normal3<T> &n) const
+        {
 			DCHECK(!n.HasNaNs());
 			return Normal3<T>(x - n.x, y - n.y, z - n.z);
 		}
 
-		Normal3<T> &operator-=(const Normal3<T> &n) {
+		Normal3<T> &operator-=(const Normal3<T> &n)
+        {
 			DCHECK(!n.HasNaNs());
 			x -= n.x;
 			y -= n.y;
 			z -= n.z;
 			return *this;
 		}
+
 		bool HasNaNs() const { return isNaN(x) || isNaN(y) || isNaN(z); }
+
 		template <typename U>
-		Normal3<T> operator*(U f) const {
+		Normal3<T> operator*(U f) const
+        {
 			return Normal3<T>(f * x, f * y, f * z);
 		}
 
 		template <typename U>
-		Normal3<T> &operator*=(U f) {
+		Normal3<T> &operator*=(U f)
+        {
 			x *= f;
 			y *= f;
 			z *= f;
 			return *this;
 		}
 		template <typename U>
-		Normal3<T> operator/(U f) const {
+		Normal3<T> operator/(U f) const
+        {
 			CHECK_NE(f, 0);
 			Float inv = (Float)1 / f;
 			return Normal3<T>(x * inv, y * inv, z * inv);
 		}
 
 		template <typename U>
-		Normal3<T> &operator/=(U f) {
+		Normal3<T> &operator/=(U f)
+        {
 			CHECK_NE(f, 0);
 			Float inv = (Float)1 / f;
 			x *= inv;
@@ -326,6 +371,7 @@ namespace mei
 			z *= inv;
 			return *this;
 		}
+
 		Float LengthSquared() const { return x * x + y * y + z * z; }
 		Float Length() const { return std::sqrt(LengthSquared()); }
 
@@ -345,24 +391,30 @@ namespace mei
 			return *this;
 		}
 #endif  // !NDEBUG
-		explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z) {
+
+		explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z)
+        {
 			DCHECK(!v.HasNaNs());
 		}
-		bool operator==(const Normal3<T> &n) const {
+		bool operator==(const Normal3<T> &n) const
+        {
 			return x == n.x && y == n.y && z == n.z;
 		}
-		bool operator!=(const Normal3<T> &n) const {
+		bool operator!=(const Normal3<T> &n) const
+        {
 			return x != n.x || y != n.y || z != n.z;
 		}
 
-		T operator[](int i) const {
+		T operator[](int i) const
+        {
 			DCHECK(i >= 0 && i <= 2);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			return z;
 		}
 
-		T &operator[](int i) {
+		T &operator[](int i)
+        {
 			DCHECK(i >= 0 && i <= 2);
 			if (i == 0) return x;
 			if (i == 1) return y;
@@ -372,31 +424,37 @@ namespace mei
 		// Normal3 Public Data
 		T x, y, z;
 	};
-#if 0
+
+#if 1
 	template <typename T>
-	inline std::ostream &operator<<(std::ostream &os, const Normal3<T> &v) {
+	inline std::ostream &operator<<(std::ostream &os, const Normal3<T> &v)
+    {
 		os << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
 		return os;
 	}
 
 	template <>
-	inline std::ostream &operator<<(std::ostream &os, const Normal3<Float> &v) {
+	inline std::ostream &operator<<(std::ostream &os, const Normal3<Float> &v)
+    {
 		os << StringPrintf("[ %f, %f, %f ]", v.x, v.y, v.z);
 		return os;
 	}
 #endif
+
 	typedef Normal3<Float> Normal3f;
 
 
-
+    //< define here because it needs to access data member of n and p
 	template <typename T>
 	inline Vector3<T>::Vector3(const Normal3<T> &n)
-		: x(n.x), y(n.y), z(n.z) {
-		DCHECK(!n.HasNaNs());
+		: x(n.x), y(n.y), z(n.z)
+    {
+		DCHECK(!HasNaNs());
 	}
 	template <typename T>
 	inline Vector3<T>::Vector3(const Point3<T> &p)
-		: x(p.x), y(p.y), z(p.z) {
+		: x(p.x), y(p.y), z(p.z)
+    {
 		DCHECK(!HasNaNs());
 	}
 
@@ -488,8 +546,14 @@ namespace mei
 			return Bounds3<U>((Point3<U>)pMin, (Point3<U>)pMax);
 		}
 
-		bool IntersectP(const Ray &ray, Float *hitt0 = nullptr, Float *hitt1 = nullptr) const;
-		inline bool IntersectP(const Ray &ray, const Vector3f &invDir, const int dirIsNeg[3]) const;
+        bool IntersectP(const Ray &ray, Float *hitt0 = nullptr, Float *hitt1 = nullptr) const
+        {
+
+        }
+        inline bool IntersectP(const Ray &ray, const Vector3f &invDir, const int dirIsNeg[3]) const
+        {
+
+        }
 
 		friend std::ostream &operator<<(std::ostream &os, const Bounds3<T> &b) {
 			os << "[ " << b.pMin << " - " << b.pMax << " ]";
@@ -688,6 +752,7 @@ namespace mei
         //< Let it behavior like a function object
 		Point3f operator()(Float t) const { return o + d * t; }
 	};
+
 }// namespace
 
 #endif

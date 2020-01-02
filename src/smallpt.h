@@ -9,22 +9,20 @@
 #include <condition_variable>
 
 #include "interface.h"
-#include "Vector3.h"
-#include "Primitives.h"
-#include "scene.h"
-#include "camera.h"
-#include "randoms.h"
+#include "3d.h"
 
 namespace mei
 {
-	void Render(std::shared_ptr<Camera> camera, std::shared_ptr<Scene> scene);
+    //< forward declare
+    class Integrator;
+    class Scene;
+    class Camera;
 
 	// smallptTest as a basic Test
 	class smallptTest : public Observer
 	{
 	public:
 		static void render(void *data);
-        static std::mutex _sMutex;
 
 	private:
 		uint32_t _imageWidth;
@@ -32,20 +30,16 @@ namespace mei
 		uint32_t _imageSizeInPixel;
 		uint32_t _spp;
 		uint32_t _curSPP = 0;
-		float _ior;
-		Vector3 *_cumulativePixels = nullptr;
+		Vector3f *_cumulativePixels = nullptr;
 		float *_pixels = nullptr;
 		float *_renderResult = nullptr;
 		bool _renderSettingIsDirty = true;
 		bool _renderTargetIsDirty = true;
 
-		//Scene scene;
+        std::unique_ptr<Scene>       _scene; 
+        std::unique_ptr<Camera>      _camera; 
+        std::unique_ptr<Integrator>  _integrator; 
 
-        std::shared_ptr<Scene>  _scene; 
-        std::shared_ptr<Camera> _camera; 
-
-		std::mutex _mutex;
-		std::condition_variable _condVar;
 		std::thread *_renderThread = nullptr;
         bool _exitRendering = false; //< tell rendering thread to exit
 		bool _isRendering = false; //< rendering thread is working 
@@ -84,7 +78,7 @@ namespace mei
 
 		void reclaimRenderTargets()
 		{
-			_cumulativePixels = new Vector3[_imageSizeInPixel];
+			_cumulativePixels = new Vector3f[_imageSizeInPixel];
 			_pixels           = new float[_imageSizeInPixel * 3];
 			_renderResult     = new float[_imageSizeInPixel * 3];
 		}
@@ -130,14 +124,6 @@ namespace mei
 			}
 		}
 
-	private:
-		void newsmallpt();
-
-        void renderTile()
-        {
-            Render(_camera, _scene);
-        }
-
 	public:
 
 		//< Render Target change:
@@ -180,12 +166,6 @@ namespace mei
 		//< 3. Set flag to tell render setting is dirty
 		virtual void handleIORChange(float newIOR) override
 		{
-			if (_scene->_ior == newIOR) return;
-
-			exitRenderingThread();
-			_scene->_ior = newIOR;
-			_renderSettingIsDirty = true;
-			clearRenderTargets();
 		}
 
 		//< Render Target change:
@@ -194,11 +174,6 @@ namespace mei
 		//< 3. Set flag to tell render setting is dirty
 		virtual void handleSceneMaskChange(uint32_t newMask) override
 		{
-			exitRenderingThread();
-			_scene->_sphereScene = newMask & 0x1 ? true : false;
-			_scene->_triangleScene = newMask & 0x2 ? true : false;
-			_renderSettingIsDirty = true;
-			clearRenderTargets();
 		}
 
 		virtual void handleFocusOffsetChange(const glm::fvec2 &newFocusOffset)

@@ -1,5 +1,7 @@
 
 #include "primitives.h"
+#include "interactions.h"
+#include "shapes.h"
 
 namespace mei
 {

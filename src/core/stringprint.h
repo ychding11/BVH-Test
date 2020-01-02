@@ -12,6 +12,7 @@
 #include <string>
 #include <string.h>
 #include <inttypes.h>
+#include <glog/logging.h>
 
 namespace mei
 {
@@ -29,8 +30,8 @@ inline void stringPrintfRecursive(std::string *s, const char *fmt)
     // specifiers.
     while (*c) {
         if (*c == '%') {
-            //CHECK_EQ(c[1], '%');
-            assert(c[1] == '%');
+            CHECK_EQ(c[1], '%');
+            //assert(c[1] == '%');
             ++c;
         }
         *s += *c++;
@@ -40,7 +41,8 @@ inline void stringPrintfRecursive(std::string *s, const char *fmt)
 // 1. Copy from fmt to *s, up to the next formatting directive.
 // 2. Advance fmt past the next formatting directive and return the
 //    formatting directive as a string.
-inline std::string copyToFormatString(const char **fmt_ptr, std::string *s) {
+inline std::string copyToFormatString(const char **fmt_ptr, std::string *s)
+{
     const char *&fmt = *fmt_ptr;
     while (*fmt) {
         if (*fmt != '%') {

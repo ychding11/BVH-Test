@@ -84,7 +84,7 @@ namespace mei
 			}
 			fputs(buf.get(), stdout);
 
-#if 1
+#if 0
 			float seconds = elapsedMs() / 1000.f;
 			float remains = seconds / percentDone - seconds;
 			if (percentDone == 1.f)

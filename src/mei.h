@@ -5,11 +5,13 @@
 #include <algorithm>
 #include <cinttypes>
 #include <cmath>
-#include <iostream>
 #include <limits>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <iostream>
+#include <sstream>
 
 #include <assert.h>
 #include <string.h>
@@ -79,11 +81,23 @@ namespace mei
 	static const Float inf = 1e20;
 	static const Float eps = 1e-6;
 
+#if 0
 	template <typename T>
 	class Vector2;
 	template <typename T>
 	class Point2;
+#endif
 
-}
+	template <typename T>
+	inline bool isNaN(const T x)
+    {
+		return std::isnan(x);
+	}
+	template <>
+	inline bool isNaN(const int x)
+    {
+		return false;
+	}
 
+} //namespace
 #endif
