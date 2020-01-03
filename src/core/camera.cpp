@@ -110,34 +110,16 @@ namespace mei
 
 
 
-	Film *CreateFilm(const ParamSet &params, std::unique_ptr<Filter> filter)
+	Film *CreateFilm(const ParamSet &params)
 	{
 		std::string filename = "test.png";
 
 		int xres = 1280;
 		int yres = 720;
-		Bounds2f crop;
-		int cwi;
-		const Float *cr = params.FindFloat("cropwindow", &cwi);
-		if (cr && cwi == 4)
-		{
-			crop.pMin.x = Clamp(std::min(cr[0], cr[1]), 0.f, 1.f);
-			crop.pMax.x = Clamp(std::max(cr[0], cr[1]), 0.f, 1.f);
-			crop.pMin.y = Clamp(std::min(cr[2], cr[3]), 0.f, 1.f);
-			crop.pMax.y = Clamp(std::max(cr[2], cr[3]), 0.f, 1.f);
-		}
-		else if (cr)
-			Error("%d values supplied for \"cropwindow\". Expected 4.", cwi);
-		else
-			crop = Bounds2f(Point2f(Clamp(PbrtOptions.cropWindow[0][0], 0, 1),
-				Clamp(PbrtOptions.cropWindow[1][0], 0, 1)),
-				Point2f(Clamp(PbrtOptions.cropWindow[0][1], 0, 1),
-					Clamp(PbrtOptions.cropWindow[1][1], 0, 1)));
-
-		Float scale = params.FindOneFloat("scale", 1.);
-		Float diagonal = params.FindOneFloat("diagonal", 35.);
-		Float maxSampleLuminance = params.FindOneFloat("maxsampleluminance", Infinity);
-		return new Film(Point2i(xres, yres), crop, std::move(filter), diagonal, filename, scale, maxSampleLuminance);
+        Bounds2f crop{ {0., 1.},{0., 1.} };
+        Float scale = 1.; 
+        Float maxSampleLuminance = Infinity;
+		return new Film(Point2i(xres, yres), crop,  filename, scale, maxSampleLuminance);
 	}
 
 	Camera *CreateCamera( Film *film)
@@ -171,6 +153,6 @@ namespace mei
 		Float fov = 90;
 		Float halffov = 45;
 	    fov = 2.f * halffov;
-		return new Camera(cam2world, screen, shutteropen, shutterclose, lensradius, focaldistance, fov, film);
+		return new Camera(screen,fov, film);
 	}
 }

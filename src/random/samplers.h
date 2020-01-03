@@ -100,7 +100,6 @@ namespace mei
 		static const int arrayStartDim = 5;
 		int arrayEndDim;
 	};
-}
 
-
+}// namespace
 #endif
