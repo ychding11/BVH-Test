@@ -114,10 +114,10 @@ namespace mei
     class Scene;
     class Camera;
     class Primitive;
+    class Light;
 
     struct RenderContext
     {
-        // RenderOptions Public Methods
         Integrator *MakeIntegrator() const;
         Scene *MakeScene();
         Camera *MakeCamera() const;
@@ -137,7 +137,7 @@ namespace mei
         ParamSet CameraParams;
         //TransformSet CameraToWorld;
         //std::map<std::string, std::shared_ptr<Medium>> namedMedia;
-        //std::vector<std::shared_ptr<Light>> lights;
+        std::vector<std::shared_ptr<Light>> lights;
         std::vector<std::shared_ptr<Primitive>> primitives;
         //std::map<std::string, std::vector<std::shared_ptr<Primitive>>> instances;
         std::vector<std::shared_ptr<Primitive>> *currentInstance = nullptr;

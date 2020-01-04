@@ -123,9 +123,9 @@ namespace mei
 
 		std::ostringstream _ss;
 
-	/*******************************************************************************
-    *  coordinate is tightly coupled with width and height of image
-	********************************************************************************/
+		/*******************************************************************************
+		*  coordinate is tightly coupled with width and height of image
+		********************************************************************************/
 		void constructCoordinate();
 		
         //! get a sample in [0,0), support subpixel;
@@ -133,19 +133,21 @@ namespace mei
         
 	public:
         Film *pFilm;
+
 		Camera() = delete; //< No default constructor allowed
 		//Camera(uint32_t w, uint32_t _h, Float vfov);
 
 		//! \param position is in world space
 		//! \param dir is in world space and is normalized
-		Camera(Point3f position, Vector3f dir, uint32_t w = 1024, uint32_t h = 1024, Float vfov = 55.)
+		Camera(Point3f position, Vector3f dir, Float vfov, Film *film)
 			: _p(position), _d(dir)
-			, _w(w), _h(h)
+			, _w(0), _h(0)
 			, _vfov(vfov)
+			, pFilm(film)
 		{
+			_w = film->fullResolution.x;
+			_h = film->fullResolution.y;
 			constructCoordinate();
-            pFilm = new Film(Point2i(_w,_h), Bounds2f(Point2f(0,0),Point2f(1.,1.)), "temp", 1.0);
-			//_ss << "camera creation.\t dir:" << _d.str() << "\t pos:" << _p.str() << std::endl;
 		}
 
 		void setImageSize(uint32_t w, uint32_t h)
@@ -185,6 +187,8 @@ namespace mei
         }
 	};
 
-}
+	Film   *CreateFilm();
+	Camera *CreateCamera(Film *film);
 
+} //<namespace
 #endif

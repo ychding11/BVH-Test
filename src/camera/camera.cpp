@@ -110,7 +110,7 @@ namespace mei
 
 
 
-	Film *CreateFilm(const ParamSet &params)
+	Film *CreateFilm()
 	{
 		std::string filename = "test.png";
 
@@ -125,34 +125,11 @@ namespace mei
 	Camera *CreateCamera( Film *film)
 	{
 		// Extract common camera parameters from _ParamSet_
-		Float frame = Float(film->fullResolution.x) / Float(film->fullResolution.y);
-		Bounds2f screen;
-		if (frame > 1.f)
-		{
-			screen.pMin.x = -frame;
-			screen.pMax.x = frame;
-			screen.pMin.y = -1.f;
-			screen.pMax.y = 1.f;
-		}
-		else
-		{
-			screen.pMin.x = -1.f;
-			screen.pMax.x = 1.f;
-			screen.pMin.y = -1.f / frame;
-			screen.pMax.y = 1.f / frame;
-		}
-		int swi;
-		Float sw[] = { 0 };
-
-			{
-				screen.pMin.x = sw[0];
-				screen.pMax.x = sw[1];
-				screen.pMin.y = sw[2];
-				screen.pMax.y = sw[3];
-			}
 		Float fov = 90;
 		Float halffov = 45;
 	    fov = 2.f * halffov;
-		return new Camera(screen,fov, film);
+		Point3f  position{};
+		Vector3f dir{};
+		return new Camera(position,dir,fov, film);
 	}
 }

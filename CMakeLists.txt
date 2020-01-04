@@ -33,6 +33,7 @@ include_directories (
 
 file(GLOB  EXE_SRC_FILES
 	${CMAKE_SOURCE_DIR}/src/main/*.cpp
+	${CMAKE_SOURCE_DIR}/src/main/*.h
 )
 file(GLOB  HW_SRC_FILES
 	 ${CMAKE_SOURCE_DIR}/quad/*.h
@@ -47,6 +48,14 @@ file(GLOB SRC_FILES
 	${CMAKE_SOURCE_DIR}/src/random/*.cpp
     ${CMAKE_SOURCE_DIR}/src/types/*.h
 	${CMAKE_SOURCE_DIR}/src/types/*.cpp
+	${CMAKE_SOURCE_DIR}/src/camera/*.h
+	${CMAKE_SOURCE_DIR}/src/camera/*.cpp
+	${CMAKE_SOURCE_DIR}/src/integrator/*.h
+	${CMAKE_SOURCE_DIR}/src/integrator/*.cpp
+	${CMAKE_SOURCE_DIR}/src/accelerator/*.h
+	${CMAKE_SOURCE_DIR}/src/accelerator/*.cpp
+	${CMAKE_SOURCE_DIR}/src/utils/*.h
+	${CMAKE_SOURCE_DIR}/src/utils/*.cpp
 )
 
 file(GLOB EXT_FILES
@@ -60,9 +69,6 @@ file(GLOB EXT_FILES
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/
   ${CMAKE_SOURCE_DIR}/src/
-  ${CMAKE_SOURCE_DIR}/src/core
-  ${CMAKE_SOURCE_DIR}/src/random
-  ${CMAKE_SOURCE_DIR}/src/types
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
   ${CMAKE_SOURCE_DIR}/thirdparty/glm

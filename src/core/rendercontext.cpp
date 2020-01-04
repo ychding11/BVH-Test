@@ -4,9 +4,7 @@
 
 #include "stringprint.h"
 //#include "parallel.h"
-#include "samplers.h"
-#include "camera.h"
-#include "scene.h"
+
 
 namespace mei
 {
@@ -651,3 +649,108 @@ namespace mei
         printItems("string", indent, strings);
     }
 } //< namespace
+
+
+#include "samplers.h"
+#include "camera.h"
+#include "scene.h"
+
+namespace mei
+{
+
+
+	Film *MakeFilm()
+	{
+		Film *film = CreateFilm();
+		return film;
+	}
+
+	Camera *MakeCamera(Film *pfilm)
+	{
+		Camera *camera = CreateCamera(pfilm);
+		return camera;
+	}
+	Camera *RenderContext::MakeCamera() const
+	{
+		Film *film = MakeFilm();
+		if (!film)
+		{
+			LOG(ERROR) << ("Unable to create film.");
+			return nullptr;
+		}
+		Camera *camera = mei::MakeCamera(film);
+		return camera;
+	}
+
+
+	Integrator *RenderContext::MakeIntegrator() const
+	{
+		std::shared_ptr<const Camera> camera(MakeCamera());
+		if (!camera)
+		{
+			LOG(ERROR) << ("Unable to create camera");
+			return nullptr;
+		}
+
+		std::shared_ptr<Sampler> sampler = MakeSampler(SamplerName, SamplerParams, camera->film);
+		if (!sampler)
+		{
+			LOG(ERROR) << ("Unable to create sampler.");
+			return nullptr;
+		}
+
+		Integrator *integrator = nullptr;
+		if (IntegratorName == "whitted")
+		{
+			integrator = CreateWhittedIntegrator(IntegratorParams, sampler, camera);
+		}
+		else if (IntegratorName == "directlighting")
+		{
+			integrator = CreateDirectLightingIntegrator(IntegratorParams, sampler, camera);
+		}
+		else
+		{
+			("Integrator \"%s\" unknown.", IntegratorName.c_str());
+			return nullptr;
+		}
+
+
+		// Warn if no light sources are defined
+		if (lights.empty())
+			( "No light sources defined in scene; ");
+		return integrator;
+	}
+
+
+	std::shared_ptr<Primitive> MakeAccelerator( const std::string &name, std::vector<std::shared_ptr<Primitive>> prims, const ParamSet &paramSet)
+	{
+		std::shared_ptr<Primitive> accel;
+		if (name == "bvh")
+		{
+		}
+		else if (name == "kdtree")
+		{
+
+		}
+		else
+		{
+			("Accelerator \"%s\" unknown.", name.c_str());
+		}
+		return accel;
+	}
+
+	Scene *RenderContext::MakeScene()
+	{
+		std::shared_ptr<Primitive> accelerator = MakeAccelerator(AcceleratorName, std::move(primitives), AcceleratorParams);
+		if (!accelerator)
+		{
+
+		}
+		Scene *scene = new Scene(accelerator, lights);
+		// Erase primitives and lights from _RenderOptions_
+		primitives.clear();
+		lights.clear();
+		return scene;
+	}
+
+}//< namespace
