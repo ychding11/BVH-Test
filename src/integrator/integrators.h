@@ -103,6 +103,8 @@ namespace mei
 		int  nSamples;
     };
 
+    NaiveIntegrator *CreateNaiveIntegrator(std::shared_ptr<Sampler> sampler, std::shared_ptr<const Camera> camera);
+
 } //namespace
 
 #endif

@@ -3,9 +3,9 @@
 #include "integrators.h"
 
 #include "parallel.h"
-#include "samplers.h"
-#include "camera.h"
 #include "scene.h"
+#include "random/samplers.h"
+#include "camera/camera.h"
 
 namespace mei
 {
@@ -111,8 +111,7 @@ namespace mei
 
 
 
-    NaiveIntegrator *CreateNaiveIntegrator(std::shared_ptr<Sampler> sampler,
-        std::shared_ptr<const Camera> camera) 
+    NaiveIntegrator *CreateNaiveIntegrator(std::shared_ptr<Sampler> sampler, std::shared_ptr<const Camera> camera) 
     {
         int maxDepth = 5;
         int pb[] = {0 };

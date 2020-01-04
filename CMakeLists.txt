@@ -69,6 +69,8 @@ file(GLOB EXT_FILES
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/
   ${CMAKE_SOURCE_DIR}/src/
+  ${CMAKE_SOURCE_DIR}/src/core/
+  ${CMAKE_SOURCE_DIR}/src/types/
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
   ${CMAKE_SOURCE_DIR}/thirdparty/glm

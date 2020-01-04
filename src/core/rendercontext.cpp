@@ -651,8 +651,9 @@ namespace mei
 } //< namespace
 
 
-#include "samplers.h"
-#include "camera.h"
+#include "random/samplers.h"
+#include "camera/camera.h"
+#include "integrator/integrators.h"
 #include "scene.h"
 
 namespace mei
@@ -683,6 +684,40 @@ namespace mei
 	}
 
 
+    std::shared_ptr<Sampler> MakeSampler(const std::string &name, const ParamSet &paramSet, const Film *film)
+    {
+        Sampler *sampler = nullptr;
+        if (name == "lowdiscrepancy" || name == "02sequence")
+        {
+
+        }
+        else if (name == "maxmindist")
+        {
+
+        }
+        else if (name == "halton")
+        {
+
+        }
+        else if (name == "sobol")
+        {
+
+        }
+        else if (name == "random")
+        {
+
+        }
+        else if (name == "stratified")
+        {
+
+        }
+        else
+        {
+            LOG(ERROR) << ("Sampler \"%s\" unknown.", name.c_str());
+        }
+        return std::shared_ptr<Sampler>(sampler);
+    }
+
 	Integrator *RenderContext::MakeIntegrator() const
 	{
 		std::shared_ptr<const Camera> camera(MakeCamera());
@@ -692,7 +727,7 @@ namespace mei
 			return nullptr;
 		}
 
-		std::shared_ptr<Sampler> sampler = MakeSampler(SamplerName, SamplerParams, camera->film);
+		std::shared_ptr<Sampler> sampler = MakeSampler(SamplerName, SamplerParams, camera->pFilm);
 		if (!sampler)
 		{
 			LOG(ERROR) << ("Unable to create sampler.");
@@ -702,39 +737,42 @@ namespace mei
 		Integrator *integrator = nullptr;
 		if (IntegratorName == "whitted")
 		{
-			integrator = CreateWhittedIntegrator(IntegratorParams, sampler, camera);
+			LOG(ERROR) << ( "Not Supported yet.");
 		}
 		else if (IntegratorName == "directlighting")
 		{
-			integrator = CreateDirectLightingIntegrator(IntegratorParams, sampler, camera);
+			LOG(ERROR) << ( "Not Supported yet.");
+		}
+		else if (IntegratorName == "naive")
+		{
+			integrator = CreateNaiveIntegrator(sampler, camera);
 		}
 		else
 		{
-			("Integrator \"%s\" unknown.", IntegratorName.c_str());
+			LOG(ERROR) << ("Integrator \"%s\" unknown.", IntegratorName.c_str());
 			return nullptr;
 		}
 
-
 		// Warn if no light sources are defined
 		if (lights.empty())
-			( "No light sources defined in scene; ");
+			LOG(ERROR) << ( "No light sources defined in scene; ");
 		return integrator;
 	}
-
 
 	std::shared_ptr<Primitive> MakeAccelerator( const std::string &name, std::vector<std::shared_ptr<Primitive>> prims, const ParamSet &paramSet)
 	{
 		std::shared_ptr<Primitive> accel;
 		if (name == "bvh")
 		{
+			LOG(ERROR) << StringPrintf("Accelerator \"%s\" Not supported yet.", name.c_str());
 		}
 		else if (name == "kdtree")
 		{
-
+			LOG(ERROR) << StringPrintf("Accelerator \"%s\" Not supported yet.", name.c_str());
 		}
 		else
 		{
-			("Accelerator \"%s\" unknown.", name.c_str());
+			LOG(ERROR) << StringPrintf("Accelerator \"%s\" unknown. Use naive one.", name.c_str());
 		}
 		return accel;
 	}
@@ -744,9 +782,11 @@ namespace mei
 		std::shared_ptr<Primitive> accelerator = MakeAccelerator(AcceleratorName, std::move(primitives), AcceleratorParams);
 		if (!accelerator)
 		{
-
+			LOG(ERROR) << ("Accelerator \"%s\" is null.");
+            return nullptr;
 		}
-		Scene *scene = new Scene(accelerator, lights);
+		Scene *scene = new Scene(accelerator);
+
 		// Erase primitives and lights from _RenderOptions_
 		primitives.clear();
 		lights.clear();
