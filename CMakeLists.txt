@@ -32,11 +32,11 @@ include_directories (
 
 
 file(GLOB  EXE_SRC_FILES
-	${CMAKE_SOURCE_DIR}/src/main/*.cpp
-	${CMAKE_SOURCE_DIR}/src/main/*.h
+	${CMAKE_SOURCE_DIR}/raytest/*.cpp
+	${CMAKE_SOURCE_DIR}/raytest/*.h
 )
 file(GLOB  HW_SRC_FILES
-	 ${CMAKE_SOURCE_DIR}/quad/*.h
+	${CMAKE_SOURCE_DIR}/quad/*.h
     ${CMAKE_SOURCE_DIR}/quad/*.cpp
 )
 file(GLOB SRC_FILES

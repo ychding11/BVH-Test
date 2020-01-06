@@ -37,7 +37,6 @@ namespace mei
 		bool _renderTargetIsDirty = true;
 
         std::unique_ptr<Scene>       _scene; 
-        std::unique_ptr<Camera>      _camera; 
         std::unique_ptr<Integrator>  _integrator; 
 
 		std::thread *_renderThread = nullptr;
@@ -130,19 +129,7 @@ namespace mei
 		//< 1. Exit current rendering thread.
 		//< 2. Set new settings, reclaim memory.
 		//< 3. Set flag to tell render setting is dirty
-		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override
-		{
-            //std::lock_guard<std::mutex> lock(_sMutex);
-			exitRenderingThread();
-			_camera->setImageSize(newScreenSize.x, newScreenSize.y);
-            _imageWidth  = newScreenSize.x;
-			_imageHeight = newScreenSize.y;
-			_imageSizeInPixel = _imageWidth * _imageHeight;
-			_renderSettingIsDirty = true;
-			destroyRenderTargets();
-			reclaimRenderTargets();
-			clearRenderTargets();
-		}
+		virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override;
 
 		//< Render ssp change:
 		//< 1. Exit current rendering thread.

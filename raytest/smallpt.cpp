@@ -4,11 +4,11 @@
 //#include <omp.h>
 
 #include "smallpt.h"
-#include "profiler.h"
+#include "utils/profiler.h"
 
 #include "scene.h"
-#include "camera.h"
-#include "integrators.h"
+#include "camera/camera.h"
+#include "integrator/integrators.h"
 //#include "randoms.h"
 
 namespace mei
@@ -43,6 +43,24 @@ namespace mei
 		this->handleScreenSizeChange(glm::ivec2(width, height));
 		this->handleSampleCountChange(sample);
 	}
+
+		//< Render Target change:
+		//< 1. Exit current rendering thread.
+		//< 2. Set new settings, reclaim memory.
+		//< 3. Set flag to tell render setting is dirty
+		void smallptTest::handleScreenSizeChange(const glm::ivec2 &newScreenSize)
+		{
+            //std::lock_guard<std::mutex> lock(_sMutex);
+			exitRenderingThread();
+			_camera->setImageSize(newScreenSize.x, newScreenSize.y);
+            _imageWidth  = newScreenSize.x;
+			_imageHeight = newScreenSize.y;
+			_imageSizeInPixel = _imageWidth * _imageHeight;
+			_renderSettingIsDirty = true;
+			destroyRenderTargets();
+			reclaimRenderTargets();
+			clearRenderTargets();
+		}
 
 #if 0
 	//< 1. Start Rendering Thread When Test Created.
