@@ -155,9 +155,16 @@ namespace mei
 	void meiInit()
 	{
 		renderContext.reset(new RenderContext);
-
 		ParallelInit();
 	}
+
+
+    void meiRun()
+    {
+        std::unique_ptr<Integrator> integrator(renderContext->MakeIntegrator());
+        std::unique_ptr<Scene> scene(renderContext->MakeScene());
+        if (scene && integrator) integrator->Render(*scene);
+    }
 
 	void meiCleanup()
 	{

@@ -15,6 +15,8 @@
 
 #include <assert.h>
 #include <string.h>
+
+#define GLOG_NO_ABBREVIATED_SEVERITIES
 #include <glog/logging.h>
 
 // Platform-specific definitions

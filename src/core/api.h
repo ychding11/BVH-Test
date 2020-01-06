@@ -49,6 +49,7 @@ namespace mei
 
 	// API Function Definitions
 	void meiInit();
+    void meiRun();
 	void meiCleanup();
 
 }

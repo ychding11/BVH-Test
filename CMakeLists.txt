@@ -39,7 +39,7 @@ file(GLOB  HW_SRC_FILES
 	${CMAKE_SOURCE_DIR}/quad/*.h
     ${CMAKE_SOURCE_DIR}/quad/*.cpp
 )
-file(GLOB SRC_FILES
+file(GLOB MEI_SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.h
     ${CMAKE_SOURCE_DIR}/src/*.cpp
 	${CMAKE_SOURCE_DIR}/src/core/*.h
@@ -112,7 +112,7 @@ set(GLFW_LIBS glfw3.lib)
 
 #######################################################################################
 
-foreach(f ${SRC_FILES})
+foreach(f ${MEI_SRC_FILES})
     # Get the path of the file relative to ${DIRECTORY},
     # then alter it (not compulsory)
     file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
@@ -244,18 +244,40 @@ endmacro()
 
 ## Target
 #######################################################################################
+
+add_library(mei STATIC ${MEI_SRC_FILES})
+IF (WIN32)
+  # Avoid a name clash when building on Visual Studio
+  set_target_properties ( mei PROPERTIES OUTPUT_NAME libmei )
+ENDIF()
+
 set(EXE_NAME "MeiRender")
-add_executable(${EXE_NAME} ${EXE_SRC_FILES} ${HW_SRC_FILES} ${SRC_FILES} ${EXT_FILES})
-target_link_libraries(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} glog)
+add_executable(${EXE_NAME} ${EXE_SRC_FILES} ${HW_SRC_FILES} ${EXT_FILES})
+target_link_libraries(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} mei glog)
 default_property(${EXE_NAME})
 
 file ( GLOB TEST_SOURCE
     ${CMAKE_SOURCE_DIR}/tests/*.cpp
     ${CMAKE_SOURCE_DIR}/tests/gtest/*.cc
-  )
+)
+  
+foreach(f ${TEST_SOURCE})
+    # Get the path of the file relative to ${DIRECTORY},
+    # then alter it (not compulsory)
+    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
+    set(SRCGR "Unit-Test/${SRCGR}")
+
+    # Extract the folder, ie remove the filename part
+    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
+
+    # Source_group expects \\ (double antislash), not / (slash)
+    string(REPLACE / \\ SRCGR ${SRCGR})
+    source_group("${SRCGR}" FILES ${f})
+endforeach()
+
 set(EXE_NAME "mytest")
-add_executable ( ${EXE_NAME} ${TEST_SOURCE} ${SRC_FILES})
-target_link_libraries( ${EXE_NAME} glog )
+add_executable ( ${EXE_NAME} ${TEST_SOURCE})
+target_link_libraries( ${EXE_NAME} mei glog )
 default_property(${EXE_NAME})
 
 
