@@ -76,7 +76,8 @@ static const Float OneMinusEpsilon = FloatOneMinusEpsilon;
 		{
 			uint64_t cur_mult = PCG32_MULT, cur_plus = inc, acc_mult = 1u,
 				acc_plus = 0u, delta = (uint64_t)idelta;
-			while (delta > 0) {
+			while (delta > 0)
+            {
 				if (delta & 1) {
 					acc_mult *= cur_mult;
 					acc_plus = acc_plus * cur_mult + cur_plus;

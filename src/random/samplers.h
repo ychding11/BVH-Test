@@ -65,8 +65,8 @@ namespace mei
 	public:
 		// PixelSampler Public Methods
 		PixelSampler(int64_t samplesPerPixel, int nSampledDimensions);
-		bool StartNextSample();
-		bool SetSampleNumber(int64_t);
+		virtual bool StartNextSample() override;
+		virtual bool SetSampleNumber(int64_t) override;
 
 		virtual Float   Get1D() override;
 		virtual Point2f Get2D() override;
@@ -82,9 +82,9 @@ namespace mei
 	class GlobalSampler : public Sampler
 	{
 	public:
-		bool StartNextSample();
-		void StartPixel(const Point2i &);
-		bool SetSampleNumber(int64_t sampleNum);
+		virtual bool StartNextSample() override;
+		virtual void StartPixel(const Point2i &) override;
+		virtual bool SetSampleNumber(int64_t sampleNum) override;
 
 		virtual Float Get1D() override;
 		virtual Point2f Get2D() override;

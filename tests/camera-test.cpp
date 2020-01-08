@@ -11,13 +11,27 @@ using namespace mei;
 
 TEST(Camera, Basics)
 {
-	std::unique_ptr<Film> pfilm(CreateFilm());
+    int width = 4;
+    int height = 4;
+	std::unique_ptr<Film> pfilm(CreateFilm(width, height));
 
-	const Point2i cropRes{ 1280, 720 };
-	EXPECT_EQ(cropRes, pfilm->fullResolution);
+	const Point2i ResolutionExpected{ width, height};
+	EXPECT_EQ(ResolutionExpected, pfilm->fullResolution);
 
 	EXPECT_EQ("test.png", pfilm->filename);
 
-	const Bounds2i cropExpected{ {0, 1}, {0, 1} };
-	EXPECT_EQ(cropExpected, pfilm->croppedPixelBounds);
+	const Bounds2f cropExpected{ {0, 0}, {1, 1} };
+    const Bounds2i cropResolutionExpected{
+        Point2i{(int)std::ceil(ResolutionExpected.x * cropExpected.pMin.x), (int)std::ceil(ResolutionExpected.y * cropExpected.pMin.y)},
+        Point2i{(int)std::ceil(ResolutionExpected.x * cropExpected.pMax.x), (int)std::ceil(ResolutionExpected.y * cropExpected.pMax.y)}
+    };
+	EXPECT_EQ(cropResolutionExpected, pfilm->croppedPixelBounds);
+    for (auto p : cropResolutionExpected)
+    {
+        LOG(INFO) << p.str();
+    }
+
+    std::unique_ptr<Camera> camera(CreateCamera(pfilm.get()));
+
+
 }

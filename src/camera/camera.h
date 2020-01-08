@@ -20,15 +20,14 @@ namespace mei
         Float time;
     };
 
-	// FilmTilePixel Declarations
 	struct FilmTilePixel
 	{
 		Vector3f contribSum;
 	};
 
+    //< Forward declare
 	class FilmTile;
 
-	// Film Declarations
 	class Film
 	{
 	public:
@@ -187,7 +186,7 @@ namespace mei
         }
 	};
 
-	Film   *CreateFilm();
+	Film   *CreateFilm(int width = 1280, int height = 720);
 	Camera *CreateCamera(Film *film);
 
 } //<namespace

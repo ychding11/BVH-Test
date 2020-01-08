@@ -18,13 +18,13 @@
 
 namespace mei
 {
+	// Forward Declarations
     template <typename T>
     class Vector2;
     template <typename T>
     class Point2;
 
 
-	// Vector Declarations
 	template <typename T>
 	class Vector2
     {

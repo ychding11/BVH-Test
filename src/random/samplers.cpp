@@ -23,7 +23,8 @@ namespace mei
 	{
 		currentPixel = p;
 		currentPixelSampleIndex = 0;
-		// Reset array offsets for next pixel sample
+
+		//< Reset array offsets for next pixel sample
 		array1DOffset = array2DOffset = 0;
 	}
 

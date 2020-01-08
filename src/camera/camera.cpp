@@ -11,10 +11,8 @@ namespace mei
 	{
 		// Compute film image bounds
 		croppedPixelBounds =
-			Bounds2i(Point2i(std::ceil(fullResolution.x * cropWindow.pMin.x),
-							 std::ceil(fullResolution.y * cropWindow.pMin.y)),
-							 Point2i(std::ceil(fullResolution.x * cropWindow.pMax.x),
-					std::ceil(fullResolution.y * cropWindow.pMax.y)));
+			Bounds2i(Point2i(std::ceil(fullResolution.x * cropWindow.pMin.x), std::ceil(fullResolution.y * cropWindow.pMin.y)),
+					 Point2i(std::ceil(fullResolution.x * cropWindow.pMax.x), std::ceil(fullResolution.y * cropWindow.pMax.y)));
 		LOG(INFO) << "Created film with full resolution " << resolution.str() <<
 			". Crop window of " << cropWindow.str() << " -> croppedPixelBounds " << croppedPixelBounds.str();
 
@@ -110,13 +108,13 @@ namespace mei
 
 
 
-	Film *CreateFilm()
+	Film *CreateFilm(int width, int height)
 	{
 		std::string filename = "test.png";
 
-		int xres = 1280;
-		int yres = 720;
-        Bounds2f crop{ {0., 1.},{0., 1.} };
+		int xres = width;
+		int yres = height;
+        Bounds2f crop{ {0., 0.}, {1., 1.} };
         Float scale = 1.; 
         Float maxSampleLuminance = Infinity;
 		return new Film(Point2i(xres, yres), crop,  filename, scale, maxSampleLuminance);
@@ -124,7 +122,6 @@ namespace mei
 
 	Camera *CreateCamera( Film *film)
 	{
-		// Extract common camera parameters from _ParamSet_
 		Float halffov = 45;
 		Float fov = 2.f * halffov;
 		Point3f  position{0,0,1};

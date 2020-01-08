@@ -8,6 +8,7 @@
 #include "random/samplers.h"
 #include "camera/camera.h"
 #include "integrator/integrators.h"
+#include "integrator/naiveintegrator.h"
 #include "scene.h"
 
 namespace mei
