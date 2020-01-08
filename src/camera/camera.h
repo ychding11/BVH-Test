@@ -150,7 +150,12 @@ namespace mei
 			constructCoordinate();
 		}
 
-		void setImageSize(uint32_t w, uint32_t h)
+		Vector2i FilmSize() const
+		{
+			return Vector2i(_w, _h);
+		}
+
+		void FilmSize(uint32_t w, uint32_t h)
 		{
 			if (w != _w || h != _h)
 			{
@@ -159,17 +164,12 @@ namespace mei
 			}
 		}
 
-		Vector2i filmSize() const
-		{
-			return Vector2i(_w, _h);
-		}
-
-		Bounds2i sampleBound() const
+		Bounds2i SampleBound() const
 		{
 			return Bounds2i(Point2i(0,0), Point2i(_w, _h));
 		}
 
-		Float aspect() const { return double(_w) / double(_h); };
+		Float Aspect() const { return double(_w) / double(_h); };
 
 		//! get a random ray based on (u, v) in image plane
 		Ray getRay(uint32_t u, uint32_t v, unsigned short *X = nullptr);

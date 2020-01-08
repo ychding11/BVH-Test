@@ -125,11 +125,10 @@ namespace mei
 	Camera *CreateCamera( Film *film)
 	{
 		// Extract common camera parameters from _ParamSet_
-		Float fov = 90;
 		Float halffov = 45;
-	    fov = 2.f * halffov;
-		Point3f  position{};
-		Vector3f dir{};
+		Float fov = 2.f * halffov;
+		Point3f  position{0,0,1};
+		Vector3f dir{0,0,-1};
 		return new Camera(position,dir,fov, film);
 	}
 }
