@@ -38,11 +38,11 @@ namespace mei
 		GeometricPrimitive(const std::shared_ptr<Shape> &shape);
 
 		// GeometricPrimitive Public Methods
-        virtual Bounds3f WorldBound() const;
+        virtual Bounds3f WorldBound() const override;
 
-        virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const;
+        virtual bool Intersect(const Ray &r, SurfaceInteraction *isect) const override;
         
-        virtual bool IntersectP(const Ray &r) const;
+        virtual bool IntersectP(const Ray &r) const override;
 
 #if 0
 		const AreaLight *GetAreaLight() const;
@@ -62,7 +62,42 @@ namespace mei
 #endif
 	};
 
-    //< the following will be deleted later
+
+    // Aggregate Declarations
+    class Aggregate : public Primitive
+    {
+    public:
+
+#if 0
+        const AreaLight *GetAreaLight() const;
+        const Material *GetMaterial() const;
+        void ComputeScatteringFunctions(SurfaceInteraction *isect,
+            MemoryArena &arena, TransportMode mode,
+            bool allowMultipleLobes) const;
+#endif
+    };
+
+    // BVHAccel Declarations
+    class ListAggregate : public Aggregate
+    {
+    public:
+
+        ListAggregate(std::vector<std::shared_ptr<Primitive>> p);
+
+        ~ListAggregate();
+
+        Bounds3f WorldBound() const override;
+
+        virtual bool Intersect(const Ray &ray, SurfaceInteraction *isect) const override;
+        virtual bool IntersectP(const Ray &ray) const override;
+
+    private:
+
+        std::vector<std::shared_ptr<Primitive>> primitives;
+    };
+
+    std::shared_ptr<ListAggregate> CreateListAggregate( std::vector<std::shared_ptr<Primitive>> prims);
+
 #if 0
     struct AABB
     {

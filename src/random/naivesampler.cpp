@@ -37,9 +37,9 @@ namespace mei
         Sampler::StartPixel(p);
     }
 
-    Sampler *CreateNaiveSampler()
+    Sampler *CreateNaiveSampler(int n)
     {
-        int ns = 4;
+        int ns = n;
         return new NaiveSampler(ns);
     }
 } //<namespace

@@ -108,7 +108,11 @@ namespace mei
 			return 0.5 * Cross(p1 - p0, p2 - p0).Length();
 		}
 	};
-}
 
+    //<
+    std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
+        int nTriangles, const int *vertexIndices,
+        int nVertices, const Point3f *p, const Normal3f *n);
 
+} //end namespace
 #endif

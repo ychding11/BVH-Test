@@ -25,6 +25,6 @@ namespace mei
         RNG rng;
     };
 
-    Sampler *CreateNaiveSampler();
+    Sampler *CreateNaiveSampler(int n = 4);
 }// namespace
 #endif

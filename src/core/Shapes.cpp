@@ -95,5 +95,18 @@ namespace mei
 		//return _e2.dot(qvec)* invdet;
 		return true;
 	}
+
+
+    std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
+        int nTriangles, const int *vertexIndices,
+        int nVertices, const Point3f *p,  const Normal3f *n)
+    {
+        std::shared_ptr<TriangleMesh> mesh = std::make_shared<TriangleMesh>( nTriangles, vertexIndices, nVertices, p, n);
+        std::vector<std::shared_ptr<Shape>> tris;
+        tris.reserve(nTriangles);
+        for (int i = 0; i < nTriangles; ++i)
+            tris.push_back(std::make_shared<Triangle>( mesh, i));
+        return tris;
+    }
 }
 

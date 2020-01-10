@@ -39,5 +39,31 @@ namespace mei
     {
         return shape->IntersectP(r);
     }
-}
+
+    ListAggregate::ListAggregate(std::vector<std::shared_ptr<Primitive>> p)
+        : primitives(std::move(p))
+    {
+    }
+
+    ListAggregate::~ListAggregate(){}
+
+    Bounds3f ListAggregate::WorldBound() const
+    {
+
+    }
+
+    bool ListAggregate::Intersect(const Ray &ray, SurfaceInteraction *isect) const
+    {
+
+    }
+    bool ListAggregate::IntersectP(const Ray &ray) const
+    {
+
+    }
+
+    std::shared_ptr<ListAggregate> CreateListAggregate(std::vector<std::shared_ptr<Primitive>> prims)
+    {
+        return std::shared_ptr<ListAggregate>{new ListAggregate(prims)};
+    }
+} //namespace
 

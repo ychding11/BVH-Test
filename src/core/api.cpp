@@ -113,6 +113,42 @@ namespace mei
 		return integrator;
 	}
 
+    // Object Creation Function Definitions
+    std::vector<std::shared_ptr<Shape>> MakeShapes(const std::string &name, const ParamSet &paramSet)
+    {
+        std::vector<std::shared_ptr<Shape>> shapes;
+        std::shared_ptr<Shape> s;
+        if (name == "sphere")
+        {
+
+        }
+        else if (name == "cylinder")
+        {
+
+        }
+        else if (name == "disk")
+        {
+
+        }
+        else if (name == "cone")
+        {
+
+        }
+        if (s != nullptr) shapes.push_back(s);
+
+        else if (name == "curve")
+        {
+
+        }
+        else if (name == "trianglemesh")
+        {
+
+        }
+        else
+            LOG(ERROR) << StringPrintf("Shape \"%s\" unknown.", name.c_str());
+        return shapes;
+    }
+
 	std::shared_ptr<Primitive> MakeAccelerator( const std::string &name, std::vector<std::shared_ptr<Primitive>> prims, const ParamSet &paramSet)
 	{
 		std::shared_ptr<Primitive> accel;
