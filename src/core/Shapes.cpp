@@ -97,7 +97,7 @@ namespace mei
 	}
 
 
-    std::vector<std::shared_ptr<Shape>> CreateTriangleMesh(
+    std::vector<std::shared_ptr<Shape>> CreateTriangleMeshShape(
         int nTriangles, const int *vertexIndices,
         int nVertices, const Point3f *p,  const Normal3f *n)
     {

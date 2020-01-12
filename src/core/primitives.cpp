@@ -49,21 +49,23 @@ namespace mei
 
     Bounds3f ListAggregate::WorldBound() const
     {
-
+        Bounds3f bound;
+        return bound;
     }
 
     bool ListAggregate::Intersect(const Ray &ray, SurfaceInteraction *isect) const
     {
-
+        return true;
     }
     bool ListAggregate::IntersectP(const Ray &ray) const
     {
 
+        return true;
     }
 
-    std::shared_ptr<ListAggregate> CreateListAggregate(std::vector<std::shared_ptr<Primitive>> prims)
+    std::shared_ptr<Primitive> CreateListAggregate(std::vector<std::shared_ptr<Primitive>> prims)
     {
-        return std::shared_ptr<ListAggregate>{new ListAggregate(prims)};
+        return std::shared_ptr<Primitive>{new ListAggregate(prims)};
     }
 } //namespace
 

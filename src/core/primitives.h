@@ -96,7 +96,7 @@ namespace mei
         std::vector<std::shared_ptr<Primitive>> primitives;
     };
 
-    std::shared_ptr<ListAggregate> CreateListAggregate( std::vector<std::shared_ptr<Primitive>> prims);
+    std::shared_ptr<Primitive> CreateListAggregate( std::vector<std::shared_ptr<Primitive>> prims);
 
 #if 0
     struct AABB

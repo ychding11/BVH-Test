@@ -48,7 +48,7 @@ namespace mei
         {
             pixelBounds = Intersect(pixelBounds, Bounds2i{ { pb[0], pb[2] },{ pb[1], pb[3] } });
             if (pixelBounds.Area() == 0)
-                LOG(FATAL) << ("Degenerate \"pixelbounds\" specified.");
+                LOG(ERROR) << ("Degenerate \"pixelbounds\" specified.");
         }
         return new NaiveIntegrator(false, maxDepth, camera, sampler, pixelBounds);
     }
