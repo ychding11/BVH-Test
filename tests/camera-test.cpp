@@ -17,6 +17,16 @@ using namespace mei;
 //< Create a quad for test
 static std::shared_ptr<Primitive> CreateQuad()
 {
+	//< hard coded data
+
+	//< triangle mesh
+
+	//< triangle shapes
+
+	//< geometric primitive
+
+	//< aggregate primitive
+
     return nullptr;
 }
 
