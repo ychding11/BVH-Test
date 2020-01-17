@@ -314,6 +314,11 @@ namespace mei
 	typedef Vector2<Float> Vector2f;
 	typedef Vector2<int> Vector2i;
 
+	template <typename T>
+	inline Float Distance(const Point2<T> &p1, const Point2<T> &p2)
+    {
+		return (p1 - p2).Length();
+	}
 
 	// Bounds Declarations
 	template <typename T>
@@ -340,11 +345,13 @@ namespace mei
 		}
 
 		Vector2<T> Diagonal() const { return pMax - pMin; }
-		T Area() const {
+		T Area() const
+        {
 			Vector2<T> d = pMax - pMin;
 			return (d.x * d.y);
 		}
-		int MaximumExtent() const {
+		int MaximumExtent() const
+        {
 			Vector2<T> diag = Diagonal();
 			if (diag.x > diag.y)
 				return 0;
@@ -365,11 +372,13 @@ namespace mei
 		bool operator!=(const Bounds2<T> &b) const {
 			return b.pMin != pMin || b.pMax != pMax;
 		}
-		Point2<T> Lerp(const Point2f &t) const {
+		Point2<T> Lerp(const Point2f &t) const
+        {
 			return Point2<T>(pbrt::Lerp(t.x, pMin.x, pMax.x),
 				pbrt::Lerp(t.y, pMin.y, pMax.y));
 		}
-		Vector2<T> Offset(const Point2<T> &p) const {
+		Vector2<T> Offset(const Point2<T> &p) const
+        {
 			Vector2<T> o = p - pMin;
 			if (pMax.x > pMin.x) o.x /= pMax.x - pMin.x;
 			if (pMax.y > pMin.y) o.y /= pMax.y - pMin.y;
@@ -378,6 +387,10 @@ namespace mei
 		void BoundingSphere(Point2<T> *c, Float *rad) const {
 			*c = (pMin + pMax) / 2;
 			*rad = Inside(*c, *this) ? Distance(*c, pMax) : 0;
+		}
+		Point2<T> Center() const
+        {
+			return Point2<T>((pMax.x+pMin.x)/2,(pMax.x+pMin.x)/2 );
 		}
 
 		std::string str() const

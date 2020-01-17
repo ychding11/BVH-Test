@@ -27,6 +27,7 @@ namespace mei
 
     //< Forward declare
 	class FilmTile;
+    class FilmTester;
 
 	class Film
 	{
@@ -42,7 +43,7 @@ namespace mei
 
 		void MergeFilmTile(std::unique_ptr<FilmTile> tile);
 
-		void WriteImage(Float splatScale = 1) { }
+        void WriteImage(Float splatScale = 1) const;
 
 		void Clear();
 
@@ -52,6 +53,9 @@ namespace mei
 		Bounds2i croppedPixelBounds;
 
 	private:
+
+        friend class FilmTester;
+
 		// Film Private Data
 		struct Pixel
 		{
@@ -72,6 +76,8 @@ namespace mei
 			int offset = (p.x - croppedPixelBounds.pMin.x) + (p.y - croppedPixelBounds.pMin.y) * width;
 			return pixels[offset];
 		}
+
+        void savePPM() const;
 	};
 
 	class FilmTile
@@ -111,6 +117,18 @@ namespace mei
 		const Float maxSampleLuminance;
 		friend class Film;
 	};
+
+    class FilmTester
+    {
+    public:
+        void DrawCircle();
+
+        FilmTester(Film *pfilm) :film(pfilm)
+        { }
+
+    private:
+        Film * film = nullptr;
+    };
 
 	class Camera
 	{

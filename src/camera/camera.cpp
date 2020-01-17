@@ -1,5 +1,6 @@
 ﻿
 #include "camera.h"
+#include <fstream>
 
 namespace mei
 {
@@ -58,6 +59,65 @@ namespace mei
 		}
 	}
 
+    static inline float clamp(Float x) { return x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x; }
+
+    //< convert RGB float in range [0.0, 1.0] to [0, 255] and perform gamma correction
+    static inline int toInt(Float x) { return int(pow(clamp(x), 1 / 2.2) * 255 + .5); }
+
+    //< Write image to PPM file, a very simple image file format
+    //< Use C-Style IO
+    void Film::savePPM() const
+    {
+        FILE *f = fopen(filename.c_str(), "w");
+        fprintf(f, "P3\n%d %d\n%d\n", fullResolution.x, fullResolution.y, 255);
+
+        for (int i = 0; i < fullResolution.x * fullResolution.y; i++)  // loop over pixels, write RGB values
+        {
+            const Pixel &pixel = pixels[i];
+
+            fprintf(f, "%d %d %d ",
+                toInt(pixel.xyz[0]),
+                toInt(pixel.xyz[1]),
+                toInt(pixel.xyz[2]));
+        }
+
+        fclose(f);
+    }
+
+    void Film::WriteImage(Float /* splatScale */) const
+    {
+        savePPM();
+    }
+
+    void FilmTester::DrawCircle()
+    {
+        //< determine center of a circle
+        Point2i c = film->croppedPixelBounds.Center();
+
+        //< determine radius of a circle
+        Vector2i diag = film->croppedPixelBounds.Diagonal();
+        int r = diag[film->croppedPixelBounds.MaximumExtent()] / 2;
+
+        //< loop over all pixels to test
+        //< inside a circle or not
+        for (Point2i p : film->croppedPixelBounds)
+        {
+            Film::Pixel &pixel = film->GetPixel(p);
+            if (Distance(p, c) <= r)
+            {
+                pixel.xyz[0] = 0.5;
+                pixel.xyz[1] = 0.5;
+                pixel.xyz[2] = 0.5;
+            }
+            else
+            {
+                pixel.xyz[0] = 0;
+                pixel.xyz[1] = 0;
+                pixel.xyz[2] = 0;
+            }
+        }
+    }
+
 	/*******************************************************************************
     *  coordinate is tightly coupled with width and height of image
 	********************************************************************************/
@@ -110,7 +170,7 @@ namespace mei
 
 	Film *CreateFilm(int width, int height)
 	{
-		std::string filename = "test.png";
+		std::string filename = "test.ppm";
 
 		int xres = width;
 		int yres = height;

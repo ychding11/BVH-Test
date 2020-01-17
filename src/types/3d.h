@@ -671,7 +671,8 @@ namespace mei
 
 
 	template <typename T>
-	inline Float Distance(const Point3<T> &p1, const Point3<T> &p2) {
+	inline Float Distance(const Point3<T> &p1, const Point3<T> &p2)
+    {
 		return (p1 - p2).Length();
 	}
 

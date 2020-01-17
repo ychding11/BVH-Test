@@ -46,14 +46,14 @@ static std::shared_ptr<Primitive> CreateQuad()
 
 TEST(Camera, Basics)
 {
-    int width = 4;
-    int height = 4;
+    int width = 64;
+    int height = 64;
 	std::unique_ptr<Film> pfilm(CreateFilm(width, height));
 
 	const Point2i ResolutionExpected{ width, height};
 	EXPECT_EQ(ResolutionExpected, pfilm->fullResolution);
 
-	EXPECT_EQ("test.png", pfilm->filename);
+	EXPECT_EQ("test.ppm", pfilm->filename);
 
 	const Bounds2f cropExpected{ {0, 0}, {1, 1} };
     const Bounds2i cropResolutionExpected{
@@ -76,7 +76,9 @@ TEST(Camera, Basics)
         CameraSample cameraSample = sampler->GetCameraSample(p);
         camera->GenerateRay(cameraSample, &ray);
     }
-
-
+    
+    FilmTester filmtester{ pfilm.get() };
+    filmtester.DrawCircle();
+    pfilm->WriteImage();
 
 }
