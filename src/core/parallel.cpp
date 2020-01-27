@@ -11,7 +11,12 @@
 #include "parallel.h"
 #include "stats.h"
 
-//logger https://github.com/gabime/spdlog
+#ifndef GLOG_NO_ABBREVIATED_SEVERITIES
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+#endif
+
+#include <glog/logging.h>
+
 //format syntax  http://fmtlib.net/latest/syntax.html
 
 namespace mei
@@ -218,24 +223,40 @@ namespace mei
 			loop.mActiveWorkers--;
 		}
 	}
-	// Called in Main Thread
+
+//< Debug in serialize mode
+//#define DEBUG_SERIALIZE
+
+
+	//< Called in Main Thread
 	void ParallelInit(void)
 	{
-		if (threads.size() > 0) return;
+		if (threads.size() > 0)
+		{
+			LOG(ERROR) << "Thread Array is NOT empty. Parallel module init Failed";
+			return;
+		}
 		int nThreads = maxThreadIndex();
 		threadIndex = 0; // thread local variable.
-		//if (nThreads > 8) nThreads = 8; //debug only.
+
+#if defined(DEBUG_SERIALIZE) 
+		nThreads = 1; //debug only.
+#endif
+
 		for (int i = 0; i < nThreads - 1; ++i)
 			threads.push_back(std::thread(workerThread, i + 1));
-		//printf("- Spaw %d worker threads.\n", nThreads - 1);
-		//std::cout << "Parallel module init Ok.\n";
+		LOG(WARNING) << "Parallel module init Ok. Spaw " << nThreads-1 << " worker threads.";
 	}
 
-	// Called in Main Thread
-	// Main Thread would wait for all worker to exit.
+	//< Called in Main Thread
+	//< Main Thread would wait for all worker threads exit.
 	void ParallelCleanup(void)
 	{
-		if (threads.size() == 0) return;
+		if (threads.size() == 0)
+		{
+			LOG(INFO) << "NO worker threads spawed. Parallel module clean up Ok.";
+			return;
+		}
 
 		{
 			std::lock_guard<std::mutex> lock(workListMutex);
@@ -246,7 +267,7 @@ namespace mei
 		for (std::thread &thread : threads) thread.join();
 		threads.erase(threads.begin(), threads.end());
 		shutdowThread = false;
-		//std::cout << "Parallel module cleanup Ok.";
+		LOG(INFO) << "Parallel module clean up Ok.";
 	}
 
 	// Called in Main Thread

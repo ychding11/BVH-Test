@@ -118,6 +118,7 @@ namespace mei
 		friend class Film;
 	};
 
+	//< This will move to another file
     class FilmTester
     {
     public:

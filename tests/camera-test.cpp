@@ -7,6 +7,7 @@
 #include "scene.h"
 #include "shapes.h"
 #include "camera/camera.h"
+#include "parallel.h"
 //#include "random/samplers.h"
 #include "random/naivesampler.h"
 #include "integrator/naiveintegrator.h"
@@ -71,14 +72,34 @@ TEST(Camera, Basics)
 
     for (auto p : cropResolutionExpected)
     {
-        LOG(ERROR) << "Begin test pixel:" << p.str();
+        //LOG(ERROR) << "Begin test pixel:" << p.str();
         Ray ray;
         CameraSample cameraSample = sampler->GetCameraSample(p);
         camera->GenerateRay(cameraSample, &ray);
     }
+	
+    ParallelInit();
+
+	integrator->Render(*scene);
+
+    ParallelCleanup();
+
+    pfilm->WriteImage();
+	system("ffplay.exe test.ppm");
     
+}
+
+TEST(Camera, FilmTest)
+{
+    int width = 64;
+    int height = 64;
+	std::unique_ptr<Film> pfilm(CreateFilm(width, height));
+	const Point2i ResolutionExpected{ width, height};
+	EXPECT_EQ(ResolutionExpected, pfilm->fullResolution);
+	EXPECT_EQ("test.ppm", pfilm->filename);
+
     FilmTester filmtester{ pfilm.get() };
     filmtester.DrawCircle();
     pfilm->WriteImage();
-
+	system("ffplay.exe test.ppm");
 }

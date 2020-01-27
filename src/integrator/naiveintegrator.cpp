@@ -33,9 +33,11 @@ namespace mei
 
 		if (!scene.Intersect(ray, &isect))
 		{
-			return Vector3f(0,0,0);
+			return Vector3f(0, 0, 0);
 		}
-	    return Li(isect.SpawnRay(ray.d), scene, sampler, depth);
+		else
+			return Vector3f(0.5, 0.5, 0.5);
+	    //return Li(isect.SpawnRay(ray.d), scene, sampler, depth);
 	}
 
 
@@ -43,13 +45,10 @@ namespace mei
     NaiveIntegrator *CreateNaiveIntegrator(std::shared_ptr<Sampler> sampler, std::shared_ptr<const Camera> camera) 
     {
         int maxDepth = 5;
-        int pb[] = {0 };
         Bounds2i pixelBounds = camera->pFilm->GetSampleBounds();
-        {
-            pixelBounds = Intersect(pixelBounds, Bounds2i{ { pb[0], pb[2] },{ pb[1], pb[3] } });
-            if (pixelBounds.Area() == 0)
-                LOG(ERROR) << ("Degenerate \"pixelbounds\" specified.");
-        }
+        if (pixelBounds.Area() == 0)
+            LOG(ERROR) << ("Degenerate \"pixelbounds\" specified.");
+        
         return new NaiveIntegrator(false, maxDepth, camera, sampler, pixelBounds);
     }
 

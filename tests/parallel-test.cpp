@@ -3,10 +3,12 @@
 #include "mei.h"
 #include "parallel.h"
 #include <atomic>
+#include <vector>
 
 using namespace mei;
 
-TEST(Parallel, Basics) {
+TEST(Parallel, Basics)
+{
     ParallelInit();
 
     std::atomic<int> counter{0};
@@ -24,7 +26,8 @@ TEST(Parallel, Basics) {
     ParallelCleanup();
 }
 
-TEST(Parallel, DoNothing) {
+TEST(Parallel, DoNothing)
+{
     ParallelInit();
 
     std::atomic<int> counter{0};
