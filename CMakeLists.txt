@@ -39,7 +39,7 @@ file(GLOB  HW_SRC_FILES
 	${CMAKE_SOURCE_DIR}/quad/*.h
     ${CMAKE_SOURCE_DIR}/quad/*.cpp
 )
-file(GLOB MEI_SRC_FILES
+file(GLOB SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.h
     ${CMAKE_SOURCE_DIR}/src/*.cpp
 	${CMAKE_SOURCE_DIR}/src/core/*.h
@@ -87,6 +87,37 @@ foreach(dir ${includes})
     message(STATUS "include dir='${dir}'")
 endforeach()
 
+## macro definition
+#######################################################################################
+macro(group_src_files src_files target)
+	foreach(f ${src_files})
+		message(STATUS "check parameters original source file :${f}")
+	endforeach()
+	message(STATUS "check parameters new group name :${target}")
+    
+    foreach(f ${src_files})
+		# Get the path of the file relative to ${DIRECTORY},
+		# then alter it (not compulsory)
+		file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
+		set(SRCGR "${target}/${SRCGR}")
+		
+		# Extract the folder, ie remove the filename part
+		string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
+
+		# Source_group expects \\ (double antislash), not / (slash)
+		string(REPLACE / \\ SRCGR ${SRCGR})
+		source_group("${SRCGR}" FILES ${f})
+		message(STATUS "New group name :${SRCGR}")
+	endforeach()
+endmacro()
+
+## Regroup source code structure
+#######################################################################################
+group_src_files("${SRC_FILES}" "Mei")
+group_src_files("${EXT_FILES}"  "External")
+group_src_files("${EXE_SRC_FILES}"  "Render")
+group_src_files("${HW_SRC_FILES}" "HWRender")
+
 ## Here Should Set correct value based on Visual Studio Version
 link_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glfw/lib-vc2015
@@ -97,76 +128,8 @@ find_package(OpenGL)
 set(GLFW_LIBS glfw3.lib)
 #######################################################################################
 
-#set (USE_MSVC_RUNTIME_LIBRARY_DLL true)
-#IF (NOT USE_MSVC_RUNTIME_LIBRARY_DLL)
-#    #We statically link to reduce dependancies
-#    FOREACH(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RETAIL)
-#        IF(${flag_var} MATCHES "/MD")
-#            STRING(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-#        ENDIF(${flag_var} MATCHES "/MD")
-#        IF(${flag_var} MATCHES "/MDd")
-#            STRING(REGEX REPLACE "/MDd" "/MTd" ${flag_var} "${${flag_var}}")
-#        ENDIF(${flag_var} MATCHES "/MDd")
-#    ENDFOREACH(flag_var)
-#ENDIF (NOT USE_MSVC_RUNTIME_LIBRARY_DLL)
 
 #######################################################################################
-
-foreach(f ${MEI_SRC_FILES})
-    # Get the path of the file relative to ${DIRECTORY},
-    # then alter it (not compulsory)
-    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
-    set(SRCGR "Mei/${SRCGR}")
-
-    # Extract the folder, ie remove the filename part
-    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
-
-    # Source_group expects \\ (double antislash), not / (slash)
-    string(REPLACE / \\ SRCGR ${SRCGR})
-    source_group("${SRCGR}" FILES ${f})
-endforeach()
-
-foreach(f ${EXT_FILES})
-    # Get the path of the file relative to ${DIRECTORY},
-    # then alter it (not compulsory)
-    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
-    set(SRCGR "External/${SRCGR}")
-
-    # Extract the folder, ie remove the filename part
-    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
-
-    # Source_group expects \\ (double antislash), not / (slash)
-    string(REPLACE / \\ SRCGR ${SRCGR})
-    source_group("${SRCGR}" FILES ${f})
-endforeach()
-
-foreach(f ${EXE_SRC_FILES})
-    # Get the path of the file relative to ${DIRECTORY},
-    # then alter it (not compulsory)
-    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
-    set(SRCGR "Render/${SRCGR}")
-
-    # Extract the folder, ie remove the filename part
-    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
-
-    # Source_group expects \\ (double antislash), not / (slash)
-    string(REPLACE / \\ SRCGR ${SRCGR})
-    source_group("${SRCGR}" FILES ${f})
-endforeach()
-
-foreach(f ${HW_SRC_FILES})
-    # Get the path of the file relative to ${DIRECTORY},
-    # then alter it (not compulsory)
-    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
-    set(SRCGR "HWRender/${SRCGR}")
-
-    # Extract the folder, ie remove the filename part
-    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
-
-    # Source_group expects \\ (double antislash), not / (slash)
-    string(REPLACE / \\ SRCGR ${SRCGR})
-    source_group("${SRCGR}" FILES ${f})
-endforeach()
 
 set(ENABLE_HIDECONSOLE_BUILD FALSE CACHE BOOL "TRUE to hide console for Windows sys" FORCE)
 if(ENABLE_HIDECONSOLE_BUILD)
@@ -244,40 +207,20 @@ endmacro()
 
 ## Target
 #######################################################################################
-
-add_library(mei STATIC ${MEI_SRC_FILES})
-IF (WIN32)
-  # Avoid a name clash when building on Visual Studio
-  set_target_properties ( mei PROPERTIES OUTPUT_NAME libmei )
-ENDIF()
-
 set(EXE_NAME "MeiRender")
-add_executable(${EXE_NAME} ${EXE_SRC_FILES} ${HW_SRC_FILES} ${EXT_FILES})
-target_link_libraries(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} mei glog)
+add_executable(${EXE_NAME} ${EXE_SRC_FILES} ${HW_SRC_FILES} ${SRC_FILES} ${EXT_FILES})
+target_link_libraries(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS} glog)
 default_property(${EXE_NAME})
 
+## Tests
+#######################################################################################
 file ( GLOB TEST_SOURCE
     ${CMAKE_SOURCE_DIR}/tests/*.cpp
     ${CMAKE_SOURCE_DIR}/tests/gtest/*.cc
-)
-  
-foreach(f ${TEST_SOURCE})
-    # Get the path of the file relative to ${DIRECTORY},
-    # then alter it (not compulsory)
-    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})
-    set(SRCGR "Unit-Test/${SRCGR}")
-
-    # Extract the folder, ie remove the filename part
-    string(REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRCGR ${SRCGR})
-
-    # Source_group expects \\ (double antislash), not / (slash)
-    string(REPLACE / \\ SRCGR ${SRCGR})
-    source_group("${SRCGR}" FILES ${f})
-endforeach()
-
+  )
 set(EXE_NAME "mytest")
-add_executable ( ${EXE_NAME} ${TEST_SOURCE})
-target_link_libraries( ${EXE_NAME} mei glog )
+add_executable ( ${EXE_NAME} ${TEST_SOURCE} ${SRC_FILES})
+target_link_libraries( ${EXE_NAME} glog )
 default_property(${EXE_NAME})
 
 
