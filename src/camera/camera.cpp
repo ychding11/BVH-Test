@@ -188,4 +188,12 @@ namespace mei
 		Vector3f dir{0,0,-1};
 		return new Camera(position,dir,fov, film);
 	}
+
+	//Camera *CreateCamera(Film *film, Point3f position={0,0,1}, Point3f target={0,0,0}, Float halfVFov=45)
+	Camera *CreateCamera(Film *film, Point3f position, Point3f target, Float halfVFov)
+	{
+		Float fov = 2.f * halfVFov;
+		Vector3f dir = Normalize(target-position);
+		return new Camera(position,dir,fov, film);
+	}
 }

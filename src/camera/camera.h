@@ -207,6 +207,7 @@ namespace mei
 
 	Film   *CreateFilm(int width = 1280, int height = 720);
 	Camera *CreateCamera(Film *film);
+	Camera *CreateCamera(Film *film, Point3f position, Point3f target, Float halfVFov);
 
 } //<namespace
 #endif

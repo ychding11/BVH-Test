@@ -40,6 +40,7 @@ namespace mei
         return shape->IntersectP(r);
     }
 
+
     ListAggregate::ListAggregate(std::vector<std::shared_ptr<Primitive>> p)
         : primitives(std::move(p))
     {
@@ -50,12 +51,22 @@ namespace mei
     Bounds3f ListAggregate::WorldBound() const
     {
         Bounds3f bound;
+		for (auto ptv: primitives)
+		{
+			Bounds3f bb = ptv->WorldBound();
+			bound = Union(bound, bb);
+		}
         return bound;
     }
 
     bool ListAggregate::Intersect(const Ray &ray, SurfaceInteraction *isect) const
     {
-        return true;
+		for (auto ptv: primitives)
+		{
+			if (ptv->Intersect(ray, isect))
+				return true;
+		}
+        return false;
     }
     bool ListAggregate::IntersectP(const Ray &ray) const
     {

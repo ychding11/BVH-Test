@@ -6,7 +6,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
 
-## 3rd party moudle
+## 3rd party moudle glog
 #######################################################################################
 if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog")
   message(FATAL_ERROR "The glog submodule directory is missing! "
@@ -25,9 +25,26 @@ set(BUILD_TESTING OFF CACHE BOOL "Build the glog unit test.")
 add_subdirectory(thirdparty/glog)
 #message(STATUS "OPT AFTER=${BUILD_TESTING}")
 set_property(TARGET glog PROPERTY FOLDER "dependencies")
+
+## 3rd party moudle assimp
+#######################################################################################
+if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/assimp")
+  message(FATAL_ERROR "The assimp submodule directory is missing! "
+    "You probably did not clone the project with --recursive, or first checked out "
+    )
+endif()
+set(BUILD_SHARED_LIBS ON CACHE BOOL " " FORCE) #build shared lib for assimp
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "supplementary tools for Assimp are built in addition to the library.")
+set(ASSIMP_INSTALL OFF CACHE BOOL " " FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "Build the assimp unit test.")
+add_subdirectory(thirdparty/assimp)
+set_property(TARGET assimp PROPERTY FOLDER "dependencies")
+
+
 include_directories (
   ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog/src
-  ${CMAKE_BINARY_DIR}/thirdparty/glog
+  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glog
+  ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/assimp/include
 )
 
 
@@ -91,9 +108,9 @@ endforeach()
 #######################################################################################
 macro(group_src_files src_files target)
 	foreach(f ${src_files})
-		message(STATUS "check parameters original source file :${f}")
+		#message(STATUS "check parameters original source file :${f}")
 	endforeach()
-	message(STATUS "check parameters new group name :${target}")
+	#message(STATUS "check parameters new group name :${target}")
     
     foreach(f ${src_files})
 		# Get the path of the file relative to ${DIRECTORY},
@@ -107,7 +124,7 @@ macro(group_src_files src_files target)
 		# Source_group expects \\ (double antislash), not / (slash)
 		string(REPLACE / \\ SRCGR ${SRCGR})
 		source_group("${SRCGR}" FILES ${f})
-		message(STATUS "New group name :${SRCGR}")
+		#message(STATUS "New group name :${SRCGR}")
 	endforeach()
 endmacro()
 
@@ -214,13 +231,18 @@ default_property(${EXE_NAME})
 
 ## Tests
 #######################################################################################
-file ( GLOB TEST_SOURCE
-    ${CMAKE_SOURCE_DIR}/tests/*.cpp
+file ( GLOB Test_Framework
     ${CMAKE_SOURCE_DIR}/tests/gtest/*.cc
-  )
+)
+file ( GLOB Test_Source
+    ${CMAKE_SOURCE_DIR}/tests/*.cpp
+)  
+group_src_files("${Test_Framework}" "Framework")
+group_src_files("${Test_Source}" "Tests")
+
 set(EXE_NAME "mytest")
-add_executable ( ${EXE_NAME} ${TEST_SOURCE} ${SRC_FILES})
-target_link_libraries( ${EXE_NAME} glog )
+add_executable ( ${EXE_NAME} ${Test_Framework} ${Test_Source} ${SRC_FILES})
+target_link_libraries( ${EXE_NAME} glog assimp )
 default_property(${EXE_NAME})
 
 

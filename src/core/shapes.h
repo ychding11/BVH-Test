@@ -59,7 +59,7 @@ namespace mei
     {
 		// TriangleMesh Public Methods
 		TriangleMesh(int nTriangles, const int *vertexIndices,
-			int nVertices, const Point3f *P, const Normal3f *N );
+			int nVertices, const Point3f *P, const Normal3f *N=nullptr);
 
 		// TriangleMesh Data
 		const int nTriangles, nVertices;
@@ -112,7 +112,7 @@ namespace mei
     //<
     std::vector<std::shared_ptr<Shape>> CreateTriangleMeshShape(
         int nTriangles, const int *vertexIndices,
-        int nVertices, const Point3f *p, const Normal3f *n);
+        int nVertices, const Point3f *p, const Normal3f *n=nullptr);
 
 } //end namespace
 #endif

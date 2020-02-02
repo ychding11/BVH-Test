@@ -80,18 +80,21 @@ namespace mei
 			DCHECK(!v.HasNaNs());
 			return Vector3(x + v.x, y + v.y, z + v.z);
 		}
-		Vector3<T> &operator+=(const Vector3<T> &v) {
+		Vector3<T> &operator+=(const Vector3<T> &v)
+		{
 			DCHECK(!v.HasNaNs());
 			x += v.x;
 			y += v.y;
 			z += v.z;
 			return *this;
 		}
-		Vector3<T> operator-(const Vector3<T> &v) const {
+		Vector3<T> operator-(const Vector3<T> &v) const
+		{
 			DCHECK(!v.HasNaNs());
 			return Vector3(x - v.x, y - v.y, z - v.z);
 		}
-		Vector3<T> &operator-=(const Vector3<T> &v) {
+		Vector3<T> &operator-=(const Vector3<T> &v)
+		{
 			DCHECK(!v.HasNaNs());
 			x -= v.x;
 			y -= v.y;
@@ -124,7 +127,8 @@ namespace mei
 		}
 
 		template <typename U>
-		Vector3<T> &operator/=(U f) {
+		Vector3<T> &operator/=(U f)
+		{
 			CHECK_NE(f, 0);
 			Float inv = (Float)1 / f;
 			x *= inv;
@@ -163,25 +167,31 @@ namespace mei
 		// Point3 Public Methods
 		Point3() { x = y = z = 0; }
 		Point3(T x, T y, T z) : x(x), y(y), z(z) { DCHECK(!HasNaNs()); }
+
 		template <typename U>
 		explicit Point3(const Point3<U> &p)
-			: x((T)p.x), y((T)p.y), z((T)p.z) {
+			: x((T)p.x), y((T)p.y), z((T)p.z)
+		{
 			DCHECK(!HasNaNs());
 		}
+
 		template <typename U>
-		explicit operator Vector3<U>() const {
+		explicit operator Vector3<U>() const
+		{
 			return Vector3<U>(x, y, z);
 		}
 
 #ifndef NDEBUG
-		Point3(const Point3<T> &p) {
+		Point3(const Point3<T> &p)
+		{
 			DCHECK(!p.HasNaNs());
 			x = p.x;
 			y = p.y;
 			z = p.z;
 		}
 
-		Point3<T> &operator=(const Point3<T> &p) {
+		Point3<T> &operator=(const Point3<T> &p)
+		{
 			DCHECK(!p.HasNaNs());
 			x = p.x;
 			y = p.y;
@@ -200,7 +210,8 @@ namespace mei
 			z += v.z;
 			return *this;
 		}
-		Vector3<T> operator-(const Point3<T> &p) const {
+		Vector3<T> operator-(const Point3<T> &p) const
+		{
 			DCHECK(!p.HasNaNs());
 			return Vector3<T>(x - p.x, y - p.y, z - p.z);
 		}
@@ -222,29 +233,34 @@ namespace mei
 			z += p.z;
 			return *this;
 		}
-		Point3<T> operator+(const Point3<T> &p) const {
+		Point3<T> operator+(const Point3<T> &p) const
+		{
 			DCHECK(!p.HasNaNs());
 			return Point3<T>(x + p.x, y + p.y, z + p.z);
 		}
 		template <typename U>
-		Point3<T> operator*(U f) const {
+		Point3<T> operator*(U f) const
+		{
 			return Point3<T>(f * x, f * y, f * z);
 		}
 		template <typename U>
-		Point3<T> &operator*=(U f) {
+		Point3<T> &operator*=(U f)
+		{
 			x *= f;
 			y *= f;
 			z *= f;
 			return *this;
 		}
 		template <typename U>
-		Point3<T> operator/(U f) const {
+		Point3<T> operator/(U f) const
+		{
 			CHECK_NE(f, 0);
 			Float inv = (Float)1 / f;
 			return Point3<T>(inv * x, inv * y, inv * z);
 		}
 		template <typename U>
-		Point3<T> &operator/=(U f) {
+		Point3<T> &operator/=(U f)
+		{
 			CHECK_NE(f, 0);
 			Float inv = (Float)1 / f;
 			x *= inv;
@@ -252,7 +268,8 @@ namespace mei
 			z *= inv;
 			return *this;
 		}
-		T operator[](int i) const {
+		T operator[](int i) const
+		{
 			DCHECK(i >= 0 && i <= 2);
 			if (i == 0) return x;
 			if (i == 1) return y;
@@ -462,12 +479,10 @@ namespace mei
 	typedef Vector3<int> Vector3i;
 
 
-
 	template <typename T>
 	class Bounds3
 	{
 	public:
-		// Bounds3 Public Methods
 		Bounds3()
 		{
 			T minNum = std::numeric_limits<T>::lowest();
@@ -481,7 +496,7 @@ namespace mei
 			, pMax(std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)) {}
 
 		const Point3<T> &operator[](int i) const;
-		Point3<T> &operator[](int i);
+		      Point3<T> &operator[](int i);
 
 		bool operator==(const Bounds3<T> &b) const
 		{
@@ -499,6 +514,11 @@ namespace mei
 				(*this)[(corner & 4) ? 1 : 0].z);
 		}
 		Vector3<T> Diagonal() const { return pMax - pMin; }
+		Point3<T> Center() const
+		{
+			Vector3<T> c = Diagonal() * 0.5;
+			return Point3<T>(c.x, c.y, c.z);
+		}
 		T SurfaceArea() const
 		{
 			Vector3<T> d = Diagonal();
@@ -555,7 +575,8 @@ namespace mei
 
         }
 
-		friend std::ostream &operator<<(std::ostream &os, const Bounds3<T> &b) {
+		friend std::ostream &operator<<(std::ostream &os, const Bounds3<T> &b)
+		{
 			os << "[ " << b.pMin << " - " << b.pMax << " ]";
 			return os;
 		}
@@ -569,28 +590,43 @@ namespace mei
 
 
 	template <typename T, typename U>
-	inline Vector3<T> operator*(U s, const Vector3<T> &v) {
+	inline Vector3<T> operator*(U s, const Vector3<T> &v)
+	{
 		return v * s;
 	}
+
 	template <typename T>
-	Vector3<T> Abs(const Vector3<T> &v) {
+	Vector3<T> Abs(const Vector3<T> &v)
+	{
 		return Vector3<T>(std::abs(v.x), std::abs(v.y), std::abs(v.z));
 	}
 
 	template <typename T>
-	inline T Dot(const Vector3<T> &v1, const Vector3<T> &v2) {
+	inline T Dot(const Vector3<T> &v1, const Vector3<T> &v2)
+	{
 		DCHECK(!v1.HasNaNs() && !v2.HasNaNs());
 		return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 	}
 
 	template <typename T>
-	inline T AbsDot(const Vector3<T> &v1, const Vector3<T> &v2) {
+	inline T AbsDot(const Vector3<T> &v1, const Vector3<T> &v2)
+	{
 		DCHECK(!v1.HasNaNs() && !v2.HasNaNs());
 		return std::abs(Dot(v1, v2));
 	}
 
 	template <typename T>
-	inline Vector3<T> Cross(const Vector3<T> &v1, const Vector3<T> &v2) {
+	inline Vector3<T> Cross(const Vector3<T> &v1, const Vector3<T> &v2)
+	{
+		DCHECK(!v1.HasNaNs() && !v2.HasNaNs());
+		double v1x = v1.x, v1y = v1.y, v1z = v1.z;
+		double v2x = v2.x, v2y = v2.y, v2z = v2.z;
+		return Vector3<T>((v1y * v2z) - (v1z * v2y), (v1z * v2x) - (v1x * v2z), (v1x * v2y) - (v1y * v2x));
+	}
+
+	template <typename T>
+	inline Vector3<T> Cross(const Vector3<T> &v1, const Normal3<T> &v2)
+	{
 		DCHECK(!v1.HasNaNs() && !v2.HasNaNs());
 		double v1x = v1.x, v1y = v1.y, v1z = v1.z;
 		double v2x = v2.x, v2y = v2.y, v2z = v2.z;
@@ -599,51 +635,49 @@ namespace mei
 	}
 
 	template <typename T>
-	inline Vector3<T> Cross(const Vector3<T> &v1, const Normal3<T> &v2) {
+	inline Vector3<T> Cross(const Normal3<T> &v1, const Vector3<T> &v2)
+	{
 		DCHECK(!v1.HasNaNs() && !v2.HasNaNs());
 		double v1x = v1.x, v1y = v1.y, v1z = v1.z;
 		double v2x = v2.x, v2y = v2.y, v2z = v2.z;
-		return Vector3<T>((v1y * v2z) - (v1z * v2y), (v1z * v2x) - (v1x * v2z),
-			(v1x * v2y) - (v1y * v2x));
-	}
-
-	template <typename T>
-	inline Vector3<T> Cross(const Normal3<T> &v1, const Vector3<T> &v2) {
-		DCHECK(!v1.HasNaNs() && !v2.HasNaNs());
-		double v1x = v1.x, v1y = v1.y, v1z = v1.z;
-		double v2x = v2.x, v2y = v2.y, v2z = v2.z;
-		return Vector3<T>((v1y * v2z) - (v1z * v2y), (v1z * v2x) - (v1x * v2z),
-			(v1x * v2y) - (v1y * v2x));
+		return Vector3<T>((v1y * v2z) - (v1z * v2y), (v1z * v2x) - (v1x * v2z), (v1x * v2y) - (v1y * v2x));
 	}
 
     template <typename T>
-    inline T Dot(const Normal3<T> &n1, const Normal3<T> &n2) {
+    inline T Dot(const Normal3<T> &n1, const Normal3<T> &n2)
+	{
         DCHECK(!n1.HasNaNs() && !n2.HasNaNs());
         return n1.x * n2.x + n1.y * n2.y + n1.z * n2.z;
     }
 
 
 	template <typename T>
-	inline Vector3<T> Normalize(const Vector3<T> &v) {
+	inline Vector3<T> Normalize(const Vector3<T> &v)
+	{
 		return v / v.Length();
 	}
+
 	template <typename T>
-	T MinComponent(const Vector3<T> &v) {
+	T MinComponent(const Vector3<T> &v)
+	{
 		return std::min(v.x, std::min(v.y, v.z));
 	}
 
 	template <typename T>
-	T MaxComponent(const Vector3<T> &v) {
+	T MaxComponent(const Vector3<T> &v)
+	{
 		return std::max(v.x, std::max(v.y, v.z));
 	}
 
 	template <typename T>
-	int MaxDimension(const Vector3<T> &v) {
+	int MaxDimension(const Vector3<T> &v)
+	{
 		return (v.x > v.y) ? ((v.x > v.z) ? 0 : 2) : ((v.y > v.z) ? 1 : 2);
 	}
 
 	template <typename T>
-	Vector3<T> Min(const Vector3<T> &p1, const Vector3<T> &p2) {
+	Vector3<T> Min(const Vector3<T> &p1, const Vector3<T> &p2)
+	{
 		return Vector3<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y),
 			std::min(p1.z, p2.z));
 	}
@@ -660,8 +694,8 @@ namespace mei
 	}
 
 	template <typename T>
-	inline void CoordinateSystem(const Vector3<T> &v1, Vector3<T> *v2,
-		Vector3<T> *v3) {
+	inline void CoordinateSystem(const Vector3<T> &v1, Vector3<T> *v2, Vector3<T> *v3)
+	{
 		if (std::abs(v1.x) > std::abs(v1.y))
 			*v2 = Vector3<T>(-v1.z, 0, v1.x) / std::sqrt(v1.x * v1.x + v1.z * v1.z);
 		else
@@ -693,15 +727,15 @@ namespace mei
 	}
 
 	template <typename T>
-	Point3<T> Min(const Point3<T> &p1, const Point3<T> &p2) {
-		return Point3<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y),
-			std::min(p1.z, p2.z));
+	Point3<T> Min(const Point3<T> &p1, const Point3<T> &p2)
+	{
+		return Point3<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z));
 	}
 
 	template <typename T>
-	Point3<T> Max(const Point3<T> &p1, const Point3<T> &p2) {
-		return Point3<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y),
-			std::max(p1.z, p2.z));
+	Point3<T> Max(const Point3<T> &p1, const Point3<T> &p2)
+	{
+		return Point3<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z));
 	}
 
 	template <typename T>
@@ -720,7 +754,8 @@ namespace mei
 	}
 
 	template <typename T>
-	Bounds3<T> Union(const Bounds3<T> &b, const Point3<T> &p) {
+	Bounds3<T> Union(const Bounds3<T> &b, const Point3<T> &p)
+	{
 		Bounds3<T> ret;
 		ret.pMin = Min(b.pMin, p);
 		ret.pMax = Max(b.pMax, p);
@@ -728,7 +763,8 @@ namespace mei
 	}
 
 	template <typename T>
-	Bounds3<T> Union(const Bounds3<T> &b1, const Bounds3<T> &b2) {
+	Bounds3<T> Union(const Bounds3<T> &b1, const Bounds3<T> &b2)
+	{
 		Bounds3<T> ret;
 		ret.pMin = Min(b1.pMin, b2.pMin);
 		ret.pMax = Max(b1.pMax, b2.pMax);
