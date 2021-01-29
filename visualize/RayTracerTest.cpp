@@ -103,8 +103,8 @@ void main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-    Quad::Renderer quadRender("../quad/shaders/");
-    quadRender.setScreenSize(settings.screenSize);
+    Quad::Renderer quadRender;
+    //quadRender.setScreenSize(settings.screenSize);
 
     std::ostringstream msgStream;
 
@@ -160,16 +160,16 @@ void main()
 		
         {
             CPUProfiler profiler("Quad Render");
-            quadRender.handleNewRenderResult(bvhTracer._pixels, (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3));
-            quadRender.render();
+            quadRender.Update(bvhTracer._pixels, (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3));
+            quadRender.Render();
         }
 
         CPUProfiler::end();
-        ImGui::Begin("Profiler");
+        ImGui::BeginChild("Profiler");
         ImGui::Text("%s", CPUProfiler::end().c_str());
         ImGui::EndChild();
 
-        ImGui::Begin("Statistic");
+        ImGui::BeginChild("Statistic");
         //ImGui::Text("=============\n%s=============\n", msgStream.str().c_str());
         ImGui::BulletText("Object Number %d \n", bvhTracer.objectNum());
         ImGui::EndChild();

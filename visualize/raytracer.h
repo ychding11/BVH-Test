@@ -37,7 +37,7 @@ public:
         , _objectNum(_scale * _scale * _scale)
         , _width(width), _height(height)
         , _testDone(false)
-		,_cameraPositionOffset(0.f)
+		, _cameraPositionOffset(0.f)
 		, _focusOffset(0.f, 0.f)
         , _bvh(nullptr)
         , _objects(_maxObjectNum)
@@ -208,7 +208,5 @@ public:
 
 private:
 	void trace();
-    
-
 };
 
