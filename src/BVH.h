@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <vector>
-#include "Sphere.h"
+#include "Shape.h"
 
 //! Node descriptor for the flattened tree
 struct BVHFlatNode

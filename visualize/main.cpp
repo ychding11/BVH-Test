@@ -19,11 +19,9 @@
 #include "imgui_impl_opengl3.h"
 
 #include "BVH.h"
-#include "Sphere.h"
 #include "interface.h"
 #include "raytracer.h"
 #include "Renderer.h"
-#include "Stopwatch.h"
 
 std::vector<ProfilerEntry> CPUProfiler::ProfilerData(16);
 std::vector<ProfilerEntry> CPUProfiler::ProfilerDataA;

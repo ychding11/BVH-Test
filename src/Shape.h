@@ -63,7 +63,7 @@ struct BBox
 
 };
 
-class Object;
+struct Object;
 
 struct IntersectionInfo
 {

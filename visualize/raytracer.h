@@ -6,10 +6,9 @@
 #include <iostream>
 
 #include "BVH.h"
-#include "Sphere.h"
 #include "interface.h"
 #include "FastNoise.h"
-#include "Stopwatch.h"
+#include "Profiler.h"
 
 // Return a random number in [0,1]
 static float rand01()

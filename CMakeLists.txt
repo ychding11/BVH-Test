@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
-project (BVHTest)
+project (BVH-Lab)
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
 
@@ -90,7 +90,7 @@ endif()
 
 
 SET(LINK_OPTIONS " ")
-SET(EXE_NAME "RayTracerTest")
+SET(EXE_NAME "BVH-Test")
 
 ADD_EXECUTABLE(${EXE_NAME} ${SRC_FILES} ${EXT_FILES})
 

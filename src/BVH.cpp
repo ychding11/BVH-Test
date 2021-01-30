@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "BVH.h"
 #include "Log.h"
-#include "Stopwatch.h"
+#include "Profiler.h"
 
 //! Node for storing state information during traversal.
 struct BVHTraversal {
