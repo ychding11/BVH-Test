@@ -55,18 +55,52 @@ void update(float secondsElapsed, GLFWwindow *window)
 	}
 }
 
+namespace GUI
+{
+    // Start the Dear ImGui frame
+    void BeginFrame(void)
+    {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+    }
+
+    // Render the GUI element 
+    void EndFrame(void)
+    {
+	    ImGui::Render();
+	    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+
+
+    // Setup Platform/Renderer bindings
+    void Setup(GLFWwindow* window, const char* glsl_version)
+    {
+	    ImGui_ImplGlfw_InitForOpenGL(window, true);
+	    ImGui_ImplOpenGL3_Init(glsl_version);
+    }
+
+    // Cleanup
+    void CleanUp()
+    {
+	    ImGui_ImplOpenGL3_Shutdown();
+	    ImGui_ImplGlfw_Shutdown();
+	    ImGui::DestroyContext();
+    }
+}
+
 void main()
 {
 	srand(unsigned int(time(0)));
 
 	GLFWwindow *window;
 	glfwInit();
-	window = glfwCreateWindow(settings.screenSize.x, settings.screenSize.y, "BVH Visulaizer", 0, 0);
+	window = glfwCreateWindow(settings.screenSize.x, settings.screenSize.y, "BVH-Lab", 0, 0);
 	glfwSetWindowPos(window, 300, 100);
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	//glfwSetCursorPos(window, 0, 0);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
+	glfwSetCursorPos(window, 0, 0);
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(0);
+	glfwSwapInterval(0); // turn off vsync
 	glewInit();
 
 	// Setup Dear ImGui context
@@ -78,7 +112,7 @@ void main()
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
+	ImGui::StyleColorsClassic();
 
 #if __APPLE__
 // GL 3.2 + GLSL 150
@@ -91,15 +125,13 @@ void main()
 #else
 	// GL 3.0 + GLSL 130
 	const char* glsl_version = "#version 130";
-	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
 
-	// Setup Platform/Renderer bindings
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init(glsl_version);
+    GUI::Setup(window, glsl_version);
 
     Quad::Renderer quadRender;
     //quadRender.setScreenSize(settings.screenSize);
@@ -109,15 +141,13 @@ void main()
     BVHTracer bvhTracer(settings.objectNum, settings.screenSize.x, settings.screenSize.y, msgStream);
     Observer *uiObserver = &bvhTracer;
 
+    std::string profileInfo;
 	double lastTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+        GUI::BeginFrame();
 
         CPUProfiler::begin();
 		{
@@ -142,6 +172,25 @@ void main()
 				uiObserver->handlePositionOffsetChange(settings.positionOffset);
 			}
 
+            ImGui::BulletText("Object Number %d \n", bvhTracer.objectNum());
+
+            ImGui::Text("%s", profileInfo.c_str());
+
+            std::string errorMessage;
+            errorMessage = msgStream.str();
+
+            if (!errorMessage.empty())
+                ImGui::OpenPopup("Error");
+            if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::Text("%s", errorMessage.c_str());
+                if (ImGui::Button("OK", ImVec2(120, 0)))
+                {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+
 			ImGui::End();
 		}
 
@@ -161,29 +210,16 @@ void main()
             quadRender.Update(bvhTracer._pixels, (sizeof(float) * settings.screenSize.x * settings.screenSize.y * 3));
             quadRender.Render();
         }
+        msgStream.str(""); //clear content in stream
+        profileInfo = CPUProfiler::end();
 
-        CPUProfiler::end();
-        ImGui::BeginChild("Profiler");
-        ImGui::Text("%s", CPUProfiler::end().c_str());
-        ImGui::EndChild();
-
-        ImGui::BeginChild("Statistic");
-        //ImGui::Text("=============\n%s=============\n", msgStream.str().c_str());
-        ImGui::BulletText("Object Number %d \n", bvhTracer.objectNum());
-        ImGui::EndChild();
-
-		// ImGui Rendering
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        GUI::EndFrame();
 
 		// glfw swap Front & Back Buffers
 		glfwSwapBuffers(window);
 	}
 
 	// Cleanup
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
+    GUI::CleanUp();
 	glfwTerminate();
 }
