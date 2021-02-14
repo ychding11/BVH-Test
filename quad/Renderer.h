@@ -30,7 +30,7 @@ namespace Quad
 
         void  setScreenSize(int x, int y) { _screenSizeX = x; _screenSizeY = y;  }
 
-        void Update(void* newData, int newSize);
+        GLuint Update(void* newData, int newSize);
         
         void Render();
 

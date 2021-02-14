@@ -178,7 +178,7 @@ namespace Quad
     Renderer::Renderer(std::string shadersDirectory)
         : _resultTexture(0)
         , _initialized(false)
-        , _screenSizeX(720)
+        , _screenSizeX(1280)
         , _screenSizeY(720)
         , _shadersDirectory(shadersDirectory)
         , invSamplesPerPixel(1.f)
@@ -228,7 +228,7 @@ namespace Quad
         _initialized = true;
     }
 
-	void Renderer::Update(void* newData, int newSize) 
+    GLuint Renderer::Update(void* newData, int newSize)
     {
         assert(newData != nullptr && " NULL pointer !!!");
         assert(newSize == (_screenSizeX * _screenSizeY * 3 * sizeof(float)) && " Texture size mismatch !!!");
@@ -237,6 +237,7 @@ namespace Quad
         glBindTexture(GL_TEXTURE_2D, _resultTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, _screenSizeX, _screenSizeY , 0, GL_RGB, GL_FLOAT, newData);
 		//// Update render result texture ////
+        return _resultTexture;
     }
 
 	void Renderer::Render()

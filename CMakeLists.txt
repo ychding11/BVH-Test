@@ -31,6 +31,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
   ${CMAKE_SOURCE_DIR}/thirdparty/glm
+  ${CMAKE_SOURCE_DIR}/thirdparty/fonts
   ${CMAKE_SOURCE_DIR}/thirdparty/imgui
   ${CMAKE_SOURCE_DIR}/thirdparty/glfw/include
   ${CMAKE_SOURCE_DIR}/thirdparty/glew/include
