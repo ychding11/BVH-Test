@@ -25,10 +25,14 @@
 #include "Renderer.h"
 #include "IconsFontAwesome4.h"
 
+//#pragma warning(push)
+#pragma warning(disable : 4244) // conversion from 'int' to 'float', possible loss of data
+//#pragma warning(pop)
+
 std::vector<ProfilerEntry> CPUProfiler::ProfilerData(16);
 std::vector<ProfilerEntry> CPUProfiler::ProfilerDataA;
 
-struct Setting;
+//struct Setting;
 static Setting settings;
 
 void update(float secondsElapsed, GLFWwindow *window)
@@ -190,6 +194,42 @@ void drawMenuBar()
     ImGui::PopStyleVar();
 }
 
+static bool initDockLayout = true;
+
+const char *testOptionsWindowName = ICON_FA_GLOBE "Test Options";
+const char *profileWindowName     = ICON_FA_GLOBE "Profile Data";
+const char *statusWindowName      = ICON_FA_GLOBE "Status";
+const char *mainWindowName        = ICON_FA_GLOBE "Main";
+void drawDockWindow()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowSize(io.DisplaySize);
+    ImGui::SetNextWindowBgAlpha(0.0f);
+
+    ImGui::Begin("DockSpaceWindow", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
+    ImGui::PopStyleVar(3);
+    ImGuiID dockSpaceId = ImGui::GetID("DockSpace");
+    ImGui::DockSpace(dockSpaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+    if (initDockLayout)
+    {
+        ImGuiID dockLeftId  = ImGui::DockBuilderSplitNode(dockSpaceId, ImGuiDir_Left, 0.20f, nullptr, &dockSpaceId);
+        ImGuiID dockRightId = ImGui::DockBuilderSplitNode(dockSpaceId, ImGuiDir_Right, 0.30f, nullptr, &dockSpaceId);
+        ImGuiID dockRightBottomId = ImGui::DockBuilderSplitNode(dockRightId, ImGuiDir_Down, 0.50f, nullptr, &dockRightId);
+        ImGui::DockBuilderDockWindow(testOptionsWindowName, dockLeftId);
+        ImGui::DockBuilderDockWindow(statusWindowName, dockRightId);
+        ImGui::DockBuilderDockWindow(profileWindowName, dockRightBottomId);
+        ImGui::DockBuilderDockWindow(mainWindowName, dockSpaceId);
+        ImGui::DockBuilderFinish(dockSpaceId);
+        initDockLayout = false;
+    }
+    ImGui::End();
+
+}
+
 int width = 1280;
 int height = 720;
 void main()
@@ -233,58 +273,26 @@ void main()
 
     BVHTracer bvhTracer(msgStream);
 
-    bool initDockLayout = true;
+    bool showWindow = false;
 
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
     while (!glfwWindowShouldClose(window))
     {
+        CPUProfiler::begin();
+
         GUI::BeginFrame();
 
         drawMenuBar();
+        drawDockWindow();
+        intptr_t retTexture = quadRender.Update(bvhTracer.getResult(), (sizeof(float) * width * height * 3));
 
-        CPUProfiler::begin();
+        profileInfo = CPUProfiler::end();
+
         {
-            CPUProfiler profiler("imgui");
-
-            ImGuiIO& io = ImGui::GetIO();
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-            ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-            ImGui::SetNextWindowSize(io.DisplaySize);
-            ImGui::SetNextWindowBgAlpha(0.0f);
-
-            ImGui::Begin("DockSpaceWindow", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
-            ImGui::PopStyleVar(3);
-            ImGuiID dockSpaceId = ImGui::GetID("DockSpace");
-            ImGui::DockSpace(dockSpaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-            const char *testOptionsWindowName = ICON_FA_GLOBE "Test Options";
-            const char *profileWindowName = ICON_FA_GLOBE "Profile Data";
-            const char *statusWindowName = ICON_FA_GLOBE "Status";
-            const char *mainWindowName = ICON_FA_GLOBE "Main";
-            if (initDockLayout)
-            {
-                ImGuiID dockLeftId = ImGui::DockBuilderSplitNode(dockSpaceId, ImGuiDir_Left, 0.20f, nullptr, &dockSpaceId);
-                ImGuiID dockRightId = ImGui::DockBuilderSplitNode(dockSpaceId, ImGuiDir_Right, 0.30f, nullptr, &dockSpaceId);
-                ImGuiID dockRightBottomId = ImGui::DockBuilderSplitNode(dockRightId, ImGuiDir_Down, 0.50f, nullptr, &dockRightId);
-                ImGui::DockBuilderDockWindow(testOptionsWindowName, dockLeftId);
-                ImGui::DockBuilderDockWindow(statusWindowName, dockRightId);
-                ImGui::DockBuilderDockWindow(profileWindowName, dockRightBottomId);
-                ImGui::DockBuilderDockWindow(mainWindowName, dockSpaceId);
-                ImGui::DockBuilderFinish(dockSpaceId);
-                initDockLayout = false;
-            }
-
-            ImGui::End();
-
-            bool showWindow = true;
             ImGui::Begin(testOptionsWindowName, &showWindow);
             ImGui::BulletText("Object Number %d \n", bvhTracer.objectNum());
             ImGui::End();
-
-            if (!msgStream.str().empty())
-                GUI::Dialog("Message", msgStream.str().c_str());
 
             ImGui::Begin(statusWindowName, &showWindow);
             ImGui::BulletText("Object Number %d \n", bvhTracer.objectNum());
@@ -295,17 +303,12 @@ void main()
             ImGui::Text("%s", profileInfo.c_str());
             ImGui::End();
 
-            intptr_t retTexture = quadRender.Update(bvhTracer.getResult(), (sizeof(float) * width * height * 3));
-
             ImGui::Begin(mainWindowName, &showWindow);
             ImGui::Image((ImTextureID)retTexture, ImVec2(width,height));
             ImGui::End();
         }
 
-        
-
         msgStream.str(""); //clear content in stream
-        profileInfo = CPUProfiler::end();
 
 
         GUI::EndFrame();
