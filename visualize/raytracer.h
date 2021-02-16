@@ -6,9 +6,10 @@
 #include <iostream>
 
 #include "BVH.h"
-#include "interface.h"
 #include "FastNoise.h"
 #include "Profiler.h"
+
+#include "interface.h"
 
 // Return a random number in [0,1]
 static float rand01()
@@ -24,25 +25,26 @@ static Vector3 randVector3()
 
 #define MAX_OBJECT_NUM (1000000)
 
-class BVHTracer : public Observer
+class BVHTracer
 {
 public:
 
-    BVHTracer(int n, int width, int height, std::ostringstream& logger)
-		: _scale (n)
-        , _objectNum(_scale * _scale * _scale)
-        , _width(width), _height(height)
-        , _traceDone(false)
-		, _cameraPositionOffset(0.f)
-		, _focusOffset(0.f, 0.f)
+    BVHTracer(std::ostringstream& logger)
+        : _traceDone(false)
+        , _cameraPositionOffset(0.f)
         , _bvh(nullptr)
         , _objects(MAX_OBJECT_NUM)
-		, _randomVectors(MAX_OBJECT_NUM)
-		, _noise()
-		, _logger(logger)
+        , _randomVectors(MAX_OBJECT_NUM)
+        , _noise()
+        , _logger(logger)
     {
+        _width = settings.width;
+        _height = settings.height;
+        _objectPerAxis = settings.objectPerAxis;
+        _objectNum = _objectPerAxis * _objectPerAxis * _objectPerAxis;
+
         _pixels = new float[_width * _height * 3];
-	    _noise.SetNoiseType(FastNoise::SimplexFractal); // Set the desired noise type
+        _noise.SetNoiseType(FastNoise::SimplexFractal); // Set the desired noise type
         constructBVH();
     }
 
@@ -55,82 +57,83 @@ public:
     float* _pixels;
 
 private:
-	int _scale;
+    int _objectPerAxis;
     int _objectNum;
     int _width;
     int _height;
     bool _traceDone;
-	float _cameraPositionOffset;
-	glm::fvec2 _focusOffset;
+    float _cameraPositionOffset;
 
-	BVH* _bvh;
+    BVH* _bvh;
     std::vector<Object*> _objects;
     std::vector<Vector3*> _randomVectors;
-	std::ostringstream& _logger;
-	FastNoise _noise; // Create a FastNoise object
+    std::ostringstream& _logger;
+    FastNoise _noise; // Create a FastNoise object
 
     void constructBVH();
     
 public:
 
-	virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override
+    //virtual void handleScreenSizeChange(const glm::ivec2 &newScreenSize) override
+    //{
+    //    if (newScreenSize.x != _width || newScreenSize.y != _height)
+    //    {
+    //        _width = newScreenSize.x;
+    //        _height = newScreenSize.y;
+    //        delete _pixels;
+    //        _pixels = new float[_width * _height * 3];
+    //        _traceDone = false;
+    //    }
+    //}
+    //virtual void handleFocusOffsetChange(const glm::fvec2 &newFocusOffset) override
+    //{
+    //    if (newFocusOffset != _focusOffset)
+    //    {
+    //        _focusOffset = newFocusOffset;
+    //        _traceDone = false;
+    //    }
+    //}
+
+    int objectNum() const
     {
-        if (newScreenSize.x != _width || newScreenSize.y != _height)
-        {
-            _width = newScreenSize.x;
-			_height = newScreenSize.y;
-            delete _pixels;
-            _pixels = new float[_width * _height * 3];
-            _traceDone = false;
-        }
-    }
-	virtual void handleFocusOffsetChange(const glm::fvec2 &newFocusOffset) override
-    {
-		if (newFocusOffset != _focusOffset)
-		{
-			_focusOffset = newFocusOffset;
-			_traceDone = false;
-		}
-    }
-	virtual void handlePositionOffsetChange(float newPositionOffset) override
-    {
-		if (newPositionOffset != _cameraPositionOffset)
-		{
-			_cameraPositionOffset = newPositionOffset;
-			_traceDone = false;
-		}
-    }
-	virtual void handleObjectNumChange(int newScale) override
-    {
-        if (newScale!= _scale)
-        {
-			if (newScale * newScale * newScale > MAX_OBJECT_NUM)
-			{
-				_logger << "Object Number exceeds max value " << MAX_OBJECT_NUM << std::endl;
-				return;
-			}
-            _objectNum = newScale * newScale * newScale;
-			_scale = newScale;
-            constructBVH();
-            _traceDone = false;
-        }
+        return _objectNum;
     }
 
-	int objectNum() const
-	{
-		return _objectNum;
-	}
-
-    void run()
+    float* getResult()
     {
+        if (settings.positionOffset != _cameraPositionOffset)
+        {
+            _cameraPositionOffset = settings.positionOffset;
+            _traceDone = false;
+        }
+        else
+        {
+        }
+
+        if (settings.objectPerAxis != _objectPerAxis)
+        {
+            if (settings.objectPerAxis * settings.objectPerAxis * settings.objectPerAxis > MAX_OBJECT_NUM)
+            {
+                _logger << "Object Number exceeds max value " << MAX_OBJECT_NUM << std::endl;
+            }
+            else
+            {
+                _objectNum = settings.objectPerAxis * settings.objectPerAxis * settings.objectPerAxis;
+                _objectPerAxis = settings.objectPerAxis;
+                constructBVH();
+                _logger << "Set Object Number  " << _objectNum << std::endl;
+                _traceDone = false;
+            }
+        }
+
         if (_traceDone == false)
         {
             trace();
             _traceDone = true;
         }
+        return _pixels;
     }
 
 private:
-	void trace();
+    void trace();
 };
-

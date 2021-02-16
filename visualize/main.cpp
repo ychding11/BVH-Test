@@ -152,6 +152,44 @@ namespace GUI
     }
 }
 
+void drawMenuBar()
+{
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu(ICON_FA_CUBE " Model"))
+        {
+            if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open..."))
+            { }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu(ICON_FA_CAMERA " Camera"))
+        {
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu(ICON_FA_EYE " View"))
+        {
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu(ICON_FA_WINDOWS " Settings"))
+        {
+            if (ImGui::Combo("Scene", &settings.testIndex, "bvh\0noise\0"))
+            {
+            }
+            if (ImGui::SliderInt("Object Per Axis", &settings.objectPerAxis, 0, 10))
+            {
+            }
+            if (ImGui::SliderFloat("position offset", &settings.positionOffset, 0.0f, 10.f))
+            {
+            }
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+    ImGui::PopStyleVar();
+}
+
 int width = 1280;
 int height = 720;
 void main()
@@ -191,16 +229,19 @@ void main()
     Quad::Renderer quadRender;
 
     std::ostringstream msgStream;
-
-    BVHTracer bvhTracer(settings.objectNum, width, height, msgStream);
-    Observer *uiObserver = &bvhTracer;
-    bool initDockLayout = true;
     std::string profileInfo;
+
+    BVHTracer bvhTracer(msgStream);
+
+    bool initDockLayout = true;
+
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
     while (!glfwWindowShouldClose(window))
     {
         GUI::BeginFrame();
+
+        drawMenuBar();
 
         CPUProfiler::begin();
         {
@@ -235,52 +276,6 @@ void main()
                 initDockLayout = false;
             }
 
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
-            if (ImGui::BeginMainMenuBar())
-            {
-                ImGui::PopStyleVar();
-                if (ImGui::BeginMenu(ICON_FA_CUBE " Model"))
-                {
-                    if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open..."))
-                    { }
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu(ICON_FA_CAMERA " Camera"))
-                {
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu(ICON_FA_EYE " View"))
-                {
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu(ICON_FA_WINDOWS " Settings"))
-                {
-                    if (ImGui::Combo("Scene", &settings.testIndex, "bvh\0noise\0"))
-                    {
-                        bvhTracer.handleTestIndexChange(settings.testIndex);
-                    }
-                    if (ImGui::SliderInt("Objects number", &settings.objectNum, 0, 100))
-                    {
-                        bvhTracer.handleObjectNumChange(settings.objectNum);
-                    }
-                    if (ImGui::SliderFloat2("focus offset", &settings.focusOffset.x, -0.5f, 0.5f))
-                    {
-                        bvhTracer.handleFocusOffsetChange(settings.focusOffset);
-                    }
-                    if (ImGui::SliderFloat("position offset", &settings.positionOffset, 0.0f, 10.f))
-                    {
-                        bvhTracer.handlePositionOffsetChange(settings.positionOffset);
-                    }
-
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMainMenuBar();
-            }
-            else
-            {
-                ImGui::PopStyleVar();
-            }
-
             ImGui::End();
 
             bool showWindow = true;
@@ -300,8 +295,7 @@ void main()
             ImGui::Text("%s", profileInfo.c_str());
             ImGui::End();
 
-            bvhTracer.run();
-            intptr_t retTexture = quadRender.Update(bvhTracer._pixels, (sizeof(float) * width * height * 3));
+            intptr_t retTexture = quadRender.Update(bvhTracer.getResult(), (sizeof(float) * width * height * 3));
 
             ImGui::Begin(mainWindowName, &showWindow);
             ImGui::Image((ImTextureID)retTexture, ImVec2(width,height));

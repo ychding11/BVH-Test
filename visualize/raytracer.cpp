@@ -10,11 +10,11 @@
 
         {
             CPUProfiler profiler("generate objects", true);
-            for (size_t i = 0; i < _scale; ++i)
-            for (size_t j = 0; j < _scale; ++j)
-            for (size_t k = 0; k < _scale; ++k)
+            for (size_t i = 0; i < _objectPerAxis; ++i)
+            for (size_t j = 0; j < _objectPerAxis; ++j)
+            for (size_t k = 0; k < _objectPerAxis; ++k)
             {    
-                float invScale = 1.f / _scale;
+                float invScale = 1.f / _objectPerAxis;
                 float r = 0.005f;
                 float x = (rand01() - 0.5) * 0.25;
                 float y = (rand01() - 0.5) * 0.25;
@@ -56,8 +56,6 @@
                 float u = (i + .25f) / (float)(_width) - .5f;
                 float v = (_height - 1 - j + .25f) / (float)(_height) - .5f;
                 float fovlen = .5f / tanf(70.f * 3.14159265*.5f / 180.f);
-                u += _focusOffset.x;
-                v += _focusOffset.y;
 
                 // This is only valid for square images
                 Ray ray(camera_position, normalize(u * camera_u + v * camera_v + fovlen * camera_dir));

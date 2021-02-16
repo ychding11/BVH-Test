@@ -13,19 +13,21 @@ struct TestOption
 struct Setting
 {
     int testIndex;
-    int objectNum;
-    glm::ivec2 screenSize;
-    glm::fvec2 focusOffset;
+    int objectPerAxis;
+    int width;
+    int height;
     float positionOffset;
 
     Setting()
         : testIndex(0)
-        , objectNum(10)
-        , screenSize(720, 720)
-        , focusOffset(0.f, 0.f)
+        , objectPerAxis(10)
+        , width(1280)
+        , height(720)
         , positionOffset(0.f)
     {}
 };
+
+extern Setting settings;
 
 class Observer
 {
