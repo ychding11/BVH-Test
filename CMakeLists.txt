@@ -5,7 +5,9 @@ SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Configuration types" FORCE)
 
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+
+option(ENABLE_HIDECONSOLE_BUILD "Enable to hide console on Windows" OFF)
 
 file(GLOB SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.h
@@ -30,6 +32,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/visualize/
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
+  ${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include
   ${CMAKE_SOURCE_DIR}/thirdparty/glm
   ${CMAKE_SOURCE_DIR}/thirdparty/fonts
   ${CMAKE_SOURCE_DIR}/thirdparty/imgui
@@ -76,8 +79,6 @@ foreach(f ${SRC_FILES})
     string(REPLACE / \\ SRCGR ${SRCGR})
     source_group("${SRCGR}" FILES ${f})
 endforeach()
-
-set(ENABLE_HIDECONSOLE_BUILD TRUE CACHE BOOL "TRUE to hide console for Windows sys")
 
 if(WINDOWS)
   set(GUI_TYPE WIN32)
@@ -129,21 +130,16 @@ set_target_properties(${EXE_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CM
 # Hide the console window in visual studio projects
 #--------------------------------------------------------------------
 if(ENABLE_HIDECONSOLE_BUILD)
-if(MSVC)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-endif()
-endif()
-
-if(WINDOWS)
-set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS")
-set_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+    if(MSVC)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+    endif()
 endif()
 
 if(ENABLE_HIDECONSOLE_BUILD)
-MESSAGE(STATUS "Console is hidden")
+    message(STATUS "Console is hidden")
 else()
-MESSAGE(STATUS "Console is visible")
+    message(STATUS "Console is visible")
 endif()
 
 #######################################################################################

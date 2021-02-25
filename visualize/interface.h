@@ -57,6 +57,21 @@ public:
     }
 };
 
+//
+// https://github.com/gabime/spdlog
+//
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
+namespace Logging
+{
+    spdlog::logger *Logger();
+}
+
+#define Log(fmt, ...)  Logging::Logger()->info(fmt,__VA_ARGS__); 
+#define Warn(fmt, ...) Logging::Logger()->warn(fmt,__VA_ARGS__); 
+
 #define XA_MULTITHREADED 0
 
 #if XA_MULTITHREADED
