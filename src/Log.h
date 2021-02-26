@@ -1,33 +1,19 @@
 #ifndef Log_h
 #define Log_h
 
-#include <cstdio>
+//
+// https://github.com/gabime/spdlog
+//
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
-#define LOG_LEVEL 100
+namespace Logging
+{
+    spdlog::logger *Logger();
+}
 
-#if LOG_LEVEL > 2 
- #define LOG_INFO(...) { printf("[Info] " __VA_ARGS__); printf("\n"); }
-#else
- #define LOG_INFO(...) 
-#endif
-
-#if LOG_LEVEL > 2 
- #define LOG_STAT(...) { printf("[Statistic] " __VA_ARGS__); printf("\n"); }
-#else
- #define LOG_STAT(...) ;
-#endif
-
-#if LOG_LEVEL > 1 
- #define LOG_WARNING(...) { printf("[Warning] " __VA_ARGS__); printf("\n"); }
-#else
- #define LOG_WARNING(...) ;
-#endif
-
-#if LOG_LEVEL > 0 
- #define LOG_ERROR(...) { printf( "[Error] " __VA_ARGS__); printf("\n"); }
-#else
- #define LOG_ERROR(...) ;
-#endif
-
+#define Log(fmt, ...)  Logging::Logger()->info(fmt,__VA_ARGS__); 
+#define Warn(fmt, ...) Logging::Logger()->warn(fmt,__VA_ARGS__); 
 
 #endif

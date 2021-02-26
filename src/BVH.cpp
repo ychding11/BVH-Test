@@ -35,12 +35,12 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
 	{
 		// Pop off the next node to work on.
 		int ni = todo[stackptr].i;
-		float near = todo[stackptr].mint;
+		float n = todo[stackptr].mint;
 		stackptr--;
 		const BVHFlatNode &node(flatTree[ ni ]);
 
 		// If this node is further than the closest found intersection, continue
-		if(near > intersection->t)
+		if(n > intersection->t)
 			continue;
 
 	// Is leaf -> Intersect
@@ -118,7 +118,7 @@ BVH::BVH(std::vector<Object*>* objects, uint32_t leafSize)
 
  // Output tree build time and statistics
  double constructionTime = sw.read();
- LOG_STAT("Built BVH (%d nodes, with %d leafs) in %d ms", nNodes, nLeafs, (int)(1000*constructionTime)); 
+ Log("Built BVH (%d nodes, with %d leafs) in %d ms", nNodes, nLeafs, (int)(1000*constructionTime)); 
 }
 
 struct BVHBuildEntry {

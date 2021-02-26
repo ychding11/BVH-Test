@@ -1,5 +1,7 @@
 #pragma once
-//
+
+#include "Log.h"
+
 
 // UI Control
 struct Setting
@@ -21,20 +23,6 @@ struct Setting
 
 extern Setting settings;
 
-//
-// https://github.com/gabime/spdlog
-//
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/sinks/basic_file_sink.h"
-
-namespace Logging
-{
-    spdlog::logger *Logger();
-}
-
-#define Log(fmt, ...)  Logging::Logger()->info(fmt,__VA_ARGS__); 
-#define Warn(fmt, ...) Logging::Logger()->warn(fmt,__VA_ARGS__); 
 
 #define XA_MULTITHREADED 0
 
