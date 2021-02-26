@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.8)
 project (BVH-Lab)
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
@@ -41,6 +41,8 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/thirdparty/fastnoise
 )
 
+set(GLFW_LIBS glfw3.lib)
+
 ## Here Should Set correct value based on Visual Studio Version
 link_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glfw/lib-vc2015
@@ -48,7 +50,6 @@ link_directories(
 
 find_package(OpenGL)
 
-set(GLFW_LIBS glfw3.lib)
 #######################################################################################
 
 #set (USE_MSVC_RUNTIME_LIBRARY_DLL true)
@@ -87,19 +88,20 @@ elseif(MACOSX)
 endif()
 
 if(MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
 
 
-SET(LINK_OPTIONS " ")
-SET(EXE_NAME "BVH-Test")
+set(LINK_OPTIONS " ")
+
+set(EXE_NAME "BVH-Test")
 
 ADD_EXECUTABLE(${EXE_NAME} ${SRC_FILES} ${EXT_FILES})
 
 TARGET_LINK_LIBRARIES(${EXE_NAME} ${OPENGL_LIBRARIES} ${GLFW_LIBS})
 
 #--------------------------------------------------------------------
-# preproc
+# preproc : add macros
 #--------------------------------------------------------------------
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 add_definitions(-D__STDC_FORMAT_MACROS)
@@ -108,17 +110,16 @@ add_definitions(-D__STDC_LIMIT_MACROS)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 if(MSVC)
-add_definitions(-DWIN32)
-add_definitions(-D_WIN32)
-#add_definitions(-DNOMINMAX)
+    add_definitions(-DWIN32)
+    add_definitions(-D_WIN32)
+    #add_definitions(-DNOMINMAX)
 endif()
 add_definitions(-DUSE_DL_PREFIX)
 add_definitions(-DGLEW_STATIC)
 
 #--------------------------------------------------------------------
-# output dirs
+# target properties : output dirs
 #--------------------------------------------------------------------
-
 set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
 set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
 set_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_SOURCE_DIR}/bin )
