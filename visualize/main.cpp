@@ -230,10 +230,40 @@ void drawDockWindow()
 
 }
 
+namespace Logging
+{
+    static spdlog::logger *sLogger = nullptr;
+
+    void Init(void)
+    {
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        console_sink->set_level(spdlog::level::warn);
+        //console_sink->set_pattern("[multi_sink_example] [%^%l%$] %v");
+
+        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/log.txt", true);
+        file_sink->set_level(spdlog::level::trace);
+
+        sLogger = new spdlog::logger("multi_sink", { console_sink, file_sink });
+        sLogger->set_level(spdlog::level::debug);
+    }
+
+    spdlog::logger *Logger()
+    {
+        if (sLogger == nullptr)
+        {
+            Init();
+        }
+        return sLogger;
+    }
+
+}
 int width = 1280;
 int height = 720;
 void main()
 {
+    Warn("this should appear in both console and file");
+    Log("this message should is just a test");
+
     srand(unsigned int(time(0)));
 
     GLFWwindow *window;
