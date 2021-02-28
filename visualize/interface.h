@@ -1,28 +1,43 @@
 #pragma once
 
+#include <bvh/vector.hpp> 
+
 #include "Log.h"
 
+using Scalar  = float;
+using Vector3 = bvh::Vector3<Scalar>;
 
 // UI Control
 struct Setting
 {
     int testIndex;
-    int objectPerAxis;
     int width;
     int height;
-    float positionOffset;
+
+    struct
+    {
+        Vector3 eye;
+        Vector3 dir;
+        Vector3 up;
+        Scalar  fov;
+    } camera ;
 
     Setting()
         : testIndex(0)
-        , objectPerAxis(10)
         , width(1280)
         , height(720)
-        , positionOffset(0.f)
-    {}
+    {
+        camera.eye = Vector3(0, 0.9, 2.5);
+        camera.dir = Vector3(0, 0.001, -1);
+        camera.up  = Vector3(0, 1, 0);
+        camera.fov = 60;
+    }
 };
 
 extern Setting settings;
 
+float* GetRenderingResult(const Setting &settings);
+int EntryPointMain(int argc, char** argv);
 
 #define XA_MULTITHREADED 0
 

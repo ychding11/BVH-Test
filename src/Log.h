@@ -15,5 +15,6 @@ namespace Logging
 
 #define Log(fmt, ...)  Logging::Logger()->info(fmt,__VA_ARGS__); 
 #define Warn(fmt, ...) Logging::Logger()->warn(fmt,__VA_ARGS__); 
+#define Err(fmt, ...)  Logging::Logger()->error(fmt,__VA_ARGS__); 
 
 #endif

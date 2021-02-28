@@ -19,9 +19,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include "BVH.h"
 #include "interface.h"
-#include "raytracer.h"
 #include "Renderer.h"
 #include "IconsFontAwesome4.h"
 
@@ -29,10 +27,6 @@
 #pragma warning(disable : 4244) // conversion from 'int' to 'float', possible loss of data
 //#pragma warning(pop)
 
-std::vector<ProfilerEntry> CPUProfiler::ProfilerData(16);
-std::vector<ProfilerEntry> CPUProfiler::ProfilerDataA;
-
-//struct Setting;
 static Setting settings;
 
 void update(float secondsElapsed, GLFWwindow *window)
@@ -180,12 +174,12 @@ void drawMenuBar()
             if (ImGui::Combo("Scene", &settings.testIndex, "bvh\0noise\0"))
             {
             }
-            if (ImGui::SliderInt("Object Per Axis", &settings.objectPerAxis, 0, 10))
-            {
-            }
-            if (ImGui::SliderFloat("position offset", &settings.positionOffset, 0.0f, 10.f))
-            {
-            }
+            //if (ImGui::SliderInt("Object Per Axis", &settings.objectPerAxis, 0, 10))
+            //{
+            //}
+            //if (ImGui::SliderFloat("position offset", &settings.positionOffset, 0.0f, 10.f))
+            //{
+            //}
 
             ImGui::EndMenu();
         }
@@ -230,14 +224,12 @@ void drawDockWindow()
 
 }
 
-int width = 1280;
-int height = 720;
-void main()
+void GUIModeMain(Setting &setting)
 {
-    Warn("this should appear in both console and file");
-    Log("this message should is just a test");
+    Log("Enter GUI Mode");
 
-    srand(unsigned int(time(0)));
+    int width  = setting.width;
+    int height = setting.height;
 
     GLFWwindow *window;
     glfwInit();
@@ -271,10 +263,7 @@ void main()
 
     Quad::Renderer quadRender;
 
-    std::ostringstream msgStream;
     std::string profileInfo;
-
-    BVHTracer bvhTracer(msgStream);
 
     bool showWindow = false;
 
@@ -282,37 +271,27 @@ void main()
     double curTime  = glfwGetTime();
     while (!glfwWindowShouldClose(window))
     {
-        CPUProfiler::begin();
-
         GUI::BeginFrame();
 
         drawMenuBar();
         drawDockWindow();
-        intptr_t retTexture = quadRender.Update(bvhTracer.getResult(), (sizeof(float) * width * height * 3));
-
-        profileInfo = CPUProfiler::end();
+        intptr_t retTexture = quadRender.Update(GetRenderingResult(settings), (sizeof(float) * width * height * 3));
 
         {
             ImGui::Begin(testOptionsWindowName, &showWindow);
-            ImGui::BulletText("Object Number %d \n", bvhTracer.objectNum());
             ImGui::End();
 
             ImGui::Begin(statusWindowName, &showWindow);
-            ImGui::BulletText("Object Number %d \n", bvhTracer.objectNum());
             ImGui::BulletText("Application average %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &showWindow);
-            ImGui::Text("%s", profileInfo.c_str());
             ImGui::End();
 
             ImGui::Begin(mainWindowName, &showWindow);
             ImGui::Image((ImTextureID)retTexture, ImVec2(width,height));
             ImGui::End();
         }
-
-        msgStream.str(""); //clear content in stream
-
 
         GUI::EndFrame();
 
@@ -327,4 +306,34 @@ void main()
     // Cleanup
     GUI::CleanUp();
     glfwTerminate();
+}
+
+//
+// --eye 0 0.9 2.5 --dir 0 0.001 -1 --up 0 1 0 --fov 60
+//
+// --batch  --eye 0 0.9 2.5 --dir 0 0.001 -1 --up 0 1 0 --fov 60  .\scene\cornell_box.obj 
+//
+void main(int argc, char** argv)
+{
+    bool batchMode = false;
+    for (int i = 1; i < argc; ++i)
+    {
+        if (argv[i][0] == '-')
+        {
+            if (!strcmp(argv[i], "--batch"))
+            {
+                batchMode = true;
+            }
+        }
+    }
+
+    if (batchMode)
+    {
+        Log("Batch Mode");
+        EntryPointMain(argc, argv);
+    }
+    else
+    {
+        GUIModeMain(settings);
+    }
 }

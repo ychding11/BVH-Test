@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.8)
 project (BVH-Lab)
 
+set(CMAKE_CXX_STANDARD 17)
+
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Configuration types" FORCE)
@@ -32,6 +34,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/visualize/
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
+  ${CMAKE_SOURCE_DIR}/thirdparty/bvh/include
   ${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include
   ${CMAKE_SOURCE_DIR}/thirdparty/glm
   ${CMAKE_SOURCE_DIR}/thirdparty/fonts
