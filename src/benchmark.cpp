@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cstdint>
 #include <functional>
 
@@ -485,6 +486,7 @@ int EntryPointMain(int argc, char** argv)
 
 float* GetRenderingResult(const Setting &settings)
 {
+    static bool done = false;
     const char* input_file   = ".\\scene\\cornell_box.obj";
     const char* builder_name = "binned_sah";
     Camera camera =
@@ -512,6 +514,7 @@ float* GetRenderingResult(const Setting &settings)
     Scalar statistics_weights[3];
     size_t width  = 1280;
     size_t height = 720;
+    std::stringstream ss;
 
     if (!input_file)
     {
@@ -521,6 +524,9 @@ float* GetRenderingResult(const Setting &settings)
 
     //auto pixels = std::make_unique<Scalar[]>(3 * width * height);
     static Scalar *pixels = new Scalar[(3 * width * height)];
+
+    if (done)
+        return pixels;
 
     std::function<size_t(Bvh&, const Triangle*, const BoundingBox&, const BoundingBox*, const Vector3*, size_t)> builder;
     if (!strcmp(builder_name, "binned_sah"))
@@ -594,22 +600,24 @@ float* GetRenderingResult(const Setting &settings)
     std::unique_ptr<Triangle[]> shuffled_triangles;
 
     // Build an acceleration data structure for this object set
-    std::cout << "Building BVH (" << builder_name;
+    ss << "Building BVH (" << builder_name;
     if (pre_split_factor)
-        std::cout << " + pre-split";
+        ss << " + pre-split";
     if (parallel_reinsertion)
-        std::cout << " + parallel-reinsertion";
+        ss << " + parallel-reinsertion";
     if (optimize_layout)
-        std::cout << " + optimize-layout";
+        ss << " + optimize-layout";
     if (collapse_leaves)
-        std::cout << " + collapse-leaves";
+        ss  << " + collapse-leaves";
     if (permute)
-        std::cout << " + permute";
-    std::cout << ")..." << std::endl;
+        ss << " + permute";
+    ss << ")..." << std::endl;
+
+    Log(ss.str());
+    ss.str("");
 
     profile("BVH construction", [&] {
-        auto [bboxes, centers] =
-            bvh::compute_bounding_boxes_and_centers(triangles.data(), triangles.size());
+        auto [bboxes, centers] = bvh::compute_bounding_boxes_and_centers(triangles.data(), triangles.size());
         auto global_bbox = bvh::compute_bounding_boxes_union(bboxes.get(), triangles.size());
         bvh::HeuristicPrimitiveSplitter<Triangle> splitter;
         if (pre_split_factor > 0)
@@ -617,15 +625,18 @@ float* GetRenderingResult(const Setting &settings)
         reference_count = builder(bvh, triangles.data(), global_bbox, bboxes.get(), centers.get(), reference_count);
         if (pre_split_factor > 0)
             splitter.repair_bvh_leaves(bvh);
-        if (parallel_reinsertion) {
+        if (parallel_reinsertion)
+        {
             bvh::ParallelReinsertionOptimizer<Bvh> reinsertion_optimizer(bvh);
             reinsertion_optimizer.optimize();
         }
-        if (optimize_layout) {
+        if (optimize_layout)
+        {
             bvh::NodeLayoutOptimizer layout_optimizer(bvh);
             layout_optimizer.optimize();
         }
-        if (collapse_leaves) {
+        if (collapse_leaves)
+        {
             bvh::LeafCollapser leaf_collapser(bvh);
             leaf_collapser.collapse();
         }
@@ -637,21 +648,28 @@ float* GetRenderingResult(const Setting &settings)
     bvh::HierarchyRefitter refitter(bvh);
     refitter.refit([] (Bvh::Node&) {});
 
-    std::cout
+    ss 
         << "BVH depth of " << compute_bvh_depth(bvh) << ", "
         << bvh.node_count << " node(s), "
         << reference_count << " reference(s)" << std::endl;
 
+    Log(ss.str());
+    ss.str("");
 
-    std::cout << "Rendering image (" << width << "x" << height << ")..." << std::endl;
+    Log("Rendering image (%dx%d)", width, height);
+    //ss << "Rendering image (" << width << "x" << height << ")..." << std::endl;
+
 
     profile("Rendering", [&] {
-        if (permute) {
+        if (permute)
+        {
             if (collect_statistics)
                 render<true, true>(camera, bvh, shuffled_triangles.get(), pixels, width, height, statistics_weights);
             else
                 render<true, false>(camera, bvh, shuffled_triangles.get(), pixels, width, height);
-        } else {
+        }
+        else
+        {
             if (collect_statistics)
                 render<false, true>(camera, bvh, triangles.data(), pixels, width, height, statistics_weights);
             else
@@ -659,6 +677,7 @@ float* GetRenderingResult(const Setting &settings)
         }
     });
 
+    done = true;
     //return pixels.get();
     return pixels;
 }

@@ -13,8 +13,8 @@ namespace Logging
     spdlog::logger *Logger();
 }
 
-#define Log(fmt, ...)  Logging::Logger()->info(fmt,__VA_ARGS__); 
-#define Warn(fmt, ...) Logging::Logger()->warn(fmt,__VA_ARGS__); 
-#define Err(fmt, ...)  Logging::Logger()->error(fmt,__VA_ARGS__); 
+#define Log(...)  Logging::Logger()->info(__VA_ARGS__); 
+#define Warn(...) Logging::Logger()->warn(__VA_ARGS__); 
+#define Err(...)  Logging::Logger()->error(__VA_ARGS__); 
 
 #endif

@@ -224,6 +224,11 @@ void drawDockWindow()
 
 }
 
+bool RenderingTaskDone()
+{
+    return false;
+}
+
 void GUIModeMain(Setting &setting)
 {
     Log("Enter GUI Mode");
@@ -267,6 +272,8 @@ void GUIModeMain(Setting &setting)
 
     bool showWindow = false;
 
+    intptr_t waitingTexture = quadRender.Update(GetRenderingResult(settings), (sizeof(float) * width * height * 3));
+    
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
     while (!glfwWindowShouldClose(window))
@@ -275,7 +282,7 @@ void GUIModeMain(Setting &setting)
 
         drawMenuBar();
         drawDockWindow();
-        intptr_t retTexture = quadRender.Update(GetRenderingResult(settings), (sizeof(float) * width * height * 3));
+        intptr_t renderedTexture = quadRender.Update(GetRenderingResult(settings), (sizeof(float) * width * height * 3));
 
         {
             ImGui::Begin(testOptionsWindowName, &showWindow);
@@ -289,7 +296,15 @@ void GUIModeMain(Setting &setting)
             ImGui::End();
 
             ImGui::Begin(mainWindowName, &showWindow);
-            ImGui::Image((ImTextureID)retTexture, ImVec2(width,height));
+            if (RenderingTaskDone())
+            {
+                intptr_t renderedTexture = quadRender.Update(GetRenderingResult(settings), (sizeof(float) * width * height * 3));
+                ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height));
+            }
+            else
+            {
+                ImGui::Image((ImTextureID)waitingTexture, ImVec2(width,height));
+            }
             ImGui::End();
         }
 

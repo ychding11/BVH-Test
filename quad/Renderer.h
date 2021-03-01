@@ -31,7 +31,12 @@ namespace Quad
         void  setScreenSize(int x, int y) { _screenSizeX = x; _screenSizeY = y;  }
 
         GLuint Update(void* newData, int newSize);
-        
+
+        GLuint LoadTexture(std::string path, int &width, int &height);
+        GLuint CreateRenderTexture();
+
+        void UpdateRenderTexture(GLuint renderTexture, void* newData, int newSize);
+
         void Render();
 
     protected:

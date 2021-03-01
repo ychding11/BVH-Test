@@ -228,6 +228,33 @@ namespace Quad
         _initialized = true;
     }
 
+    GLuint Renderer::LoadTexture(std::string path, int &width, int &height)
+    {
+        return 0;
+    }
+
+    GLuint Renderer::CreateRenderTexture()
+    {
+		GLuint renderTexture;
+        glGenTextures(1, &renderTexture);
+        glBindTexture(GL_TEXTURE_2D, renderTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, _screenSizeY, _screenSizeY , 0, GL_RGB, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return renderTexture;
+    }
+
+    void Renderer::UpdateRenderTexture(GLuint renderTexture, void* newData, int newSize)
+    {
+        assert(newData != nullptr && " NULL pointer !!!");
+        assert(newSize == (_screenSizeX * _screenSizeY * 3 * sizeof(float)) && " Texture size mismatch !!!");
+
+        //// Update render result texture ////
+        glBindTexture(GL_TEXTURE_2D, renderTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, _screenSizeX, _screenSizeY, 0, GL_RGB, GL_FLOAT, newData);
+    }
+
     GLuint Renderer::Update(void* newData, int newSize)
     {
         assert(newData != nullptr && " NULL pointer !!!");
