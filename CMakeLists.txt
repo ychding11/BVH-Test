@@ -22,6 +22,7 @@ file(GLOB SRC_FILES
 
 file(GLOB EXT_FILES
     ${CMAKE_SOURCE_DIR}/thirdparty/*.h
+    ${CMAKE_SOURCE_DIR}/thirdparty/lodepng/*.cpp
     ${CMAKE_SOURCE_DIR}/thirdparty/imgui/*.h
     ${CMAKE_SOURCE_DIR}/thirdparty/imgui/*.cpp
 	${CMAKE_SOURCE_DIR}/thirdparty/glew/src/glew.c
@@ -34,6 +35,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/visualize/
   ${CMAKE_SOURCE_DIR}/quad/
   ${CMAKE_SOURCE_DIR}/thirdparty/
+  ${CMAKE_SOURCE_DIR}/thirdparty/lodepng
   ${CMAKE_SOURCE_DIR}/thirdparty/bvh/include
   ${CMAKE_SOURCE_DIR}/thirdparty/spdlog/include
   ${CMAKE_SOURCE_DIR}/thirdparty/glm

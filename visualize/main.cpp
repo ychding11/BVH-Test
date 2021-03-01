@@ -272,7 +272,8 @@ void GUIModeMain(Setting &setting)
 
     bool showWindow = false;
 
-    intptr_t waitingTexture = quadRender.Update(GetRenderingResult(settings), (sizeof(float) * width * height * 3));
+    int width_, height_;
+    intptr_t waitingTexture = quadRender.LoadTexture("../image/teapot.png", width_, height_);
     
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
@@ -282,14 +283,13 @@ void GUIModeMain(Setting &setting)
 
         drawMenuBar();
         drawDockWindow();
-        intptr_t renderedTexture = quadRender.Update(GetRenderingResult(settings), (sizeof(float) * width * height * 3));
 
         {
             ImGui::Begin(testOptionsWindowName, &showWindow);
             ImGui::End();
 
             ImGui::Begin(statusWindowName, &showWindow);
-            ImGui::BulletText("Application average %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
+            ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &showWindow);
@@ -303,7 +303,7 @@ void GUIModeMain(Setting &setting)
             }
             else
             {
-                ImGui::Image((ImTextureID)waitingTexture, ImVec2(width,height));
+                ImGui::Image((ImTextureID)waitingTexture, ImVec2(width_, height_));
             }
             ImGui::End();
         }

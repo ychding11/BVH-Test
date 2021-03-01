@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "lodepng.h"
 
 #include <iostream>
 #include <fstream>
@@ -220,7 +221,7 @@ namespace Quad
 		//----------------------------------------------------------
         //Create Texture for Result 
         glBindTexture(GL_TEXTURE_2D, _resultTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, _screenSizeY, _screenSizeY , 0, GL_RGB, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, _screenSizeX, _screenSizeY , 0, GL_RGB, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -228,9 +229,31 @@ namespace Quad
         _initialized = true;
     }
 
-    GLuint Renderer::LoadTexture(std::string path, int &width, int &height)
+    GLuint Renderer::LoadTexture(std::string path,  int &width, int &height)
     {
-        return 0;
+        std::vector<unsigned char> image; //the raw pixels
+        unsigned width_, height_;
+        unsigned error = lodepng::decode(image, width_, height_, path, LCT_RGB, 8);
+
+        //if there's an error, display it
+        if (error)
+        {
+            std::cout << "png decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+        }
+        width = width_;
+        height = height_;
+
+		GLuint renderTexture;
+        glGenTextures(1, &renderTexture);
+        glBindTexture(GL_TEXTURE_2D, renderTexture);
+        //
+        // https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexImage2D.xhtml
+        //
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return renderTexture;
     }
 
     GLuint Renderer::CreateRenderTexture()
@@ -238,7 +261,7 @@ namespace Quad
 		GLuint renderTexture;
         glGenTextures(1, &renderTexture);
         glBindTexture(GL_TEXTURE_2D, renderTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, _screenSizeY, _screenSizeY , 0, GL_RGB, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, _screenSizeX, _screenSizeY , 0, GL_RGB, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glBindTexture(GL_TEXTURE_2D, 0);
