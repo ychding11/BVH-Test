@@ -484,9 +484,11 @@ int EntryPointMain(int argc, char** argv)
     }
 }
 
-float* GetRenderingResult(const Setting &settings)
+void Rendering(void *userData)
 {
     static bool done = false;
+
+    const Setting &settings = *(reinterpret_cast<Setting*>(userData));
     const char* input_file   = ".\\scene\\cornell_box.obj";
     const char* builder_name = "binned_sah";
     Camera camera =
@@ -519,14 +521,14 @@ float* GetRenderingResult(const Setting &settings)
     if (!input_file)
     {
         Err("Missing a command line argument for the scene file");
-        return nullptr;
+        return ;
     }
 
     //auto pixels = std::make_unique<Scalar[]>(3 * width * height);
     static Scalar *pixels = new Scalar[(3 * width * height)];
 
     if (done)
-        return pixels;
+        return ;
 
     std::function<size_t(Bvh&, const Triangle*, const BoundingBox&, const BoundingBox*, const Vector3*, size_t)> builder;
     if (!strcmp(builder_name, "binned_sah"))
@@ -575,7 +577,7 @@ float* GetRenderingResult(const Setting &settings)
     else
     {
         Err("Unknown BVH builder name");
-        return nullptr;
+        return ;
     }
 
     // Load mesh from file
@@ -583,7 +585,7 @@ float* GetRenderingResult(const Setting &settings)
     if (triangles.size() == 0)
     {
         Err("The given scene is empty or cannot be loaded");
-        return nullptr;
+        return ;
     }
 
     // Rotate triangles if requested
@@ -679,5 +681,5 @@ float* GetRenderingResult(const Setting &settings)
 
     done = true;
     //return pixels.get();
-    return pixels;
+    return ;
 }

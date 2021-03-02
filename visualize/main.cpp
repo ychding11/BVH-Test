@@ -27,6 +27,9 @@
 #pragma warning(disable : 4244) // conversion from 'int' to 'float', possible loss of data
 //#pragma warning(pop)
 
+TaskHandle Task::s_count = 0;
+thread_local uint32_t TaskScheduler::m_threadIndex;
+
 static Setting settings;
 
 void update(float secondsElapsed, GLFWwindow *window)
@@ -224,11 +227,6 @@ void drawDockWindow()
 
 }
 
-bool RenderingTaskDone()
-{
-    return false;
-}
-
 void GUIModeMain(Setting &setting)
 {
     Log("Enter GUI Mode");
@@ -286,6 +284,7 @@ void GUIModeMain(Setting &setting)
 
         {
             ImGui::Begin(testOptionsWindowName, &showWindow);
+            ImGui::Checkbox("Fit to Window", &settings.fitToWindow);
             ImGui::End();
 
             ImGui::Begin(statusWindowName, &showWindow);
@@ -303,12 +302,18 @@ void GUIModeMain(Setting &setting)
             }
             else
             {
-                ImVec2 size((float)width_, (float)height_);
-                const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
-                size.x *= scale;
-                size.y *= scale;
-                //ImGui::Image((ImTextureID)waitingTexture, ImVec2(width_, height_));
-                ImGui::Image((ImTextureID)waitingTexture, size);
+                if (settings.fitToWindow)
+                {
+                    ImVec2 size((float)width_, (float)height_);
+                    const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
+                    size.x *= scale;
+                    size.y *= scale;
+                    ImGui::Image((ImTextureID)waitingTexture, size);
+                }
+                else
+                {
+                    ImGui::Image((ImTextureID)waitingTexture, ImVec2(width_, height_));
+                }
             }
             ImGui::End();
         }

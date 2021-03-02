@@ -22,10 +22,12 @@ struct Setting
         Scalar  fov;
     } camera ;
 
+    bool fitToWindow;
     Setting()
         : testIndex(0)
         , width(1280)
         , height(720)
+        , fitToWindow(true)
     {
         camera.eye = Vector3(0, 0.9, 2.5);
         camera.dir = Vector3(0, 0.001, -1);
@@ -36,8 +38,228 @@ struct Setting
 
 extern Setting settings;
 
-float* GetRenderingResult(const Setting &settings);
+
 int EntryPointMain(int argc, char** argv);
+
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <condition_variable>
+
+namespace
+{
+    struct MemTag
+    {
+        enum
+        {
+            Default,
+            BitImage,
+            BVH,
+            Matrix,
+            Mesh,
+            Count
+        };
+    };
+
+    enum TaskStatus
+    {
+        Invalid = -1,
+        Created = 0,
+        Scheduled,
+        Running,
+        Completed,
+        Count
+    };
+
+    typedef uint32_t TaskHandle;
+
+    struct Task
+    {
+
+        TaskHandle handle;
+        std::atomic<TaskStatus> status;
+
+        void(*func)(void *taskUserData);
+        void *userData; // Passed to func as taskUserData.
+
+        Task()
+        {
+            func = nullptr;
+            userData = nullptr;
+            status = TaskStatus::Invalid;
+            handle = s_count++;
+        }
+
+    private:
+        static TaskHandle s_count;
+    };
+
+    class TaskScheduler
+    {
+    public:
+
+        TaskScheduler() : m_shutdown(false)
+        {
+            m_threadIndex = 0;
+
+            m_group = new TaskGroup();
+            m_group->free = true;
+            m_group->ref = 0;
+
+            m_workers.resize(std::thread::hardware_concurrency() <= 1 ? 1 : std::thread::hardware_concurrency() - 1);
+            for (uint32_t i = 0; i < m_workers.size(); i++)
+            {
+                m_workers[i] = new Worker();
+                m_workers[i]->wakeup = false;
+                m_workers[i]->thread = new std::thread(workerThread, this, m_workers[i], i + 1);
+            }
+        }
+
+        ~TaskScheduler()
+        {
+            m_shutdown = true;
+            for (uint32_t i = 0; i < m_workers.size(); i++)
+            {
+                Worker &worker = *(m_workers[i]);
+                assert(worker.thread);
+                worker.wakeup = true;
+                worker.cv.notify_one();
+                if (worker.thread->joinable()) worker.thread->join();
+                worker.thread->~thread();
+                free(worker.thread);
+                worker.~Worker();
+            }
+
+            m_group->~TaskGroup();
+            free(m_group);
+        }
+
+        TaskStatus GetTaskStatus(TaskHandle handle)
+        {
+            Task *task = nullptr;
+            m_group->queueLock.lock();
+            if (m_group->queueHead < m_group->queue.size())
+            {
+                task = m_group->queue[m_group->queueHead++];
+                m_group->queueLock.unlock();
+            }
+            else
+                m_group->queueLock.unlock();
+            return task->status.load();
+        }
+
+        void Schedule(Task *task)
+        {
+            TaskGroup &group = *m_group;
+            group.queueLock.lock();
+            task->status = TaskStatus::Scheduled;
+            group.queue.push_back(task);
+            group.queueLock.unlock();
+            group.ref++;
+
+            // Wake up a worker to run this task.
+            for (uint32_t i = 0; i < m_workers.size(); i++)
+            {
+                m_workers[i]->wakeup = true;
+                m_workers[i]->cv.notify_one();
+            }
+        }
+
+    private:
+
+        struct Spinlock
+        {
+            void lock() { while (m_lock.test_and_set(std::memory_order_acquire)) {} }
+            void unlock() { m_lock.clear(std::memory_order_release); }
+
+        private:
+            std::atomic_flag m_lock = ATOMIC_FLAG_INIT;
+        };
+
+        struct Worker
+        {
+            std::thread *thread = nullptr;
+            std::mutex mutex;
+            std::condition_variable cv;
+            std::atomic<bool> wakeup;
+        };
+
+        struct TaskGroup
+        {
+            std::atomic<bool> free;
+            std::vector<Task*> queue; // Items are never removed. queueHead is incremented to pop items.
+            uint32_t queueHead = 0;
+            Spinlock queueLock;
+            std::atomic<uint32_t> ref; // Increment when a task is enqueued, decrement when a task finishes.
+            void *userData;
+        };
+
+        TaskGroup *m_group;
+        std::atomic<bool> m_shutdown;
+        std::vector<Worker*> m_workers;
+
+        static thread_local uint32_t m_threadIndex;
+        static void workerThread(TaskScheduler *scheduler, Worker *worker, uint32_t threadIndex)
+        {
+            m_threadIndex = threadIndex;
+            std::unique_lock<std::mutex> lock(worker->mutex);
+            for (;;)
+            {
+                worker->cv.wait(lock, [=] { return worker->wakeup.load(); });
+                worker->wakeup = false;
+                for (;;)
+                {
+                    if (scheduler->m_shutdown) return;
+
+                    TaskGroup *group = nullptr;
+                    Task *task = nullptr;
+                    {
+                        group = scheduler->m_group;
+                        if (group->free || group->ref == 0) continue;
+
+                        group->queueLock.lock();
+                        if (group->queueHead < group->queue.size())
+                        {
+                            task = group->queue[group->queueHead++];
+                            group->queueLock.unlock();
+                        }
+                        else
+                            group->queueLock.unlock();
+                    }
+                    if (!task) break;
+                    task->status = TaskStatus::Running;
+                    task->func(task->userData);
+                    task->status = TaskStatus::Completed;
+                    group->ref--;
+                }
+            }
+        }
+
+
+    };
+}
+
+void Rendering(void *taskUserData);
+
+inline void StartRenderingTask(Setting &setting)
+{
+    Task *task = new Task;
+    task->func = Rendering;
+    task->userData = &settings;
+    task->status = TaskStatus::Created;
+
+
+}
+
+inline bool RenderingTaskDone()
+{
+    return false;
+}
+
+inline float* GetRenderingResult(const Setting &settings)
+{
+    return nullptr;
+}
 
 #define XA_MULTITHREADED 0
 
