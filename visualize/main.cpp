@@ -303,7 +303,12 @@ void GUIModeMain(Setting &setting)
             }
             else
             {
-                ImGui::Image((ImTextureID)waitingTexture, ImVec2(width_, height_));
+                ImVec2 size((float)width_, (float)height_);
+                const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
+                size.x *= scale;
+                size.y *= scale;
+                //ImGui::Image((ImTextureID)waitingTexture, ImVec2(width_, height_));
+                ImGui::Image((ImTextureID)waitingTexture, size);
             }
             ImGui::End();
         }
