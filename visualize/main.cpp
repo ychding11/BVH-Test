@@ -169,9 +169,9 @@ void drawMenuBar()
         }
         if (ImGui::BeginMenu(ICON_FA_WINDOWS " Settings"))
         {
-            if (ImGui::Combo("Scene", &settings.testIndex, "bvh\0noise\0"))
+            /*if (ImGui::Combo("Scene", &settings.testIndex, "bvh\0noise\0"))
             {
-            }
+            }*/
             //if (ImGui::SliderInt("Object Per Axis", &settings.objectPerAxis, 0, 10))
             //{
             //}
@@ -267,8 +267,7 @@ void GUIModeMain(Setting &setting)
 
     int width_, height_;
     intptr_t waitingTexture = quadRender.LoadTexture("../image/teapot.png", width_, height_);
-    
-    TaskHandle handle = StartRenderingTask(settings);
+    TaskHandle activeTaskHandle = 0;
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
     while (!glfwWindowShouldClose(window))
@@ -283,6 +282,11 @@ void GUIModeMain(Setting &setting)
             ImGui::Checkbox("Fit to Window", &settings.fitToWindow);
             ImGui::End();
 
+            TaskHandle handle = StartRenderingTask(settings);
+            if (handle != Invalid_Task_Handle)
+            {
+                activeTaskHandle = handle;
+            }
 
             ImGui::Begin(statusWindowName, &showWindow);
             ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
@@ -293,8 +297,7 @@ void GUIModeMain(Setting &setting)
 
             ImGui::Begin(mainWindowName, &showWindow);
             
-            //if (RenderingTaskDone())
-            if (TaskDone(handle))
+            if (TaskDone(activeTaskHandle))
             {
                 intptr_t renderedTexture = quadRender.Update(GetRenderingResult(), (sizeof(float) * width * height * 3));
                 if (settings.fitToWindow)

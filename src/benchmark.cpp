@@ -655,9 +655,7 @@ void Rendering(void *userData)
     Log(ss.str());
     ss.str("");
 
-    Log("Rendering image (%dx%d)", width, height);
-    //ss << "Rendering image (" << width << "x" << height << ")..." << std::endl;
-
+    Log("Rendering image ({}x{})", width, height);
 
     profile("Rendering", [&] {
         if (permute)
