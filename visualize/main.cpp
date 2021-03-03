@@ -27,11 +27,6 @@
 #pragma warning(disable : 4244) // conversion from 'int' to 'float', possible loss of data
 //#pragma warning(pop)
 
-TaskHandle Task::s_count = 0;
-thread_local uint32_t TaskScheduler::m_threadIndex;
-
-static Setting settings;
-
 void update(float secondsElapsed, GLFWwindow *window)
 {
     static bool keyPressed = false;
@@ -273,6 +268,7 @@ void GUIModeMain(Setting &setting)
     int width_, height_;
     intptr_t waitingTexture = quadRender.LoadTexture("../image/teapot.png", width_, height_);
     
+    TaskHandle handle = StartRenderingTask(settings);
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
     while (!glfwWindowShouldClose(window))
@@ -287,6 +283,7 @@ void GUIModeMain(Setting &setting)
             ImGui::Checkbox("Fit to Window", &settings.fitToWindow);
             ImGui::End();
 
+
             ImGui::Begin(statusWindowName, &showWindow);
             ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
             ImGui::End();
@@ -295,10 +292,23 @@ void GUIModeMain(Setting &setting)
             ImGui::End();
 
             ImGui::Begin(mainWindowName, &showWindow);
-            if (RenderingTaskDone())
+            
+            //if (RenderingTaskDone())
+            if (TaskDone(handle))
             {
-                intptr_t renderedTexture = quadRender.Update(GetRenderingResult(settings), (sizeof(float) * width * height * 3));
-                ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height));
+                intptr_t renderedTexture = quadRender.Update(GetRenderingResult(), (sizeof(float) * width * height * 3));
+                if (settings.fitToWindow)
+                {
+                    ImVec2 size((float)width, (float)height);
+                    const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
+                    size.x *= scale;
+                    size.y *= scale;
+                    ImGui::Image((ImTextureID)renderedTexture, size);
+                }
+                else
+                {
+                    ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height));
+                }
             }
             else
             {

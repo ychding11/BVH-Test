@@ -37,6 +37,7 @@ struct Setting
 };
 
 extern Setting settings;
+extern float *result;
 
 
 int EntryPointMain(int argc, char** argv);
@@ -46,8 +47,8 @@ int EntryPointMain(int argc, char** argv);
 #include <atomic>
 #include <condition_variable>
 
-namespace
-{
+//namespace
+//{
     struct MemTag
     {
         enum
@@ -98,6 +99,8 @@ namespace
     {
     public:
 
+        static TaskScheduler* GetScheduler();
+
         TaskScheduler() : m_shutdown(false)
         {
             m_threadIndex = 0;
@@ -134,18 +137,20 @@ namespace
             free(m_group);
         }
 
-        TaskStatus GetTaskStatus(TaskHandle handle)
+        TaskStatus QueryTaskStatus(TaskHandle handle)
         {
             Task *task = nullptr;
             m_group->queueLock.lock();
-            if (m_group->queueHead < m_group->queue.size())
+            for (uint32_t i = 0; i < m_group->queueHead; ++i)
             {
-                task = m_group->queue[m_group->queueHead++];
-                m_group->queueLock.unlock();
+                task = m_group->queue[i];
+                if (task->handle == handle)
+                    break;
             }
-            else
-                m_group->queueLock.unlock();
-            return task->status.load();
+            m_group->queueLock.unlock();
+            if (task)
+                return task->status.load();
+            return TaskStatus::Invalid;
         }
 
         void Schedule(Task *task)
@@ -207,7 +212,7 @@ namespace
             {
                 worker->cv.wait(lock, [=] { return worker->wakeup.load(); });
                 worker->wakeup = false;
-                for (;;)
+                //for (;;)
                 {
                     if (scheduler->m_shutdown) return;
 
@@ -215,7 +220,7 @@ namespace
                     Task *task = nullptr;
                     {
                         group = scheduler->m_group;
-                        if (group->free || group->ref == 0) continue;
+                        if (group->ref == 0) continue;
 
                         group->queueLock.lock();
                         if (group->queueHead < group->queue.size())
@@ -237,18 +242,25 @@ namespace
 
 
     };
-}
+//}
 
+// implement in external source code
 void Rendering(void *taskUserData);
 
-inline void StartRenderingTask(Setting &setting)
+inline TaskHandle StartRenderingTask(Setting &setting)
 {
     Task *task = new Task;
     task->func = Rendering;
     task->userData = &settings;
     task->status = TaskStatus::Created;
 
+    TaskScheduler::GetScheduler()->Schedule(task);
+    return task->handle;
+}
 
+inline bool TaskDone(TaskHandle handle)
+{
+    return TaskScheduler::GetScheduler()->QueryTaskStatus(handle) == TaskStatus::Completed;
 }
 
 inline bool RenderingTaskDone()
@@ -256,9 +268,10 @@ inline bool RenderingTaskDone()
     return false;
 }
 
-inline float* GetRenderingResult(const Setting &settings)
+
+inline float* GetRenderingResult()
 {
-    return nullptr;
+    return result;
 }
 
 #define XA_MULTITHREADED 0

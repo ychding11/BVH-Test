@@ -527,9 +527,6 @@ void Rendering(void *userData)
     //auto pixels = std::make_unique<Scalar[]>(3 * width * height);
     static Scalar *pixels = new Scalar[(3 * width * height)];
 
-    if (done)
-        return ;
-
     std::function<size_t(Bvh&, const Triangle*, const BoundingBox&, const BoundingBox*, const Vector3*, size_t)> builder;
     if (!strcmp(builder_name, "binned_sah"))
     {
@@ -680,6 +677,7 @@ void Rendering(void *userData)
     });
 
     done = true;
+    result = pixels;
     //return pixels.get();
     return ;
 }

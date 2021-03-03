@@ -16,8 +16,6 @@ file(GLOB SRC_FILES
     ${CMAKE_SOURCE_DIR}/src/*.cpp
     ${CMAKE_SOURCE_DIR}/visualize/*.h
     ${CMAKE_SOURCE_DIR}/visualize/*.cpp
-    ${CMAKE_SOURCE_DIR}/quad/*.h
-    ${CMAKE_SOURCE_DIR}/quad/*.cpp
 )
 
 file(GLOB EXT_FILES
@@ -30,10 +28,9 @@ file(GLOB EXT_FILES
 )
 
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/
-  ${CMAKE_SOURCE_DIR}/src/
-  ${CMAKE_SOURCE_DIR}/visualize/
-  ${CMAKE_SOURCE_DIR}/quad/
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_SOURCE_DIR}/src
+  ${CMAKE_SOURCE_DIR}/visualize
   ${CMAKE_SOURCE_DIR}/thirdparty/
   ${CMAKE_SOURCE_DIR}/thirdparty/lodepng
   ${CMAKE_SOURCE_DIR}/thirdparty/bvh/include

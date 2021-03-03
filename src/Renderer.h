@@ -25,7 +25,7 @@ namespace Quad
 		float invSamplesPerPixel;
 		float* pixelData;
 
-        Renderer(std::string shadersDirectory = "../quad/shaders/");
+        Renderer(std::string shadersDirectory = "../src/shaders/");
         virtual ~Renderer();
 
         void  setScreenSize(int x, int y) { _screenSizeX = x; _screenSizeY = y;  }
