@@ -175,7 +175,8 @@ void render(
         }
     }
 
-    if (CollectStatistics) {
+    if (CollectStatistics)
+    {
         std::cout << intersections << " total primitive intersection(s)" << std::endl;
         std::cout << traversal_steps << " total traversal step(s)" << std::endl;
     }
@@ -488,7 +489,7 @@ void Rendering(void *userData)
 {
     static bool done = false;
 
-    const Setting &settings = *(reinterpret_cast<Setting*>(userData));
+    Setting &settings = *(reinterpret_cast<Setting*>(userData));
     const char* input_file   = ".\\scene\\cornell_box.obj";
     const char* builder_name = "binned_sah";
     Camera camera =
@@ -510,7 +511,7 @@ void Rendering(void *userData)
     bool collapse_leaves = false;
     size_t build_iterations = 1;
     Scalar pre_split_factor = 0;
-    bool collect_statistics = false;
+    bool collect_statistics = settings.statistic;
     size_t rotation_axis = 3;
     Scalar rotation_degrees = 0;
     Scalar statistics_weights[3];
@@ -525,7 +526,8 @@ void Rendering(void *userData)
     }
 
     //auto pixels = std::make_unique<Scalar[]>(3 * width * height);
-    static Scalar *pixels = new Scalar[(3 * width * height)];
+    Scalar *pixels = new Scalar[(3 * width * height)];
+    settings.data = pixels;
 
     std::function<size_t(Bvh&, const Triangle*, const BoundingBox&, const BoundingBox*, const Vector3*, size_t)> builder;
     if (!strcmp(builder_name, "binned_sah"))
@@ -610,7 +612,7 @@ void Rendering(void *userData)
         ss  << " + collapse-leaves";
     if (permute)
         ss << " + permute";
-    ss << ")..." << std::endl;
+    ss << ")...";
 
     Log(ss.str());
     ss.str("");
@@ -650,7 +652,7 @@ void Rendering(void *userData)
     ss 
         << "BVH depth of " << compute_bvh_depth(bvh) << ", "
         << bvh.node_count << " node(s), "
-        << reference_count << " reference(s)" << std::endl;
+        << reference_count << " reference(s)";
 
     Log(ss.str());
     ss.str("");
@@ -675,7 +677,6 @@ void Rendering(void *userData)
     });
 
     done = true;
-    result = pixels;
     //return pixels.get();
     return ;
 }

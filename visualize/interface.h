@@ -10,9 +10,12 @@ using Vector3 = bvh::Vector3<Scalar>;
 // UI Control
 struct Setting
 {
-    int width;
-    int height;
+    int  width;
+    int  height;
     bool fitToWindow;
+    bool statistic;
+
+    Scalar *data;
 
     struct
     {
@@ -24,9 +27,11 @@ struct Setting
 
     Setting& operator =(const Setting &setting)
     {
+        assert((this->data == setting.data) && this->data == nullptr);
         this->width = setting.width;
         this->height = setting.height;
         this->fitToWindow = setting.fitToWindow;
+        this->statistic = setting.statistic;
         this->camera.eye = setting.camera.eye;
         this->camera.dir = setting.camera.dir;
         this->camera.up = setting.camera.up;
@@ -38,16 +43,17 @@ struct Setting
     {
         if (width != setting.width || height != setting.height)
             return false;
-        if (fitToWindow != setting.fitToWindow)
+        if (fitToWindow != setting.fitToWindow || statistic != setting.statistic)
             return false;
         return true;
-
     }
 
     Setting(bool a = true)
         : width(1280)
         , height(720)
         , fitToWindow(true)
+        , statistic(false)
+        , data(nullptr)
     {
         camera.eye = Vector3(0, 0.9, 2.5);
         camera.dir = Vector3(0, 0.001, -1);
@@ -57,9 +63,7 @@ struct Setting
     }
 };
 
-extern Setting settings;
-extern float *result;
-
+extern Setting gSettings;
 
 int EntryPointMain(int argc, char** argv);
 
@@ -158,6 +162,22 @@ int EntryPointMain(int argc, char** argv);
 
             m_group->~TaskGroup();
             free(m_group);
+        }
+
+        void* QueryTaskData(TaskHandle handle)
+        {
+            Task *task = nullptr;
+            m_group->queueLock.lock();
+            for (uint32_t i = 0; i < m_group->queueHead; ++i)
+            {
+                task = m_group->queue[i];
+                if (task->handle == handle)
+                    break;
+            }
+            m_group->queueLock.unlock();
+            if (task)
+                return task->userData;
+            return nullptr;
         }
 
         TaskStatus QueryTaskStatus(TaskHandle handle)
@@ -301,13 +321,16 @@ inline bool TaskDone(TaskHandle handle)
     return TaskScheduler::GetScheduler()->QueryTaskStatus(handle) == TaskStatus::Completed;
 }
 
-inline bool RenderingTaskDone()
-{
-    return false;
-}
 
-
-inline float* GetRenderingResult()
+inline float* GetRenderingResult(TaskHandle handle)
 {
-    return result;
+    void *data = TaskScheduler::GetScheduler()->QueryTaskData(handle);
+    if (data == nullptr)
+    {
+        Err("Rendering output corrupted.");
+        return nullptr;
+    }
+    Setting &temp = *(reinterpret_cast<Setting*>(data));
+    
+    return temp.data;;
 }

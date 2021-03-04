@@ -1,7 +1,6 @@
 #include "interface.h"
 
-Setting settings;
-float  *result = nullptr;
+Setting gSettings;
 
 //{
 

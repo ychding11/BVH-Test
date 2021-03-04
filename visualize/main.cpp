@@ -279,10 +279,11 @@ void GUIModeMain(Setting &setting)
 
         {
             ImGui::Begin(testOptionsWindowName, &showWindow);
-            ImGui::Checkbox("Fit to Window", &settings.fitToWindow);
+            ImGui::Checkbox("Fit Window", &setting.fitToWindow);
+            ImGui::Checkbox("Statistic",  &setting.statistic);
             ImGui::End();
 
-            TaskHandle handle = StartRenderingTask(settings);
+            TaskHandle handle = StartRenderingTask(setting);
             if (handle != Invalid_Task_Handle)
             {
                 activeTaskHandle = handle;
@@ -299,8 +300,8 @@ void GUIModeMain(Setting &setting)
             
             if (TaskDone(activeTaskHandle))
             {
-                intptr_t renderedTexture = quadRender.Update(GetRenderingResult(), (sizeof(float) * width * height * 3));
-                if (settings.fitToWindow)
+                intptr_t renderedTexture = quadRender.Update(GetRenderingResult(activeTaskHandle), (sizeof(float) * width * height * 3));
+                if (setting.fitToWindow)
                 {
                     ImVec2 size((float)width, (float)height);
                     const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
@@ -315,7 +316,7 @@ void GUIModeMain(Setting &setting)
             }
             else
             {
-                if (settings.fitToWindow)
+                if (setting.fitToWindow)
                 {
                     ImVec2 size((float)width_, (float)height_);
                     const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
@@ -372,6 +373,6 @@ void main(int argc, char** argv)
     }
     else
     {
-        GUIModeMain(settings);
+        GUIModeMain(gSettings);
     }
 }
