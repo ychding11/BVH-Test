@@ -327,7 +327,7 @@ inline float* GetRenderingResult(TaskHandle handle)
     void *data = TaskScheduler::GetScheduler()->QueryTaskData(handle);
     if (data == nullptr)
     {
-        Err("Rendering output corrupted.");
+        Err("Task output corrupted.");
         return nullptr;
     }
     Setting &temp = *(reinterpret_cast<Setting*>(data));

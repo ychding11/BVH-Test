@@ -12,7 +12,8 @@ namespace bvh {
 
 /// Single ray traversal algorithm, using the provided ray-node intersector.
 template <typename Bvh, size_t StackSize = 64, typename NodeIntersector = FastNodeIntersector<Bvh>>
-class SingleRayTraverser {
+class SingleRayTraverser
+{
 public:
     static constexpr size_t stack_size = StackSize;
 
@@ -65,7 +66,8 @@ private:
     template <typename PrimitiveIntersector, typename Statistics>
     bvh_always_inline
     std::optional<typename PrimitiveIntersector::Result>
-    intersect(Ray<Scalar> ray, PrimitiveIntersector& primitive_intersector, Statistics& statistics) const {
+    intersect(Ray<Scalar> ray, PrimitiveIntersector& primitive_intersector, Statistics& statistics) const
+    {
         auto best_hit = std::optional<typename PrimitiveIntersector::Result>(std::nullopt);
 
         // If the root is a leaf, intersect it and return
@@ -79,43 +81,54 @@ private:
         // allow to cull more subtrees with the ray-box test of the traversal loop.
         Stack stack;
         auto* left_child = &bvh.nodes[bvh.nodes[0].first_child_or_primitive];
-        while (true) {
+        while (true)
+        {
             statistics.traversal_steps++;
 
             auto* right_child = left_child + 1;
             auto distance_left  = node_intersector.intersect(*left_child,  ray);
             auto distance_right = node_intersector.intersect(*right_child, ray);
 
-            if (distance_left.first <= distance_left.second) {
+            if (distance_left.first <= distance_left.second)
+            {
                 if (bvh_unlikely(left_child->is_leaf())) {
                     if (intersect_leaf(*left_child, ray, best_hit, primitive_intersector, statistics) &&
                         primitive_intersector.any_hit)
                         break;
                     left_child = nullptr;
                 }
-            } else
+            }
+            else
                 left_child = nullptr;
 
-            if (distance_right.first <= distance_right.second) {
+            if (distance_right.first <= distance_right.second)
+            {
                 if (bvh_unlikely(right_child->is_leaf())) {
                     if (intersect_leaf(*right_child, ray, best_hit, primitive_intersector, statistics) &&
                         primitive_intersector.any_hit)
                         break;
                     right_child = nullptr;
                 }
-            } else
+            }
+            else
                 right_child = nullptr;
 
-            if (left_child) {
-                if (right_child) {
+            if (left_child)
+            {
+                if (right_child)
+                {
                     if (distance_left.first > distance_right.first)
                         std::swap(left_child, right_child);
                     stack.push(right_child->first_child_or_primitive);
                 }
                 left_child = &bvh.nodes[left_child->first_child_or_primitive];
-            } else if (right_child) {
+            }
+            else if (right_child)
+            {
                 left_child = &bvh.nodes[right_child->first_child_or_primitive];
-            } else {
+            }
+            else
+            {
                 if (stack.empty())
                     break;
                 left_child = &bvh.nodes[stack.pop()];

@@ -140,8 +140,10 @@ void render(
     size_t traversal_steps = 0, intersections = 0;
 
     #pragma omp parallel for collapse(2) reduction(+: traversal_steps, intersections)
-    for(size_t i = 0; i < width; ++i) {
-        for(size_t j = 0; j < height; ++j) {
+    for(size_t i = 0; i < width; ++i)
+    {
+        for(size_t j = 0; j < height; ++j)
+        {
             size_t index = 3 * (width * j + i);
 
             auto u = 2 * (i + Scalar(0.5)) / Scalar(width)  - Scalar(1);
@@ -157,15 +159,21 @@ void render(
                 traversal_steps += statistics.traversal_steps;
                 intersections   += statistics.intersections;
             }
-            if (!hit) {
+            if (!hit)
+            {
                 pixels[index] = pixels[index + 1] = pixels[index + 2] = 0;
-            } else {
-                if (CollectStatistics) {
+            }
+            else
+            {
+                if (CollectStatistics)
+                {
                     auto combined = statistics.traversal_steps + statistics.intersections; 
                     pixels[index    ] = std::min(statistics.traversal_steps * statistics_weights[0], Scalar(1.0f));
                     pixels[index + 1] = std::min(statistics.intersections   * statistics_weights[1], Scalar(1.0f));
                     pixels[index + 2] = std::min(combined                   * statistics_weights[2], Scalar(1.0f));
-                } else {
+                }
+                else
+                {
                     auto normal = bvh::normalize(triangles[hit->primitive_index].n);
                     pixels[index    ] = std::fabs(normal[0]);
                     pixels[index + 1] = std::fabs(normal[1]);

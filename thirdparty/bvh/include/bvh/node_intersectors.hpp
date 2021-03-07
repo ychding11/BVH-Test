@@ -80,7 +80,8 @@ struct RobustNodeIntersector : public NodeIntersector<Bvh, RobustNodeIntersector
 
 /// Semi-robust, fast ray-node intersection algorithm.
 template <typename Bvh>
-struct FastNodeIntersector : public NodeIntersector<Bvh, FastNodeIntersector<Bvh>> {
+struct FastNodeIntersector : public NodeIntersector<Bvh, FastNodeIntersector<Bvh>>
+{
     using Scalar = typename Bvh::ScalarType;
 
     Vector3<Scalar> scaled_origin;
