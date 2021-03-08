@@ -266,7 +266,7 @@ void GUIModeMain(Setting &setting)
     bool showWindow = false;
 
     int width_, height_;
-    intptr_t waitingTexture = quadRender.LoadTexture("../image/teapot.png", width_, height_);
+    intptr_t waitingTexture = quadRender.LoadTexture("../image/waiting.png", width_, height_);
     TaskHandle activeTaskHandle = 0;
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
@@ -323,6 +323,7 @@ void GUIModeMain(Setting &setting)
                     size.x *= scale;
                     size.y *= scale;
                     ImGui::Image((ImTextureID)waitingTexture, size);
+                    //ImGui::Text("Rendiring");
                 }
                 else
                 {
