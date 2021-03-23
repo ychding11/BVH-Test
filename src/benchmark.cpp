@@ -34,11 +34,13 @@ using Bvh         = bvh::Bvh<Scalar>;
 #include "interface.h"
 
 template <typename F>
-void profile(const char* task, F f, size_t runs = 1) {
+void profile(const char* task, F f, size_t runs = 1)
+{
     using namespace std::chrono;
     std::vector<double> timings;
 
-    for (size_t i = 0; i < runs; ++i) {
+    for (size_t i = 0; i < runs; ++i)
+    {
         auto start_tick = high_resolution_clock::now();
         f();
         auto end_tick = high_resolution_clock::now();
@@ -48,7 +50,8 @@ void profile(const char* task, F f, size_t runs = 1) {
     std::sort(timings.begin(), timings.end());
     if (timings.size() == 1)
         std::cout << task << " took " << timings.front() << "ms" << std::endl;
-    else {
+    else
+    {
         std::cout
             << task << " took "
             << timings.front() << "/"
@@ -57,22 +60,27 @@ void profile(const char* task, F f, size_t runs = 1) {
     }
 }
 
-static size_t compute_bvh_depth(const Bvh& bvh, size_t node_index = 0) {
+static size_t compute_bvh_depth(const Bvh& bvh, size_t node_index = 0)
+{
     auto& node = bvh.nodes[node_index];
-    if (node.primitive_count == 0) {
+    if (node.primitive_count == 0)
+    {
         return 1 + std::max(
             compute_bvh_depth(bvh, node.first_child_or_primitive + 0),
             compute_bvh_depth(bvh, node.first_child_or_primitive + 1));
-    } else
+    }
+    else
         return 0;
 }
 
-static int not_enough_arguments(const char* option) {
+static int not_enough_arguments(const char* option)
+{
     std::cerr << "Not enough arguments for '" << option << "'" << std::endl;
     return 1;
 }
 
-static void usage() {
+static void usage()
+{
     std::cout <<
         "Usage: benchmark [options] file.obj\n"
         "\nOptions:\n"
@@ -110,12 +118,26 @@ static void usage() {
         << std::endl;
 }
 
-struct Camera {
+// #include "spdlog/fmt/ostr.h" // must be included
+
+struct Camera
+{
     Vector3 eye;
     Vector3 dir;
     Vector3 up;
     Scalar  fov;
 };
+
+template<typename OStream>
+OStream &operator<<(OStream &os, const Camera& c)
+{
+    return os << "camera: \n"
+        << "eye: [ " << c.eye[0] << "," << c.eye[1] << "," << c.eye[2] << " ]\n"
+        << "dir: [ " << c.dir[0] << "," << c.dir[1] << ","  << c.dir[2] << " ]\n"
+        << "eye: [ " << c.up[0] << "," << c.up[1] << "," << c.up[2] << " ]\n"
+        << "fov: [ " << c.fov << " ]\n"
+        ;
+}
 
 template <bool Permute, bool CollectStatistics>
 void render(
@@ -139,6 +161,8 @@ void render(
 
     size_t traversal_steps = 0, intersections = 0;
 
+    Log("{}", camera);
+
     #pragma omp parallel for collapse(2) reduction(+: traversal_steps, intersections)
     for(size_t i = 0; i < width; ++i)
     {
@@ -155,10 +179,12 @@ void render(
             auto hit = CollectStatistics
                 ? traverser.traverse(ray, intersector, statistics)
                 : traverser.traverse(ray, intersector);
-            if (CollectStatistics) {
+            if (CollectStatistics)
+            {
                 traversal_steps += statistics.traversal_steps;
                 intersections   += statistics.intersections;
             }
+
             if (!hit)
             {
                 pixels[index] = pixels[index + 1] = pixels[index + 2] = 0;
@@ -185,17 +211,21 @@ void render(
 
     if (CollectStatistics)
     {
-        std::cout << intersections << " total primitive intersection(s)" << std::endl;
-        std::cout << traversal_steps << " total traversal step(s)" << std::endl;
+        Log("total primitive intersection(s) {}", intersections);
+        Log("total traversal step(s) {}", traversal_steps);
+        //std::cout << intersections << " total primitive intersection(s)" << std::endl;
+        //std::cout << traversal_steps << " total traversal step(s)" << std::endl;
     }
 }
 
 template <size_t Axis>
-static void rotate_triangles(Scalar degrees, Triangle* triangles, size_t triangle_count) {
+static void rotate_triangles(Scalar degrees, Triangle* triangles, size_t triangle_count)
+{
     static constexpr Scalar pi = Scalar(3.14159265359);
     auto cos = std::cos(degrees * pi / Scalar(180));
     auto sin = std::sin(degrees * pi / Scalar(180));
-    auto rotate = [&] (const Vector3& p) {
+    auto rotate = [&] (const Vector3& p)
+    {
         if (Axis == 0)
             return Vector3(p[0], p[1] * cos - p[2] * sin, p[1] * sin + p[2] * cos);
         else if (Axis == 1)
@@ -203,8 +233,10 @@ static void rotate_triangles(Scalar degrees, Triangle* triangles, size_t triangl
         else
             return Vector3(p[0] * cos - p[1] * sin, p[0] * sin + p[1] * cos, p[2]);
     };
+
     #pragma omp parallel for
-    for (size_t i = 0; i < triangle_count; ++i) {
+    for (size_t i = 0; i < triangle_count; ++i)
+    {
         auto p0 = rotate(triangles[i].p0);
         auto p1 = rotate(triangles[i].p1());
         auto p2 = rotate(triangles[i].p2());
@@ -223,7 +255,8 @@ int EntryPointMain(int argc, char** argv)
     const char* output_file  = "render.ppm";
     const char* input_file   = NULL;
     const char* builder_name = "binned_sah";
-    Camera camera = {
+    Camera camera =
+    {
         Vector3(0, 0.9, 2.5),
         Vector3(0, 0, 1),
         Vector3(0, 1, 0),

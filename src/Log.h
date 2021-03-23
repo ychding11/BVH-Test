@@ -8,6 +8,8 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
 
+#include "spdlog/fmt/ostr.h" // must be included for user type format
+
 namespace Logging
 {
     spdlog::logger *Logger();

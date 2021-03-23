@@ -52,8 +52,10 @@ private:
         size_t begin = node.first_child_or_primitive;
         size_t end   = begin + node.primitive_count;
         statistics.intersections += end - begin;
-        for (size_t i = begin; i < end; ++i) {
-            if (auto hit = primitive_intersector.intersect(i, ray)) {
+        for (size_t i = begin; i < end; ++i)
+        {
+            if (auto hit = primitive_intersector.intersect(i, ray))
+            {
                 best_hit = hit;
                 if (primitive_intersector.any_hit)
                     return best_hit;
@@ -155,7 +157,8 @@ public:
     template <typename PrimitiveIntersector>
     bvh_always_inline
     std::optional<typename PrimitiveIntersector::Result>
-    traverse(const Ray<Scalar>& ray, PrimitiveIntersector& intersector) const {
+    traverse(const Ray<Scalar>& ray, PrimitiveIntersector& intersector) const
+    {
         struct {
             struct Empty {
                 Empty& operator ++ (int)    { return *this; }
@@ -171,7 +174,8 @@ public:
     template <typename PrimitiveIntersector>
     bvh_always_inline
     std::optional<typename PrimitiveIntersector::Result>
-    traverse(const Ray<Scalar>& ray, PrimitiveIntersector& primitive_intersector, Statistics& statistics) const {
+    traverse(const Ray<Scalar>& ray, PrimitiveIntersector& primitive_intersector, Statistics& statistics) const
+    {
         return intersect(ray, primitive_intersector, statistics);
     }
 };
