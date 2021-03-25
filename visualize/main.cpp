@@ -33,11 +33,13 @@ struct DisplayOption
 {
     bool flipVertical;
     bool showSplitWindow;
+    bool fitToWindow;
 
     DisplayOption()
         : flipVertical(false)
         , showSplitWindow(false)
-    {}
+        , fitToWindow(true)
+    { }
 };
 
 DisplayOption gDisplayOption;
@@ -181,6 +183,7 @@ void drawMenuBar()
         if (ImGui::BeginMenu(ICON_FA_EYE " View"))
         {
             ImGui::Checkbox("flip vertical", &gDisplayOption.flipVertical);
+            ImGui::Checkbox("fit window",  &gDisplayOption.fitToWindow);
             ImGui::Checkbox("split window",  &gDisplayOption.showSplitWindow);
             ImGui::EndMenu();
         }
@@ -289,6 +292,7 @@ void GUIModeMain(Setting &setting)
 
     std::queue<TaskHandle> renderTaskQueue;
     TaskHandle activeTaskHandle = StartRenderingTask(setting);
+    assert(activeTaskHandle != Invalid_Task_Handle);
 
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
@@ -301,21 +305,21 @@ void GUIModeMain(Setting &setting)
 
         {
             ImGui::Begin(testOptionsWindowName, &gDisplayOption.showSplitWindow);
-            ImGui::Checkbox("Fit Window", &setting.fitToWindow);
             ImGui::Checkbox("Statistic",  &setting.statistic);
+            ImGui::SliderFloat("vertical fov", &setting.camera.fov, 30.0f, 80.f);
             ImGui::End();
 
             TaskHandle handle = StartRenderingTask(setting);
             if (handle != Invalid_Task_Handle)
             {
                 renderTaskQueue.push(handle);
-                //activeTaskHandle = handle;
                 GUI::Dialog("Popup_task","Enque a Task");
+                Log("enque a new task : {}", handle);
             }
 
             ImGui::Begin(statusWindowName, &gDisplayOption.showSplitWindow);
             ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
-            ImGui::BulletText("rendering task number: %d",renderTaskQueue.size());
+            ImGui::BulletText("rendering task count: %d",renderTaskQueue.size());
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &gDisplayOption.showSplitWindow);
@@ -333,7 +337,7 @@ void GUIModeMain(Setting &setting)
                     uv0 = ImVec2(0, 1);
                     uv1 = ImVec2(1, 0);
                 }
-                if (setting.fitToWindow)
+                if (gDisplayOption.fitToWindow)
                 {
                     ImVec2 size((float)width, (float)height);
                     const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
@@ -349,11 +353,12 @@ void GUIModeMain(Setting &setting)
                 {
                     activeTaskHandle = renderTaskQueue.front();
                     renderTaskQueue.pop();
+                    Log("deque a new task : {}", activeTaskHandle);
                 }
             }
             else
             {
-                if (setting.fitToWindow)
+                if (gDisplayOption.fitToWindow)
                 {
                     ImVec2 size((float)width_, (float)height_);
                     const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);

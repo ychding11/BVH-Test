@@ -661,6 +661,7 @@ void Rendering(void *userData)
     profile("BVH construction", [&] {
         auto [bboxes, centers] = bvh::compute_bounding_boxes_and_centers(triangles.data(), triangles.size());
         auto global_bbox = bvh::compute_bounding_boxes_union(bboxes.get(), triangles.size());
+        Log("bb center : {}", global_bbox.center());
         bvh::HeuristicPrimitiveSplitter<Triangle> splitter;
         if (pre_split_factor > 0)
             std::tie(reference_count, bboxes, centers) = splitter.split(global_bbox, triangles.data(), triangles.size(), pre_split_factor);
@@ -690,10 +691,9 @@ void Rendering(void *userData)
     bvh::HierarchyRefitter refitter(bvh);
     refitter.refit([] (Bvh::Node&) {});
 
-    ss 
-        << "BVH depth of " << compute_bvh_depth(bvh) << ", "
-        << bvh.node_count << " node(s), "
-        << reference_count << " reference(s)";
+    ss << "BVH depth of " << compute_bvh_depth(bvh) << ", "
+       << bvh.node_count << " node(s), "
+       << reference_count << " reference(s)";
 
     Log(ss.str());
     ss.str("");

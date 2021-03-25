@@ -166,6 +166,12 @@ inline Vector3<Scalar> cross(const Vector3<Scalar>& a, const Vector3<Scalar>& b)
     });
 }
 
+template<typename OStream, typename Vector3>
+OStream &operator<<(OStream &os, const Vector3& c)
+{
+    return os << "[ " << c[0] << "," << c[1] << "," << c[2] << " ] " ;
+}
+
 } // namespace bvh
 
 #endif

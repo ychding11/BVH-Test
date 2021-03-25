@@ -10,9 +10,9 @@ using Vector3 = bvh::Vector3<Scalar>;
 // UI Control
 struct Setting
 {
+    int onlyUseForIndentification;
     int  width;
     int  height;
-    bool fitToWindow;
     bool statistic;
 
     Scalar *data;
@@ -28,9 +28,9 @@ struct Setting
     Setting& operator =(const Setting &setting)
     {
         assert((this->data == setting.data) && this->data == nullptr);
+        this->onlyUseForIndentification = setting.onlyUseForIndentification;
         this->width = setting.width;
         this->height = setting.height;
-        this->fitToWindow = setting.fitToWindow;
         this->statistic = setting.statistic;
         this->camera.eye = setting.camera.eye;
         this->camera.dir = setting.camera.dir;
@@ -41,9 +41,13 @@ struct Setting
 
     bool operator ==(const Setting &setting)
     {
+        if (onlyUseForIndentification != setting.onlyUseForIndentification)
+            return false;
         if (width != setting.width || height != setting.height)
             return false;
-        if (fitToWindow != setting.fitToWindow || statistic != setting.statistic)
+        if (statistic != setting.statistic)
+            return false;
+        if (camera.fov != setting.camera.fov)
             return false;
         return true;
     }
@@ -51,15 +55,14 @@ struct Setting
     Setting(bool a = true)
         : width(1280)
         , height(720)
-        , fitToWindow(true)
         , statistic(false)
         , data(nullptr)
+        , onlyUseForIndentification(a == true ? 1 : 0)
     {
-        camera.eye = Vector3(0, 0.9, 2.5);
+        camera.eye = Vector3(0, 0.9, 3.5);
         camera.dir = Vector3(0, 0.001, -1);
         camera.up  = Vector3(0, 1, 0);
         camera.fov = 60;
-        fitToWindow = a ;
     }
 };
 
