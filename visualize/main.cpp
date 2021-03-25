@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <vector>
+#include <queue> 
 #include <cstdlib>
 #include <string>
 #include <iostream>
@@ -31,9 +32,11 @@
 struct DisplayOption
 {
     bool flipVertical;
+    bool showSplitWindow;
 
     DisplayOption()
         : flipVertical(false)
+        , showSplitWindow(false)
     {}
 };
 
@@ -155,8 +158,8 @@ namespace GUI
             {
                 ImGui::CloseCurrentPopup();
             }
-            ImGui::EndPopup();
         }
+        ImGui::EndPopup();
     }
 }
 
@@ -178,6 +181,7 @@ void drawMenuBar()
         if (ImGui::BeginMenu(ICON_FA_EYE " View"))
         {
             ImGui::Checkbox("flip vertical", &gDisplayOption.flipVertical);
+            ImGui::Checkbox("split window",  &gDisplayOption.showSplitWindow);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_WINDOWS " Settings"))
@@ -282,7 +286,10 @@ void GUIModeMain(Setting &setting)
 
     int width_, height_;
     intptr_t waitingTexture = quadRender.LoadTexture("../image/waiting.png", width_, height_);
-    TaskHandle activeTaskHandle = 0;
+
+    std::queue<TaskHandle> renderTaskQueue;
+    TaskHandle activeTaskHandle = StartRenderingTask(setting);
+
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
     while (!glfwWindowShouldClose(window))
@@ -293,7 +300,7 @@ void GUIModeMain(Setting &setting)
         drawDockWindow();
 
         {
-            ImGui::Begin(testOptionsWindowName, &showWindow);
+            ImGui::Begin(testOptionsWindowName, &gDisplayOption.showSplitWindow);
             ImGui::Checkbox("Fit Window", &setting.fitToWindow);
             ImGui::Checkbox("Statistic",  &setting.statistic);
             ImGui::End();
@@ -301,17 +308,20 @@ void GUIModeMain(Setting &setting)
             TaskHandle handle = StartRenderingTask(setting);
             if (handle != Invalid_Task_Handle)
             {
-                activeTaskHandle = handle;
+                renderTaskQueue.push(handle);
+                //activeTaskHandle = handle;
+                GUI::Dialog("Popup_task","Enque a Task");
             }
 
-            ImGui::Begin(statusWindowName, &showWindow);
+            ImGui::Begin(statusWindowName, &gDisplayOption.showSplitWindow);
             ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
+            ImGui::BulletText("rendering task number: %d",renderTaskQueue.size());
             ImGui::End();
 
-            ImGui::Begin(profileWindowName, &showWindow);
+            ImGui::Begin(profileWindowName, &gDisplayOption.showSplitWindow);
             ImGui::End();
 
-            ImGui::Begin(mainWindowName, &showWindow);
+            ImGui::Begin(mainWindowName, &gDisplayOption.showSplitWindow);
             
             if (TaskDone(activeTaskHandle))
             {
@@ -334,6 +344,11 @@ void GUIModeMain(Setting &setting)
                 else
                 {
                     ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height), uv0, uv1);
+                }
+                if (!renderTaskQueue.empty())
+                {
+                    activeTaskHandle = renderTaskQueue.front();
+                    renderTaskQueue.pop();
                 }
             }
             else
