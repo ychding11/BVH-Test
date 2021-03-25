@@ -7,7 +7,6 @@
 #include <time.h>
 #include <math.h>
 
-
 // third-party libraries
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>    
@@ -26,6 +25,19 @@
 //#pragma warning(push)
 #pragma warning(disable : 4244) // conversion from 'int' to 'float', possible loss of data
 //#pragma warning(pop)
+
+
+// options has no relation with rendering
+struct DisplayOption
+{
+    bool flipVertical;
+
+    DisplayOption()
+        : flipVertical(false)
+    {}
+};
+
+DisplayOption gDisplayOption;
 
 void update(float secondsElapsed, GLFWwindow *window)
 {
@@ -165,6 +177,7 @@ void drawMenuBar()
         }
         if (ImGui::BeginMenu(ICON_FA_EYE " View"))
         {
+            ImGui::Checkbox("flip vertical", &gDisplayOption.flipVertical);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_WINDOWS " Settings"))
@@ -222,9 +235,11 @@ void drawDockWindow()
 
 }
 
+
 void GUIModeMain(Setting &setting)
 {
     Log("Enter GUI Mode");
+
 
     int width  = setting.width;
     int height = setting.height;
@@ -301,19 +316,24 @@ void GUIModeMain(Setting &setting)
             if (TaskDone(activeTaskHandle))
             {
                 intptr_t renderedTexture = quadRender.Update(GetRenderingResult(activeTaskHandle), (sizeof(float) * width * height * 3));
+                ImVec2 uv0(0, 0);
+                ImVec2 uv1(1, 1);
+                if (gDisplayOption.flipVertical)
+                {
+                    uv0 = ImVec2(0, 1);
+                    uv1 = ImVec2(1, 0);
+                }
                 if (setting.fitToWindow)
                 {
                     ImVec2 size((float)width, (float)height);
                     const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
                     size.x *= scale;
                     size.y *= scale;
-                    //ImGui::Image((ImTextureID)renderedTexture, size);
-                    //< need to reverse the y coordinate
-                    ImGui::Image((ImTextureID)renderedTexture, size, ImVec2(0, 1), ImVec2(1, 0));
+                    ImGui::Image((ImTextureID)renderedTexture, size, uv0, uv1);
                 }
                 else
                 {
-                    ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height));
+                    ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height), uv0, uv1);
                 }
             }
             else
