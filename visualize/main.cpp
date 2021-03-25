@@ -307,7 +307,9 @@ void GUIModeMain(Setting &setting)
                     const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
                     size.x *= scale;
                     size.y *= scale;
-                    ImGui::Image((ImTextureID)renderedTexture, size);
+                    //ImGui::Image((ImTextureID)renderedTexture, size);
+                    //< need to reverse the y coordinate
+                    ImGui::Image((ImTextureID)renderedTexture, size, ImVec2(0, 1), ImVec2(1, 0));
                 }
                 else
                 {
