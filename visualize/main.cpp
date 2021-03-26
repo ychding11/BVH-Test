@@ -67,7 +67,7 @@ struct DisplayOption
     { }
 };
 
-DisplayOption gDisplayOption;
+DisplayOption g_DisplayOption;
 
 void update(float secondsElapsed, GLFWwindow *window)
 {
@@ -207,9 +207,9 @@ void drawMenuBar()
         }
         if (ImGui::BeginMenu(ICON_FA_EYE " View"))
         {
-            ImGui::Checkbox("flip vertical", &gDisplayOption.flipVertical);
-            ImGui::Checkbox("fit window",  &gDisplayOption.fitToWindow);
-            ImGui::Checkbox("split window",  &gDisplayOption.showSplitWindow);
+            ImGui::Checkbox("flip vertical", &g_DisplayOption.flipVertical);
+            ImGui::Checkbox("fit window",  &g_DisplayOption.fitToWindow);
+            ImGui::Checkbox("split window",  &g_DisplayOption.showSplitWindow);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_WINDOWS " Settings"))
@@ -312,8 +312,9 @@ void GUIModeMain(Setting &setting)
     intptr_t waitingTexture = quadRender.LoadTexture("../image/waiting.png", width_, height_);
 
     std::queue<TaskHandle> pendingRenderTaskQueue;
-    TaskHandle activeTaskHandle = StartRenderingTask(setting);
-    assert(activeTaskHandle != Invalid_Task_Handle);
+    //TaskHandle activeTaskHandle = StartRenderingTask(setting);
+    //assert(activeTaskHandle != Invalid_Task_Handle);
+    TaskHandle activeTaskHandle = Invalid_Task_Handle;
 
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
@@ -326,58 +327,50 @@ void GUIModeMain(Setting &setting)
 
         {
             static int bvhBuilderName;
-            ImGui::Begin(testOptionsWindowName, &gDisplayOption.showSplitWindow);
-            ImGui::Checkbox("Statistic",  &setting.statistic);
-            ImGui::SliderFloat("vertical fov", &setting.camera.fov, 30.0f, 80.f);
+            ImGui::Begin(testOptionsWindowName, &g_DisplayOption.showSplitWindow);
+                ImGui::Checkbox("Statistic",  &setting.statistic);
+                ImGui::SliderFloat("vertical fov", &setting.camera.fov, 30.0f, 80.f);
 
-            ImGui::Separator();
-            ImGui::RadioButton("binned_sah", &bvhBuilderName, Binned_SAH);
-            ImGui::RadioButton("sweep_sah", &bvhBuilderName, Sweep_SAH);
-            ImGui::RadioButton("spatial_split", &bvhBuilderName, Spatial_Split);
-            ImGui::RadioButton("locally_ordered_clustering", &bvhBuilderName, Locally_Ordered_Clustering);
-            ImGui::RadioButton("linear", &bvhBuilderName, Linear);
-
+                ImGui::Separator();
+                ImGui::RadioButton("binned_sah", &bvhBuilderName, Binned_SAH);
+                ImGui::RadioButton("sweep_sah", &bvhBuilderName, Sweep_SAH);
+                ImGui::RadioButton("spatial_split", &bvhBuilderName, Spatial_Split);
+                ImGui::RadioButton("locally_ordered_clustering", &bvhBuilderName, Locally_Ordered_Clustering);
+                ImGui::RadioButton("linear", &bvhBuilderName, Linear);
             ImGui::End();
 
             TaskHandle handle = StartRenderingTask(setting);
             if (handle != Invalid_Task_Handle)
             {
+                activeTaskHandle = handle;
                 pendingRenderTaskQueue.push(handle);
-                GUI::Dialog("Popup_task","Enque a Task");
                 Log("enque a new task : {}", handle);
             }
 
-            ImGui::Begin(statusWindowName, &gDisplayOption.showSplitWindow);
-            ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
-            ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
+            ImGui::Begin(statusWindowName, &g_DisplayOption.showSplitWindow);
+                ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
+                ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
+                ImGui::BulletText("completed rendering task count: %d", g_CompletedTasks.size());
             ImGui::End();
 
-            ImGui::Begin(profileWindowName, &gDisplayOption.showSplitWindow);
+            ImGui::Begin(profileWindowName, &g_DisplayOption.showSplitWindow);
             ImGui::End();
 
-            ImGui::Begin(mainWindowName, &gDisplayOption.showSplitWindow);
+            ImGui::Begin(mainWindowName, &g_DisplayOption.showSplitWindow);
             
-            if (TaskDone(activeTaskHandle))
+            if (!g_CompletedTasks.empty())
             {
-                void *result = FetchRenderTaskData(activeTaskHandle);
-                if (result)
-                {
-                    auto ret = g_CompletedTasks.emplace(activeTaskHandle, result);
-                    if (!ret.second)
-                    {
-                        Err("insert completed task {} fails.", activeTaskHandle);
-                    }
-                }
-
-                intptr_t renderedTexture = quadRender.Update(GetRenderingResult(activeTaskHandle), (sizeof(float) * width * height * 3));
+                void *data = g_CompletedTasks.begin()->second;
+                Setting &temp = *(reinterpret_cast<Setting*>(data));
+                intptr_t renderedTexture = quadRender.Update(temp.data, (sizeof(float) * width * height * 3));
                 ImVec2 uv0(0, 0);
                 ImVec2 uv1(1, 1);
-                if (gDisplayOption.flipVertical)
+                if (g_DisplayOption.flipVertical)
                 {
                     uv0 = ImVec2(0, 1);
                     uv1 = ImVec2(1, 0);
                 }
-                if (gDisplayOption.fitToWindow)
+                if (g_DisplayOption.fitToWindow)
                 {
                     ImVec2 size((float)width, (float)height);
                     const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
@@ -398,7 +391,7 @@ void GUIModeMain(Setting &setting)
             }
             else
             {
-                if (gDisplayOption.fitToWindow)
+                if (g_DisplayOption.fitToWindow)
                 {
                     ImVec2 size((float)width_, (float)height_);
                     const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
@@ -413,6 +406,21 @@ void GUIModeMain(Setting &setting)
                 }
             }
             ImGui::End();
+
+            if (g_CompletedTasks.find(activeTaskHandle) == g_CompletedTasks.end() && TaskDone(activeTaskHandle))
+            {
+                void *result = FetchRenderTaskData(activeTaskHandle);
+                if (result)
+                {
+                    auto ret = g_CompletedTasks.emplace(activeTaskHandle, result);
+                    if (!ret.second)
+                    {
+                        Err("insert completed task {} fails.", activeTaskHandle);
+                    }
+                    else
+                        Log("insert completed task {} ok.", activeTaskHandle);
+                }
+            }
         }
 
         GUI::EndFrame();
