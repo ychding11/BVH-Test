@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream> 
 #include <bvh/vector.hpp> 
 
 #include "Log.h"
@@ -15,15 +16,41 @@ struct Setting
     int  height;
     bool statistic;
 
-    Scalar *data;
-
-    struct
+    struct Camera
     {
         Vector3 eye;
         Vector3 dir;
         Vector3 up;
         Scalar  fov;
-    } camera ;
+
+        template<typename OStream>
+        friend OStream& operator<<(OStream &os, const Camera& c)
+        {
+            return os << "camera info: "
+                << "eye: [ " << c.eye[0] << "," << c.eye[1] << "," << c.eye[2] << " ]\n"
+                << "dir: [ " << c.dir[0] << "," << c.dir[1] << ","  << c.dir[2] << " ]\n"
+                << "eye: [ " << c.up[0] << "," << c.up[1] << "," << c.up[2] << " ]\n"
+                << "fov: [ " << c.fov << " ]\n" ;
+        }
+    };
+
+    Camera camera;
+
+    // the output of current setting
+    Scalar *data;
+
+    std::string str() const
+    {
+        std::stringstream ss;
+        ss
+            << "width : " << width << "\n"
+            << "height: " << height << "\n"
+            << "statistic: " << statistic << "\n"
+            //<< camera
+            ;
+
+        return ss.str();
+    }
 
     Setting& operator =(const Setting &setting)
     {
@@ -297,7 +324,7 @@ void Rendering(void *taskUserData);
 inline TaskHandle StartRenderingTask(Setting &setting)
 {
     static Setting local(false);
-    if (local == setting)
+    if (local == setting) // identical to the previous setting, no need to start a new task
     {
         return Invalid_Task_Handle;
     }
@@ -305,6 +332,7 @@ inline TaskHandle StartRenderingTask(Setting &setting)
     {
         local = setting;
     }
+
     Setting *temp = new Setting();
     *temp = setting;
 
@@ -313,8 +341,8 @@ inline TaskHandle StartRenderingTask(Setting &setting)
     task->userData = temp;
     task->status = TaskStatus::Created;
 
-    Log("schedule a task: handle={}",task->handle);
     TaskScheduler::GetScheduler()->Schedule(task);
+    Log("schedule a task: handle={}",task->handle);
     return task->handle;
 }
 
@@ -330,10 +358,24 @@ inline float* GetRenderingResult(TaskHandle handle)
     void *data = TaskScheduler::GetScheduler()->QueryTaskData(handle);
     if (data == nullptr)
     {
-        Err("Task output corrupted.");
+        Err("task {} output is corrupted.", handle);
         return nullptr;
     }
     Setting &temp = *(reinterpret_cast<Setting*>(data));
     
+    Log("task {} output is got.", handle);
     return temp.data;;
+}
+
+inline void* FetchRenderTaskData(TaskHandle handle)
+{
+    void *data = TaskScheduler::GetScheduler()->QueryTaskData(handle);
+    if (data == nullptr)
+    {
+        Err("task {} output is corrupted.", handle);
+        return nullptr;
+    }
+    
+    Log("task {} data is got.", handle);
+    return data;;
 }

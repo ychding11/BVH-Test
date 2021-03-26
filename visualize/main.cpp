@@ -50,6 +50,9 @@ std::map<BVHBuilderType, std::string> g_BVHBuilderNames =
     {Linear, "linear"},
 };
 
+typedef std::map<TaskHandle, void*> CompletedTaskMap;
+CompletedTaskMap g_CompletedTasks;
+
 // options has no relation with rendering
 struct DisplayOption
 {
@@ -305,14 +308,10 @@ void GUIModeMain(Setting &setting)
 
     Quad::Renderer quadRender;
 
-    std::string profileInfo;
-
-    bool showWindow = false;
-
     int width_, height_;
     intptr_t waitingTexture = quadRender.LoadTexture("../image/waiting.png", width_, height_);
 
-    std::queue<TaskHandle> renderTaskQueue;
+    std::queue<TaskHandle> pendingRenderTaskQueue;
     TaskHandle activeTaskHandle = StartRenderingTask(setting);
     assert(activeTaskHandle != Invalid_Task_Handle);
 
@@ -325,17 +324,6 @@ void GUIModeMain(Setting &setting)
         drawMenuBar();
         drawDockWindow();
 
-        //enum BVHBuilderType
-        //{
-        //    Invalid_Type = -1,
-        //    Binned_SAH = 0, //binned_sah
-        //    Sweep_SAH = 1,  //sweep_sah
-        //    Spatial_Split = 2, //spatial_split
-        //    Locally_Ordered_Clustering = 3, //locally_ordered_clustering
-        //    Linear = 4, //linear
-
-        //    Count
-        //};
         {
             static int bvhBuilderName;
             ImGui::Begin(testOptionsWindowName, &gDisplayOption.showSplitWindow);
@@ -354,14 +342,14 @@ void GUIModeMain(Setting &setting)
             TaskHandle handle = StartRenderingTask(setting);
             if (handle != Invalid_Task_Handle)
             {
-                renderTaskQueue.push(handle);
+                pendingRenderTaskQueue.push(handle);
                 GUI::Dialog("Popup_task","Enque a Task");
                 Log("enque a new task : {}", handle);
             }
 
             ImGui::Begin(statusWindowName, &gDisplayOption.showSplitWindow);
             ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
-            ImGui::BulletText("rendering task count: %d",renderTaskQueue.size());
+            ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &gDisplayOption.showSplitWindow);
@@ -371,6 +359,16 @@ void GUIModeMain(Setting &setting)
             
             if (TaskDone(activeTaskHandle))
             {
+                void *result = FetchRenderTaskData(activeTaskHandle);
+                if (result)
+                {
+                    auto ret = g_CompletedTasks.emplace(activeTaskHandle, result);
+                    if (!ret.second)
+                    {
+                        Err("insert completed task {} fails.", activeTaskHandle);
+                    }
+                }
+
                 intptr_t renderedTexture = quadRender.Update(GetRenderingResult(activeTaskHandle), (sizeof(float) * width * height * 3));
                 ImVec2 uv0(0, 0);
                 ImVec2 uv1(1, 1);
@@ -391,10 +389,10 @@ void GUIModeMain(Setting &setting)
                 {
                     ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height), uv0, uv1);
                 }
-                if (!renderTaskQueue.empty())
+                if (!pendingRenderTaskQueue.empty())
                 {
-                    activeTaskHandle = renderTaskQueue.front();
-                    renderTaskQueue.pop();
+                    activeTaskHandle = pendingRenderTaskQueue.front();
+                    pendingRenderTaskQueue.pop();
                     Log("deque a new task : {}", activeTaskHandle);
                 }
             }
