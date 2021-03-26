@@ -69,6 +69,19 @@ struct DisplayOption
 
 DisplayOption g_DisplayOption;
 
+static void ShowHelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
 void update(float secondsElapsed, GLFWwindow *window)
 {
     static bool keyPressed = false;
@@ -332,11 +345,14 @@ void GUIModeMain(Setting &setting)
                 ImGui::SliderFloat("vertical fov", &setting.camera.fov, 30.0f, 80.f);
 
                 ImGui::Separator();
-                ImGui::RadioButton("binned_sah", &bvhBuilderName, Binned_SAH);
-                ImGui::RadioButton("sweep_sah", &bvhBuilderName, Sweep_SAH);
-                ImGui::RadioButton("spatial_split", &bvhBuilderName, Spatial_Split);
-                ImGui::RadioButton("locally_ordered_clustering", &bvhBuilderName, Locally_Ordered_Clustering);
-                ImGui::RadioButton("linear", &bvhBuilderName, Linear);
+                if (ImGui::CollapsingHeader("bvh_builder_type"))
+                {
+                    ImGui::RadioButton("binned_sah", &bvhBuilderName, Binned_SAH);
+                    ImGui::RadioButton("sweep_sah", &bvhBuilderName, Sweep_SAH);
+                    ImGui::RadioButton("spatial_split", &bvhBuilderName, Spatial_Split);
+                    ImGui::RadioButton("locally_ordered_clustering", &bvhBuilderName, Locally_Ordered_Clustering);
+                    ImGui::RadioButton("linear", &bvhBuilderName, Linear);
+                }
             ImGui::End();
 
             TaskHandle handle = StartRenderingTask(setting);
@@ -351,6 +367,16 @@ void GUIModeMain(Setting &setting)
                 ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
                 ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
                 ImGui::BulletText("completed rendering task count: %d", g_CompletedTasks.size());
+                if (ImGui::CollapsingHeader("complete_task_list"))
+                {
+                    static TaskHandle completeTaskHandle;
+                    for (auto it = g_CompletedTasks.begin(); it != g_CompletedTasks.end(); ++it)
+                    {
+                        std::stringstream ss;
+                        ss << "Task : " << it->first;
+                        ImGui::RadioButton(ss.str().c_str(), (int*)&completeTaskHandle, it->first);
+                    }
+                }
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &g_DisplayOption.showSplitWindow);
