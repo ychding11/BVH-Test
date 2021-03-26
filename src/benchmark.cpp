@@ -526,6 +526,7 @@ int EntryPointMain(int argc, char** argv)
     }
 }
 
+
 void Rendering(void *userData)
 {
     static bool done = false;

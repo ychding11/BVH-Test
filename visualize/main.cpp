@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <vector>
 #include <queue> 
+#include <map>
 #include <cstdlib>
 #include <string>
 #include <iostream>
@@ -27,6 +28,27 @@
 #pragma warning(disable : 4244) // conversion from 'int' to 'float', possible loss of data
 //#pragma warning(pop)
 
+
+enum BVHBuilderType
+{
+    Invalid_Type =  -1,
+    Binned_SAH = 0, //binned_sah
+    Sweep_SAH = 1,  //sweep_sah
+    Spatial_Split = 2, //spatial_split
+    Locally_Ordered_Clustering = 3, //locally_ordered_clustering
+    Linear = 4, //linear
+
+    Builder_Count
+};
+
+std::map<BVHBuilderType, std::string> g_BVHBuilderNames = 
+{
+    {Binned_SAH, "binned_sah"},
+    {Sweep_SAH, "sweep_sah"},
+    {Spatial_Split, "spatial_split"},
+    {Locally_Ordered_Clustering, "locally_ordered_clustering"},
+    {Linear, "linear"},
+};
 
 // options has no relation with rendering
 struct DisplayOption
@@ -303,10 +325,30 @@ void GUIModeMain(Setting &setting)
         drawMenuBar();
         drawDockWindow();
 
+        //enum BVHBuilderType
+        //{
+        //    Invalid_Type = -1,
+        //    Binned_SAH = 0, //binned_sah
+        //    Sweep_SAH = 1,  //sweep_sah
+        //    Spatial_Split = 2, //spatial_split
+        //    Locally_Ordered_Clustering = 3, //locally_ordered_clustering
+        //    Linear = 4, //linear
+
+        //    Count
+        //};
         {
+            static int bvhBuilderName;
             ImGui::Begin(testOptionsWindowName, &gDisplayOption.showSplitWindow);
             ImGui::Checkbox("Statistic",  &setting.statistic);
             ImGui::SliderFloat("vertical fov", &setting.camera.fov, 30.0f, 80.f);
+
+            ImGui::Separator();
+            ImGui::RadioButton("binned_sah", &bvhBuilderName, Binned_SAH);
+            ImGui::RadioButton("sweep_sah", &bvhBuilderName, Sweep_SAH);
+            ImGui::RadioButton("spatial_split", &bvhBuilderName, Spatial_Split);
+            ImGui::RadioButton("locally_ordered_clustering", &bvhBuilderName, Locally_Ordered_Clustering);
+            ImGui::RadioButton("linear", &bvhBuilderName, Linear);
+
             ImGui::End();
 
             TaskHandle handle = StartRenderingTask(setting);
