@@ -4,6 +4,7 @@
 #include <bvh/vector.hpp> 
 
 #include "Log.h"
+#include "camera.h"
 
 using Scalar  = float;
 using Vector3 = bvh::Vector3<Scalar>;
@@ -16,23 +17,23 @@ struct Setting
     int  height;
     bool statistic;
 
-    struct Camera
-    {
-        Vector3 eye;
-        Vector3 dir;
-        Vector3 up;
-        Scalar  fov;
+    //struct Camera
+    //{
+    //    Vector3 eye;
+    //    Vector3 dir;
+    //    Vector3 up;
+    //    Scalar  fov;
 
-        template<typename OStream>
-        friend OStream& operator<<(OStream &os, const Camera& c)
-        {
-            return os << "camera info: "
-                << "eye: [ " << c.eye[0] << "," << c.eye[1] << "," << c.eye[2] << " ]\n"
-                << "dir: [ " << c.dir[0] << "," << c.dir[1] << ","  << c.dir[2] << " ]\n"
-                << "eye: [ " << c.up[0] << "," << c.up[1] << "," << c.up[2] << " ]\n"
-                << "fov: [ " << c.fov << " ]\n" ;
-        }
-    };
+    //    template<typename OStream>
+    //    friend OStream& operator<<(OStream &os, const Camera& c)
+    //    {
+    //        return os << "camera info: "
+    //            << "eye: [ " << c.eye[0] << "," << c.eye[1] << "," << c.eye[2] << " ]\n"
+    //            << "dir: [ " << c.dir[0] << "," << c.dir[1] << ","  << c.dir[2] << " ]\n"
+    //            << "eye: [ " << c.up[0] << "," << c.up[1] << "," << c.up[2] << " ]\n"
+    //            << "fov: [ " << c.fov << " ]\n" ;
+    //    }
+    //};
 
     Camera camera;
 
@@ -46,7 +47,7 @@ struct Setting
             << "width : " << width << "\n"
             << "height: " << height << "\n"
             << "statistic: " << statistic << "\n"
-            //<< camera
+            << camera
             ;
 
         return ss.str();
