@@ -59,11 +59,12 @@ struct DisplayOption
     bool flipVertical;
     bool showSplitWindow;
     bool fitToWindow;
-
+    TaskHandle completeTaskHandle;
     DisplayOption()
         : flipVertical(false)
         , showSplitWindow(false)
         , fitToWindow(true)
+        , completeTaskHandle(Invalid_Task_Handle)
     { }
 };
 
@@ -367,15 +368,22 @@ void GUIModeMain(Setting &setting)
                 ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
                 ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
                 ImGui::BulletText("completed rendering task count: %d", g_CompletedTasks.size());
+                ImGui::Separator();
                 if (ImGui::CollapsingHeader("complete_task_list"))
                 {
-                    static TaskHandle completeTaskHandle;
                     for (auto it = g_CompletedTasks.begin(); it != g_CompletedTasks.end(); ++it)
                     {
                         std::stringstream ss;
                         ss << "Task : " << it->first;
-                        ImGui::RadioButton(ss.str().c_str(), (int*)&completeTaskHandle, it->first);
+                        ImGui::RadioButton(ss.str().c_str(), (int*)&g_DisplayOption.completeTaskHandle, it->first);
                     }
+                }
+                ImGui::Separator();
+                if (!g_CompletedTasks.empty() && g_DisplayOption.completeTaskHandle != Invalid_Task_Handle)
+                {
+                    void *data = g_CompletedTasks[g_DisplayOption.completeTaskHandle];
+                    Setting &temp = *(reinterpret_cast<Setting*>(data));
+                    ImGui::BulletText("%s", temp.str().c_str());
                 }
             ImGui::End();
 
@@ -383,54 +391,48 @@ void GUIModeMain(Setting &setting)
             ImGui::End();
 
             ImGui::Begin(mainWindowName, &g_DisplayOption.showSplitWindow);
-            
-            if (!g_CompletedTasks.empty())
-            {
-                void *data = g_CompletedTasks.begin()->second;
-                Setting &temp = *(reinterpret_cast<Setting*>(data));
-                intptr_t renderedTexture = quadRender.Update(temp.data, (sizeof(float) * width * height * 3));
-                ImVec2 uv0(0, 0);
-                ImVec2 uv1(1, 1);
-                if (g_DisplayOption.flipVertical)
+                if (!g_CompletedTasks.empty() && g_DisplayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
-                    uv0 = ImVec2(0, 1);
-                    uv1 = ImVec2(1, 0);
-                }
-                if (g_DisplayOption.fitToWindow)
-                {
-                    ImVec2 size((float)width, (float)height);
-                    const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
-                    size.x *= scale;
-                    size.y *= scale;
-                    ImGui::Image((ImTextureID)renderedTexture, size, uv0, uv1);
-                }
-                else
-                {
-                    ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height), uv0, uv1);
-                }
-                if (!pendingRenderTaskQueue.empty())
-                {
-                    activeTaskHandle = pendingRenderTaskQueue.front();
-                    pendingRenderTaskQueue.pop();
-                    Log("deque a new task : {}", activeTaskHandle);
-                }
-            }
-            else
-            {
-                if (g_DisplayOption.fitToWindow)
-                {
-                    ImVec2 size((float)width_, (float)height_);
-                    const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
-                    size.x *= scale;
-                    size.y *= scale;
-                    ImGui::Image((ImTextureID)waitingTexture, size);
-                    //ImGui::Text("Rendiring");
+                    //void *data = g_CompletedTasks.begin()->second;
+                    void *data = g_CompletedTasks[g_DisplayOption.completeTaskHandle];
+                    Setting &temp = *(reinterpret_cast<Setting*>(data));
+                    intptr_t renderedTexture = quadRender.Update(temp.data, (sizeof(float) * width * height * 3));
+                    ImVec2 uv0(0, 0);
+                    ImVec2 uv1(1, 1);
+                    if (g_DisplayOption.flipVertical)
+                    {
+                        uv0 = ImVec2(0, 1);
+                        uv1 = ImVec2(1, 0);
+                    }
+                    if (g_DisplayOption.fitToWindow)
+                    {
+                        ImVec2 size((float)width, (float)height);
+                        const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
+                        size.x *= scale;
+                        size.y *= scale;
+                        ImGui::Image((ImTextureID)renderedTexture, size, uv0, uv1);
+                    }
+                    else
+                    {
+                        ImGui::Image((ImTextureID)renderedTexture, ImVec2(width,height), uv0, uv1);
+                    }
                 }
                 else
                 {
-                    ImGui::Image((ImTextureID)waitingTexture, ImVec2(width_, height_));
+                    if (g_DisplayOption.fitToWindow)
+                    {
+                        ImVec2 size((float)width_, (float)height_);
+                        const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
+                        size.x *= scale;
+                        size.y *= scale;
+                        ImGui::Image((ImTextureID)waitingTexture, size);
+                        //ImGui::Text("Rendiring");
+                    }
+                    else
+                    {
+                        ImGui::Image((ImTextureID)waitingTexture, ImVec2(width_, height_));
+                    }
                 }
-            }
             ImGui::End();
 
             if (g_CompletedTasks.find(activeTaskHandle) == g_CompletedTasks.end() && TaskDone(activeTaskHandle))
@@ -445,6 +447,13 @@ void GUIModeMain(Setting &setting)
                     }
                     else
                         Log("insert completed task {} ok.", activeTaskHandle);
+                }
+
+                if (!pendingRenderTaskQueue.empty())
+                {
+                    activeTaskHandle = pendingRenderTaskQueue.front();
+                    pendingRenderTaskQueue.pop();
+                    Log("deque a new task : {}", activeTaskHandle);
                 }
             }
         }
