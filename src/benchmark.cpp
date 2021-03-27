@@ -32,6 +32,7 @@ using Bvh         = bvh::Bvh<Scalar>;
 
 #include "obj.hpp"
 #include "interface.h"
+#include "camera.h"
 
 template <typename F>
 void profile(const char* task, F f, size_t runs = 1)
@@ -120,23 +121,23 @@ static void usage()
 
 // #include "spdlog/fmt/ostr.h" // must be included
 
-struct Camera
-{
-    Vector3 eye;
-    Vector3 dir;
-    Vector3 up;
-    Scalar  fov;
-};
-
-template<typename OStream>
-OStream& operator<<(OStream &os, const Camera& c)
-{
-    return os << "camera info: "
-        << "eye: [ " << c.eye[0] << "," << c.eye[1] << "," << c.eye[2] << " ]\n"
-        << "dir: [ " << c.dir[0] << "," << c.dir[1] << ","  << c.dir[2] << " ]\n"
-        << "eye: [ " << c.up[0] << "," << c.up[1] << "," << c.up[2] << " ]\n"
-        << "fov: [ " << c.fov << " ]\n" ;
-}
+//struct Camera
+//{
+//    Vector3 eye;
+//    Vector3 dir;
+//    Vector3 up;
+//    Scalar  fov;
+//};
+//
+//template<typename OStream>
+//OStream& operator<<(OStream &os, const Camera& c)
+//{
+//    return os << "camera info: "
+//        << "eye: [ " << c.eye[0] << "," << c.eye[1] << "," << c.eye[2] << " ]\n"
+//        << "dir: [ " << c.dir[0] << "," << c.dir[1] << ","  << c.dir[2] << " ]\n"
+//        << "eye: [ " << c.up[0] << "," << c.up[1] << "," << c.up[2] << " ]\n"
+//        << "fov: [ " << c.fov << " ]\n" ;
+//}
 
 template <bool Permute, bool CollectStatistics>
 void render(
