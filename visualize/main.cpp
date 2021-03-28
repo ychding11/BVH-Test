@@ -282,7 +282,7 @@ void drawDockWindow()
 }
 
 
-void GUIModeMain(Setting &setting)
+void GUIModeMain(RenderSetting &setting)
 {
     Log("Enter GUI Mode");
 
@@ -382,7 +382,7 @@ void GUIModeMain(Setting &setting)
                 if (!g_CompletedTasks.empty() && g_DisplayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
                     void *data = g_CompletedTasks[g_DisplayOption.completeTaskHandle];
-                    Setting &temp = *(reinterpret_cast<Setting*>(data));
+                    auto &temp = *(reinterpret_cast<RenderSetting*>(data));
                     ImGui::BulletText("%s", temp.str().c_str());
                 }
             ImGui::End();
@@ -395,7 +395,7 @@ void GUIModeMain(Setting &setting)
                 {
                     //void *data = g_CompletedTasks.begin()->second;
                     void *data = g_CompletedTasks[g_DisplayOption.completeTaskHandle];
-                    Setting &temp = *(reinterpret_cast<Setting*>(data));
+                    auto &temp = *(reinterpret_cast<RenderSetting*>(data));
                     intptr_t renderedTexture = quadRender.Update(temp.data, (sizeof(float) * width * height * 3));
                     ImVec2 uv0(0, 0);
                     ImVec2 uv1(1, 1);

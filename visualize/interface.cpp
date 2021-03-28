@@ -1,6 +1,6 @@
 #include "interface.h"
 
-Setting gSettings;
+RenderSetting gSettings;
 
 //{
 

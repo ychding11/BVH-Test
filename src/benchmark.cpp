@@ -511,7 +511,7 @@ void Rendering(void *userData)
 {
     static bool done = false;
 
-    Setting &settings = *(reinterpret_cast<Setting*>(userData));
+    auto &settings = *(reinterpret_cast<RenderSetting*>(userData));
     const char* input_file   = ".\\scene\\cornell_box.obj";
     const char* builder_name = "binned_sah";
     Camera camera =

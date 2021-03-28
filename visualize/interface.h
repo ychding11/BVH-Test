@@ -10,7 +10,7 @@ using Scalar  = float;
 using Vector3 = bvh::Vector3<Scalar>;
 
 // UI Control
-struct Setting
+struct RenderSetting
 {
     int onlyUseForIndentification;
     int  width;
@@ -34,7 +34,7 @@ struct Setting
         return ss.str();
     }
 
-    Setting& operator =(const Setting &setting)
+    RenderSetting& operator =(const RenderSetting &setting)
     {
         assert((this->data == setting.data) && this->data == nullptr);
         this->onlyUseForIndentification = setting.onlyUseForIndentification;
@@ -48,7 +48,7 @@ struct Setting
         return *this;
     }
 
-    bool operator ==(const Setting &setting)
+    bool operator ==(const RenderSetting &setting)
     {
         if (onlyUseForIndentification != setting.onlyUseForIndentification)
             return false;
@@ -61,7 +61,7 @@ struct Setting
         return true;
     }
 
-    Setting(bool a = true)
+    RenderSetting(bool a = true)
         : width(1280)
         , height(720)
         , statistic(false)
@@ -75,7 +75,7 @@ struct Setting
     }
 };
 
-extern Setting gSettings;
+extern RenderSetting gSettings;
 
 int EntryPointMain(int argc, char** argv);
 
@@ -303,9 +303,9 @@ int EntryPointMain(int argc, char** argv);
 // implement in external source code
 void Rendering(void *taskUserData);
 
-inline TaskHandle StartRenderingTask(Setting &setting)
+inline TaskHandle StartRenderingTask(RenderSetting &setting)
 {
-    static Setting local(false);
+    static RenderSetting local(false);
     if (local == setting) // identical to the previous setting, no need to start a new task
     {
         return Invalid_Task_Handle;
@@ -315,7 +315,7 @@ inline TaskHandle StartRenderingTask(Setting &setting)
         local = setting;
     }
 
-    Setting *temp = new Setting();
+    RenderSetting *temp = new RenderSetting();
     *temp = setting;
 
     Task *task = new Task;
@@ -343,7 +343,7 @@ inline float* GetRenderingResult(TaskHandle handle)
         Err("task {} output is corrupted.", handle);
         return nullptr;
     }
-    Setting &temp = *(reinterpret_cast<Setting*>(data));
+    RenderSetting &temp = *(reinterpret_cast<RenderSetting*>(data));
     
     Log("task {} output is got.", handle);
     return temp.data;;
