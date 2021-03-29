@@ -103,6 +103,15 @@ inline Vector<Scalar, N> operator - (const Vector<Scalar, N>& a, const Vector<Sc
 
 template <typename Scalar, size_t N>
 bvh_always_inline
+inline bool operator == (const Vector<Scalar, N>& a, const Vector<Scalar, N>& b) {
+    bool ret = true;
+    for (size_t i = 0; i < N; ++i)
+        ret = ret && (a[i] == b[i]);
+    return ret;
+}
+
+template <typename Scalar, size_t N>
+bvh_always_inline
 inline Vector<Scalar, N> operator * (const Vector<Scalar, N>& a, const Vector<Scalar, N>& b) {
     return Vector<Scalar, N>([=] (size_t i) { return a[i] * b[i]; });
 }

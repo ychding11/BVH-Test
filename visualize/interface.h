@@ -12,9 +12,10 @@ using Vector3 = bvh::Vector3<Scalar>;
 // UI Control
 struct RenderSetting
 {
-    int onlyUseForIndentification;
+    int  onlyUseForIndentification;
     int  width;
     int  height;
+    int  bvhBuilderType;
     bool statistic;
     Camera camera;
 
@@ -41,6 +42,7 @@ struct RenderSetting
         this->width = setting.width;
         this->height = setting.height;
         this->statistic = setting.statistic;
+        this->bvhBuilderType = setting.bvhBuilderType;
         this->camera.eye = setting.camera.eye;
         this->camera.dir = setting.camera.dir;
         this->camera.up = setting.camera.up;
@@ -56,7 +58,9 @@ struct RenderSetting
             return false;
         if (statistic != setting.statistic)
             return false;
-        if (camera.fov != setting.camera.fov)
+        if (bvhBuilderType != setting.bvhBuilderType)
+            return false;
+        if (camera != setting.camera)
             return false;
         return true;
     }
@@ -65,6 +69,7 @@ struct RenderSetting
         : width(1280)
         , height(720)
         , statistic(false)
+        , bvhBuilderType(0)
         , data(nullptr)
         , onlyUseForIndentification(a == true ? 1 : 0)
     {

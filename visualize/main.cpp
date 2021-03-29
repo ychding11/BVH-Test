@@ -326,8 +326,6 @@ void GUIModeMain(RenderSetting &setting)
     intptr_t waitingTexture = quadRender.LoadTexture("../image/waiting.png", width_, height_);
 
     std::queue<TaskHandle> pendingRenderTaskQueue;
-    //TaskHandle activeTaskHandle = StartRenderingTask(setting);
-    //assert(activeTaskHandle != Invalid_Task_Handle);
     TaskHandle activeTaskHandle = Invalid_Task_Handle;
 
     double lastTime = glfwGetTime();
@@ -340,7 +338,7 @@ void GUIModeMain(RenderSetting &setting)
         drawDockWindow();
 
         {
-            static int bvhBuilderName;
+            //static int bvhBuilderName;
             ImGui::Begin(testOptionsWindowName, &g_DisplayOption.showSplitWindow);
                 ImGui::Checkbox("Statistic",  &setting.statistic);
                 ImGui::SliderFloat("vertical fov", &setting.camera.fov, 30.0f, 80.f);
@@ -348,11 +346,11 @@ void GUIModeMain(RenderSetting &setting)
                 ImGui::Separator();
                 if (ImGui::CollapsingHeader("bvh_builder_type"))
                 {
-                    ImGui::RadioButton("binned_sah", &bvhBuilderName, Binned_SAH);
-                    ImGui::RadioButton("sweep_sah", &bvhBuilderName, Sweep_SAH);
-                    ImGui::RadioButton("spatial_split", &bvhBuilderName, Spatial_Split);
-                    ImGui::RadioButton("locally_ordered_clustering", &bvhBuilderName, Locally_Ordered_Clustering);
-                    ImGui::RadioButton("linear", &bvhBuilderName, Linear);
+                    ImGui::RadioButton("binned_sah", &setting.bvhBuilderType, Binned_SAH);
+                    ImGui::RadioButton("sweep_sah", &setting.bvhBuilderType, Sweep_SAH);
+                    ImGui::RadioButton("spatial_split", &setting.bvhBuilderType, Spatial_Split);
+                    ImGui::RadioButton("locally_ordered_clustering", &setting.bvhBuilderType, Locally_Ordered_Clustering);
+                    ImGui::RadioButton("linear", &setting.bvhBuilderType, Linear);
                 }
             ImGui::End();
 
@@ -393,7 +391,6 @@ void GUIModeMain(RenderSetting &setting)
             ImGui::Begin(mainWindowName, &g_DisplayOption.showSplitWindow);
                 if (!g_CompletedTasks.empty() && g_DisplayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
-                    //void *data = g_CompletedTasks.begin()->second;
                     void *data = g_CompletedTasks[g_DisplayOption.completeTaskHandle];
                     auto &temp = *(reinterpret_cast<RenderSetting*>(data));
                     intptr_t renderedTexture = quadRender.Update(temp.data, (sizeof(float) * width * height * 3));

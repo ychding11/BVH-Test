@@ -17,6 +17,26 @@ struct Camera
     Vector3 up;
     Scalar  fov;
 
+    bool operator== (const Camera &rhs)
+    {
+        if (   this->eye == rhs.eye
+            && this->dir == rhs.dir 
+            && this->up == rhs.up
+            && this->fov == rhs.fov
+            )
+        {
+            return true;
+        }
+        return false;
+
+    }
+
+    bool operator!= (const Camera &rhs)
+    {
+
+        return !operator==(rhs);
+    }
+
     std::string str() const
     {
         std::stringstream ss;
