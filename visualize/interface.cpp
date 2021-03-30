@@ -1,7 +1,5 @@
 #include "interface.h"
 
-RenderSetting gSettings;
-
 std::string RenderSetting::str() const
 {
     std::stringstream ss;

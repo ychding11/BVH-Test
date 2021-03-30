@@ -12,6 +12,42 @@
     }
 
 
+    TaskScheduler::TaskScheduler()
+        : m_shutdown(false)
+    {
+        m_threadIndex = 0;
+
+        m_group = new TaskGroup();
+        m_group->free = true;
+        m_group->ref = 0;
+
+        m_workers.resize(std::thread::hardware_concurrency() <= 1 ? 1 : std::thread::hardware_concurrency() - 1);
+        for (uint32_t i = 0; i < m_workers.size(); i++)
+        {
+            m_workers[i] = new Worker();
+            m_workers[i]->wakeup = false;
+            m_workers[i]->thread = new std::thread(workerThread, this, m_workers[i], i + 1);
+        }
+    }
+    TaskScheduler::~TaskScheduler()
+    {
+        m_shutdown = true;
+        for (uint32_t i = 0; i < m_workers.size(); i++)
+        {
+            Worker &worker = *(m_workers[i]);
+            assert(worker.thread);
+            worker.wakeup = true;
+            worker.cv.notify_one();
+            if (worker.thread->joinable()) worker.thread->join();
+            worker.thread->~thread();
+            free(worker.thread);
+            worker.~Worker();
+        }
+
+        m_group->~TaskGroup();
+        free(m_group);
+    }
+
     void TaskScheduler::workerThread(TaskScheduler *scheduler, Worker *worker, uint32_t threadIndex)
     {
         m_threadIndex = threadIndex;

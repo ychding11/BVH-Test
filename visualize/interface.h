@@ -31,8 +31,6 @@ struct RenderSetting
     RenderSetting(bool a = true);
 };
 
-extern RenderSetting gSettings;
-
 int EntryPointMain(int argc, char** argv);
 
 // implement in external source code
