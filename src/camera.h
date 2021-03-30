@@ -24,11 +24,18 @@ struct Camera
             && this->up == rhs.up
             && this->fov == rhs.fov
             )
-        {
             return true;
-        }
         return false;
 
+    }
+
+    Camera& operator= (const Camera &rhs)
+    {
+        this->eye = rhs.eye;
+        this->dir = rhs.dir;
+        this->up  = rhs.up;
+        this->fov = rhs.fov;
+        return *this;
     }
 
     bool operator!= (const Camera &rhs)

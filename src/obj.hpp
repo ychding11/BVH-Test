@@ -54,38 +54,50 @@ inline std::optional<int> read_index(char** ptr) {
     return std::make_optional(index);
 }
 
-inline std::vector<Triangle> load_from_stream(std::istream& is) {
+inline std::vector<Triangle> load_from_stream(std::istream& is)
+{
     static constexpr size_t max_line = 1024;
     char line[max_line];
 
     std::vector<Vector3> vertices;
     std::vector<Triangle> triangles;
 
-    while (is.getline(line, max_line)) {
+    while (is.getline(line, max_line))
+    {
         char* ptr = strip_spaces(line);
         if (*ptr == '\0' || *ptr == '#')
             continue;
         remove_eol(ptr);
-        if (*ptr == 'v' && std::isspace(ptr[1])) {
+        if (*ptr == 'v' && std::isspace(ptr[1]))
+        {
             auto x = std::strtof(ptr + 1, &ptr);
             auto y = std::strtof(ptr, &ptr);
             auto z = std::strtof(ptr, &ptr);
             vertices.emplace_back(x, y, z);
-        } else if (*ptr == 'f' && std::isspace(ptr[1])) {
+        }
+        else if (*ptr == 'f' && std::isspace(ptr[1]))
+        {
             Vector3 points[2];
             ptr += 2;
-            for (size_t i = 0; ; ++i) {
-                if (auto index = read_index(&ptr)) {
+            for (size_t i = 0; ; ++i)
+            {
+                if (auto index = read_index(&ptr))
+                {
                     size_t j = *index < 0 ? vertices.size() + *index : *index - 1;
                     assert(j < vertices.size());
                     auto v = vertices[j];
-                    if (i >= 2) {
+                    if (i >= 2)
+                    {
                         triangles.emplace_back(points[0], points[1], v);
                         points[1] = v;
-                    } else {
+                    }
+                    else
+                    {
                         points[i] = v;
                     }
-                } else {
+                }
+                else
+                {
                     break;
                 }
             }
@@ -95,7 +107,8 @@ inline std::vector<Triangle> load_from_stream(std::istream& is) {
     return triangles;
 }
 
-inline std::vector<Triangle> load_from_file(const std::string& file) {
+inline std::vector<Triangle> load_from_file(const std::string& file)
+{
     std::ifstream is(file);
     if (is)
         return load_from_stream(is);

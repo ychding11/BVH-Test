@@ -21,10 +21,11 @@ RenderSetting& RenderSetting::operator=(const RenderSetting &setting)
     this->height = setting.height;
     this->statistic = setting.statistic;
     this->bvhBuilderType = setting.bvhBuilderType;
-    this->camera.eye = setting.camera.eye;
-    this->camera.dir = setting.camera.dir;
-    this->camera.up = setting.camera.up;
-    this->camera.fov = setting.camera.fov;
+    //this->camera.eye = setting.camera.eye;
+    //this->camera.dir = setting.camera.dir;
+    //this->camera.up = setting.camera.up;
+    //this->camera.fov = setting.camera.fov;
+    this->camera = setting.camera;
     return *this;
 }
 
