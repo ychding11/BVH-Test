@@ -31,8 +31,8 @@ using Ray         = bvh::Ray<Scalar>;
 using Bvh         = bvh::Bvh<Scalar>;
 
 #include "obj.hpp"
-#include "interface.h"
 #include "camera.h"
+#include "setting.h"
 
 template <typename F>
 void profile(const char* task, F f, size_t runs = 1)

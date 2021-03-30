@@ -1,4 +1,4 @@
-#include "interface.h"
+#include "setting.h"
 
 std::string RenderSetting::str() const
 {

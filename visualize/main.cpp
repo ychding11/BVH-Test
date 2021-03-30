@@ -20,7 +20,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include "interface.h"
+#include "setting.h"
 #include "Renderer.h"
 #include "IconsFontAwesome4.h"
 
@@ -28,6 +28,36 @@
 #pragma warning(disable : 4244) // conversion from 'int' to 'float', possible loss of data
 //#pragma warning(pop)
 
+
+int EntryPointMain(int argc, char** argv);
+
+// implement in external source code
+void Rendering(void *taskUserData);
+
+inline TaskHandle StartRenderingTask(RenderSetting &setting)
+{
+    static RenderSetting local(false);
+    if (local == setting) // identical to the previous setting, no need to start a new task
+    {
+        return Invalid_Task_Handle;
+    }
+    else
+    {
+        local = setting;
+    }
+
+    RenderSetting *temp = new RenderSetting();
+    *temp = setting;
+
+    Task *task = new Task;
+    task->func = Rendering;
+    task->userData = temp;
+    task->status = TaskStatus::Created;
+
+    TaskScheduler::GetScheduler()->Schedule(task);
+    Log("schedule a task: handle={}",task->handle);
+    return task->handle;
+}
 
 enum BVHBuilderType
 {
