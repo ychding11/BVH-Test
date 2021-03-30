@@ -1,4 +1,5 @@
 #include "setting.h"
+#include <map> 
 
 std::string RenderSetting::str() const
 {
@@ -56,4 +57,19 @@ bool  RenderSetting::operator==(const RenderSetting &setting)
     camera.dir = Vector3(0, 0.001, -1);
     camera.up = Vector3(0, 1, 0);
     camera.fov = 60;
+}
+
+
+static std::map<BVHBuilderType, std::string> g_BVHBuilderNames = 
+{
+    {Binned_SAH, "binned_sah"},
+    {Sweep_SAH, "sweep_sah"},
+    {Spatial_Split, "spatial_split"},
+    {Locally_Ordered_Clustering, "locally_ordered_clustering"},
+    {Linear, "linear"},
+};
+
+std::string BvhBuilderTypeStr(BVHBuilderType type)
+{
+    return g_BVHBuilderNames[type];
 }

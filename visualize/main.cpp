@@ -59,25 +59,6 @@ inline TaskHandle StartRenderingTask(RenderSetting &setting)
     return task->handle;
 }
 
-enum BVHBuilderType
-{
-    Invalid_Type =  -1,
-    Binned_SAH = 0,                 //binned_sah
-    Sweep_SAH = 1,                  //sweep_sah
-    Spatial_Split = 2,              //spatial_split
-    Locally_Ordered_Clustering = 3, //locally_ordered_clustering
-    Linear = 4,                     //linear
-    Builder_Count
-};
-
-std::map<BVHBuilderType, std::string> g_BVHBuilderNames = 
-{
-    {Binned_SAH, "binned_sah"},
-    {Sweep_SAH, "sweep_sah"},
-    {Spatial_Split, "spatial_split"},
-    {Locally_Ordered_Clustering, "locally_ordered_clustering"},
-    {Linear, "linear"},
-};
 
 typedef std::map<TaskHandle, void*> CompletedTaskMap;
 CompletedTaskMap g_CompletedTasks;

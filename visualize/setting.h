@@ -10,6 +10,19 @@
 using Scalar  = float;
 using Vector3 = bvh::Vector3<Scalar>;
 
+enum BVHBuilderType
+{
+    Invalid_Type =  -1,
+    Binned_SAH = 0,                 //binned_sah
+    Sweep_SAH = 1,                  //sweep_sah
+    Spatial_Split = 2,              //spatial_split
+    Locally_Ordered_Clustering = 3, //locally_ordered_clustering
+    Linear = 4,                     //linear
+    Builder_Count
+};
+
+std::string BvhBuilderTypeStr(BVHBuilderType type);
+
 struct RenderSetting
 {
     int  onlyUseForIndentification;

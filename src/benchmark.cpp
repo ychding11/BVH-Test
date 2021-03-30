@@ -512,17 +512,13 @@ void Rendering(void *userData)
     static bool done = false;
 
     auto &settings = *(reinterpret_cast<RenderSetting*>(userData));
-    //const char* input_file   = ".\\scene\\cornell_box.obj";
-    const char* input_file   = ".\\scene\\bunny.obj";
-    const char* builder_name = "binned_sah";
-    Camera camera =
-    {
-        Vector3(0, 0, -10),
-        Vector3(0, 0, 1),
-        Vector3(0, 1, 0),
-        60
-    };
+    const char* input_file   = ".\\scene\\cornell_box.obj";
+    //const char* input_file   = ".\\scene\\bunny.obj";
+    //const char* builder_name = "binned_sah";
+    std::string builderStr = BvhBuilderTypeStr((BVHBuilderType)settings.bvhBuilderType);
+    const char* builder_name = builderStr.c_str();
 
+    Camera camera;
     camera.eye = settings.camera.eye;
     camera.dir = settings.camera.dir;
     camera.up  = settings.camera.up;
