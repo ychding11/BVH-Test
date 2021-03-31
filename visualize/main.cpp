@@ -80,6 +80,20 @@ struct DisplayOption
 
 DisplayOption g_DisplayOption;
 
+#include <nfd.h>
+static std::string ModelPathDialog()
+{
+    nfdchar_t *filename = nullptr;
+    nfdresult_t result = NFD_OpenDialog("obj", nullptr, &filename);
+
+    if (result != NFD_OKAY)
+    {
+        if (filename) free(filename);
+        return nullptr;
+    }
+    return std::string(filename);
+}
+
 static void ShowHelpMarker(const char* desc)
 {
     ImGui::TextDisabled("(?)");
@@ -222,7 +236,10 @@ void drawMenuBar()
         if (ImGui::BeginMenu(ICON_FA_CUBE " Model"))
         {
             if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open..."))
-            { }
+            {
+                auto path = ModelPathDialog();
+                Log("model : {}", path)
+            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_CAMERA " Camera"))
