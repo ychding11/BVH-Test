@@ -21,6 +21,9 @@ file(GLOB SRC_FILES
 
 file(GLOB EXT_FILES
     ${CMAKE_SOURCE_DIR}/thirdparty/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nativefiledialog/nfd_common.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nativefiledialog/nfd_common.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nativefiledialog/nfd_win.cpp
     ${CMAKE_SOURCE_DIR}/thirdparty/lodepng/*.cpp
     ${CMAKE_SOURCE_DIR}/thirdparty/imgui/*.h
     ${CMAKE_SOURCE_DIR}/thirdparty/imgui/*.cpp
@@ -43,6 +46,9 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/thirdparty/glew/include
   ${CMAKE_SOURCE_DIR}/thirdparty/fastnoise
 )
+
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nativefiledialog )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nativefiledialog/include )
 
 set(GLFW_LIBS glfw3.lib)
 
