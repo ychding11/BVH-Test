@@ -30,6 +30,7 @@ struct RenderSetting
     int  height;
     int  bvhBuilderType;
     bool statistic;
+    std::string modelPath;
     Camera camera;
 
     // the output of current setting

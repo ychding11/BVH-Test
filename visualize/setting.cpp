@@ -8,6 +8,7 @@ std::string RenderSetting::str() const
         << "width : " << width << "\n"
         << "height: " << height << "\n"
         << "statistic: " << statistic << "\n"
+        << "3D model: " << modelPath << "\n"
         << camera
         ;
 
@@ -22,6 +23,7 @@ RenderSetting& RenderSetting::operator=(const RenderSetting &setting)
     this->height = setting.height;
     this->statistic = setting.statistic;
     this->bvhBuilderType = setting.bvhBuilderType;
+    this->modelPath = setting.modelPath;
     //this->camera.eye = setting.camera.eye;
     //this->camera.dir = setting.camera.dir;
     //this->camera.up = setting.camera.up;
@@ -40,6 +42,8 @@ bool  RenderSetting::operator==(const RenderSetting &setting)
         return false;
     if (bvhBuilderType != setting.bvhBuilderType)
         return false;
+    if (modelPath != setting.modelPath)
+        return false;
     if (camera != setting.camera)
         return false;
     return true;
@@ -50,6 +54,7 @@ bool  RenderSetting::operator==(const RenderSetting &setting)
     , height(720)
     , statistic(false)
     , bvhBuilderType(0)
+    , modelPath(".\\scene\\cornell_box.obj")
     , data(nullptr)
     , onlyUseForIndentification(a == true ? 1 : 0)
 {
