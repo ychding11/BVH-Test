@@ -89,12 +89,12 @@ static std::string ModelPathDialog()
     if (result != NFD_OKAY)
     {
         if (filename) free(filename);
-        return nullptr;
+        return "";
     }
     return std::string(filename);
 }
 
-static void ShowHelpMarker(const char* desc)
+static void ShowHelpTip(const char* desc)
 {
     ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered())
@@ -238,7 +238,7 @@ static void drawMenuBar(RenderSetting &setting)
             if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open..."))
             {
                 auto path = ModelPathDialog();
-                setting.modelPath = path;
+                if (!path.empty()) setting.modelPath = path;
                 Log("model : {}", path)
             }
             ImGui::EndMenu();
