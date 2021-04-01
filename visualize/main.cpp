@@ -228,7 +228,7 @@ namespace GUI
     }
 }
 
-void drawMenuBar()
+static void drawMenuBar(RenderSetting &setting)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
     if (ImGui::BeginMainMenuBar())
@@ -238,6 +238,7 @@ void drawMenuBar()
             if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open..."))
             {
                 auto path = ModelPathDialog();
+                setting.modelPath = path;
                 Log("model : {}", path)
             }
             ImGui::EndMenu();
@@ -249,7 +250,7 @@ void drawMenuBar()
         if (ImGui::BeginMenu(ICON_FA_EYE " View"))
         {
             ImGui::Checkbox("flip vertical", &g_DisplayOption.flipVertical);
-            ImGui::Checkbox("fit window",  &g_DisplayOption.fitToWindow);
+            ImGui::Checkbox("fit window",    &g_DisplayOption.fitToWindow);
             ImGui::Checkbox("split window",  &g_DisplayOption.showSplitWindow);
             ImGui::EndMenu();
         }
@@ -361,7 +362,7 @@ void GUIModeMain(RenderSetting &setting)
     {
         GUI::BeginFrame();
 
-        drawMenuBar();
+        drawMenuBar(setting);
         drawDockWindow();
 
         {
