@@ -78,7 +78,6 @@ struct DisplayOption
     { }
 };
 
-DisplayOption g_DisplayOption;
 
 #include <nfd.h>
 static std::string ModelPathDialog()
@@ -228,7 +227,7 @@ namespace GUI
     }
 }
 
-static void drawMenuBar(RenderSetting &setting)
+static void drawMenuBar(RenderSetting &setting, DisplayOption & displayOption)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
     if (ImGui::BeginMainMenuBar())
@@ -249,9 +248,9 @@ static void drawMenuBar(RenderSetting &setting)
         }
         if (ImGui::BeginMenu(ICON_FA_EYE " View"))
         {
-            ImGui::Checkbox("flip vertical", &g_DisplayOption.flipVertical);
-            ImGui::Checkbox("fit window",    &g_DisplayOption.fitToWindow);
-            ImGui::Checkbox("split window",  &g_DisplayOption.showSplitWindow);
+            ImGui::Checkbox("flip vertical", &displayOption.flipVertical);
+            ImGui::Checkbox("fit window",    &displayOption.fitToWindow);
+            ImGui::Checkbox("split window",  &displayOption.showSplitWindow);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(ICON_FA_WINDOWS " Settings"))
@@ -356,18 +355,19 @@ void GUIModeMain(RenderSetting &setting)
     std::queue<TaskHandle> pendingRenderTaskQueue;
     TaskHandle activeTaskHandle = Invalid_Task_Handle;
 
+    DisplayOption displayOption;
     double lastTime = glfwGetTime();
     double curTime  = glfwGetTime();
     while (!glfwWindowShouldClose(window))
     {
         GUI::BeginFrame();
 
-        drawMenuBar(setting);
+        drawMenuBar(setting, displayOption);
         drawDockWindow();
 
         {
             //static int bvhBuilderName;
-            ImGui::Begin(testOptionsWindowName, &g_DisplayOption.showSplitWindow);
+            ImGui::Begin(testOptionsWindowName, &displayOption.showSplitWindow);
                 ImGui::Checkbox("Statistic",  &setting.statistic);
                 ImGui::SliderFloat("vertical fov", &setting.camera.fov, 30.0f, 80.f);
 
@@ -390,7 +390,7 @@ void GUIModeMain(RenderSetting &setting)
                 Log("enque a new task : {}", handle);
             }
 
-            ImGui::Begin(statusWindowName, &g_DisplayOption.showSplitWindow);
+            ImGui::Begin(statusWindowName, &displayOption.showSplitWindow);
                 ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
                 ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
                 ImGui::BulletText("completed rendering task count: %d", g_CompletedTasks.size());
@@ -401,35 +401,35 @@ void GUIModeMain(RenderSetting &setting)
                     {
                         std::stringstream ss;
                         ss << "Task : " << it->first;
-                        ImGui::RadioButton(ss.str().c_str(), (int*)&g_DisplayOption.completeTaskHandle, it->first);
+                        ImGui::RadioButton(ss.str().c_str(), (int*)&displayOption.completeTaskHandle, it->first);
                     }
                 }
                 ImGui::Separator();
-                if (!g_CompletedTasks.empty() && g_DisplayOption.completeTaskHandle != Invalid_Task_Handle)
+                if (!g_CompletedTasks.empty() && displayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
-                    void *data = g_CompletedTasks[g_DisplayOption.completeTaskHandle];
+                    void *data = g_CompletedTasks[displayOption.completeTaskHandle];
                     auto &temp = *(reinterpret_cast<RenderSetting*>(data));
                     ImGui::BulletText("%s", temp.str().c_str());
                 }
             ImGui::End();
 
-            ImGui::Begin(profileWindowName, &g_DisplayOption.showSplitWindow);
+            ImGui::Begin(profileWindowName, &displayOption.showSplitWindow);
             ImGui::End();
 
-            ImGui::Begin(mainWindowName, &g_DisplayOption.showSplitWindow);
-                if (!g_CompletedTasks.empty() && g_DisplayOption.completeTaskHandle != Invalid_Task_Handle)
+            ImGui::Begin(mainWindowName, &displayOption.showSplitWindow);
+                if (!g_CompletedTasks.empty() && displayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
-                    void *data = g_CompletedTasks[g_DisplayOption.completeTaskHandle];
+                    void *data = g_CompletedTasks[displayOption.completeTaskHandle];
                     auto &temp = *(reinterpret_cast<RenderSetting*>(data));
                     intptr_t renderedTexture = quadRender.Update(temp.data, (sizeof(float) * width * height * 3));
                     ImVec2 uv0(0, 0);
                     ImVec2 uv1(1, 1);
-                    if (g_DisplayOption.flipVertical)
+                    if (displayOption.flipVertical)
                     {
                         uv0 = ImVec2(0, 1);
                         uv1 = ImVec2(1, 0);
                     }
-                    if (g_DisplayOption.fitToWindow)
+                    if (displayOption.fitToWindow)
                     {
                         ImVec2 size((float)width, (float)height);
                         const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
@@ -444,7 +444,7 @@ void GUIModeMain(RenderSetting &setting)
                 }
                 else
                 {
-                    if (g_DisplayOption.fitToWindow)
+                    if (displayOption.fitToWindow)
                     {
                         ImVec2 size((float)width_, (float)height_);
                         const float scale = std::min(ImGui::GetContentRegionAvail().x / size.x, ImGui::GetContentRegionAvail().y / size.y);
