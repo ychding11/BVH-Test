@@ -258,13 +258,6 @@ static void drawMenuBar(RenderSetting &setting, DisplayOption & displayOption)
             /*if (ImGui::Combo("Scene", &settings.testIndex, "bvh\0noise\0"))
             {
             }*/
-            //if (ImGui::SliderInt("Object Per Axis", &settings.objectPerAxis, 0, 10))
-            //{
-            //}
-            //if (ImGui::SliderFloat("position offset", &settings.positionOffset, 0.0f, 10.f))
-            //{
-            //}
-
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
