@@ -119,6 +119,20 @@ static void usage()
         << std::endl;
 }
 
+Ray GenerateRay(const Camera& camera, size_t width, size_t height, Scalar u, Scalar v)
+{
+    auto dir = bvh::normalize(camera.dir);
+    auto image_u = bvh::normalize(bvh::cross(dir, camera.up));
+    auto image_v = bvh::normalize(bvh::cross(image_u, dir));
+    auto image_w = std::tan(camera.fov * Scalar(3.14159265 * (1.0 / 180.0) * 0.5));
+    auto ratio = Scalar(height) / Scalar(width);
+    image_u = image_u * image_w;
+    image_v = image_v * image_w * ratio;
+
+    Ray ray(camera.eye, bvh::normalize(image_u * u + image_v * v + dir));
+    return ray;
+}
+
 template <bool Permute, bool CollectStatistics>
 void render(
     const Camera& camera,
