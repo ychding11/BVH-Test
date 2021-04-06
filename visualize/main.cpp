@@ -301,7 +301,7 @@ void drawDockWindow()
 
 }
 
-
+#define BACKGROUND_IMAGE "../image/waiting.png" 
 void GUIModeMain(RenderSetting &setting)
 {
     Log("Enter GUI Mode");
@@ -343,7 +343,7 @@ void GUIModeMain(RenderSetting &setting)
     Quad::Renderer quadRender;
 
     int width_, height_;
-    intptr_t waitingTexture = quadRender.LoadTexture("../image/waiting.png", width_, height_);
+    intptr_t waitingTexture = quadRender.LoadTexture(BACKGROUND_IMAGE, width_, height_);
 
     std::queue<TaskHandle> pendingRenderTaskQueue;
     TaskHandle activeTaskHandle = Invalid_Task_Handle;
