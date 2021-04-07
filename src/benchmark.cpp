@@ -164,13 +164,15 @@ void render(
     size_t width, size_t height,
     const Scalar* statistics_weights = NULL)
 {
-    auto dir = bvh::normalize(camera.dir);
-    auto image_u = bvh::normalize(bvh::cross(dir, camera.up));
-    auto image_v = bvh::normalize(bvh::cross(image_u, dir));
-    auto image_w = std::tan(camera.fov * Scalar(3.14159265 * (1.0 / 180.0) * 0.5));
-    auto ratio = Scalar(height) / Scalar(width);
-    image_u = image_u * image_w;
-    image_v = image_v * image_w * ratio;
+    //auto dir = bvh::normalize(camera.dir);
+    //auto image_u = bvh::normalize(bvh::cross(dir, camera.up));
+    //auto image_v = bvh::normalize(bvh::cross(image_u, dir));
+    //auto image_w = std::tan(camera.fov * Scalar(3.14159265 * (1.0 / 180.0) * 0.5));
+    //auto ratio = Scalar(height) / Scalar(width);
+    //image_u = image_u * image_w;
+    //image_v = image_v * image_w * ratio;
+
+    CameraSampler cameraSampler(camera, width, height);
 
     bvh::ClosestPrimitiveIntersector<Bvh, Triangle, Permute> intersector(bvh, triangles);
     bvh::SingleRayTraverser<Bvh> traverser(bvh);
@@ -189,7 +191,8 @@ void render(
             auto u = 2 * (i + Scalar(0.5)) / Scalar(width)  - Scalar(1);
             auto v = 2 * (j + Scalar(0.5)) / Scalar(height) - Scalar(1);
 
-            Ray ray(camera.eye, bvh::normalize(image_u * u + image_v * v + dir));
+            //Ray ray(camera.eye, bvh::normalize(image_u * u + image_v * v + dir));
+            Ray ray = cameraSampler.GenerateRay(u,v);
 
             bvh::SingleRayTraverser<Bvh>::Statistics statistics;
             auto hit = CollectStatistics
