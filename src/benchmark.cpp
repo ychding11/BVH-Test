@@ -119,19 +119,41 @@ static void usage()
         << std::endl;
 }
 
-Ray GenerateRay(const Camera& camera, size_t width, size_t height, Scalar u, Scalar v)
+class CameraSampler
 {
-    auto dir = bvh::normalize(camera.dir);
-    auto image_u = bvh::normalize(bvh::cross(dir, camera.up));
-    auto image_v = bvh::normalize(bvh::cross(image_u, dir));
-    auto image_w = std::tan(camera.fov * Scalar(3.14159265 * (1.0 / 180.0) * 0.5));
-    auto ratio = Scalar(height) / Scalar(width);
-    image_u = image_u * image_w;
-    image_v = image_v * image_w * ratio;
+private:
+    size_t width;
+    size_t height;
 
-    Ray ray(camera.eye, bvh::normalize(image_u * u + image_v * v + dir));
-    return ray;
-}
+    Vector3 eye;
+    Vector3 dir;
+    Vector3 image_u;
+    Vector3 image_v;
+
+public:
+
+    CameraSampler() = delete;
+
+    CameraSampler(const Camera& camera, size_t _width, size_t _height)
+        : width(_width)
+        , height(_height)
+    {
+        eye = camera.eye;
+        dir = bvh::normalize(camera.dir);
+        image_u = bvh::normalize(bvh::cross(dir, camera.up));
+        image_v = bvh::normalize(bvh::cross(image_u, dir));
+        auto image_w = std::tan(camera.fov * Scalar(3.14159265 * (1.0 / 180.0) * 0.5));
+        auto ratio = Scalar(height) / Scalar(width);
+        image_u = image_u * image_w;
+        image_v = image_v * image_w * ratio;
+    }
+
+    Ray GenerateRay(Scalar u, Scalar v)
+    {
+       return Ray(eye, bvh::normalize(image_u * u + image_v * v + dir));
+    }
+};
+
 
 template <bool Permute, bool CollectStatistics>
 void render(
