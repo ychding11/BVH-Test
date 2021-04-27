@@ -543,6 +543,7 @@ int EntryPointMain(int argc, char** argv)
             out.write(reinterpret_cast<char*>(pixel), sizeof(uint8_t) * 3);
         }
     }
+    return 0;
 }
 
 

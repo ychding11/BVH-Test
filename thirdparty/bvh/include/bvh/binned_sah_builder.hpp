@@ -68,7 +68,8 @@ public:
 };
 
 template <typename Bvh, size_t BinCount>
-class BinnedSahBuildTask : public TopDownBuildTask {
+class BinnedSahBuildTask : public TopDownBuildTask
+{
     using Scalar  = typename Bvh::ScalarType;
     using Builder = BinnedSahBuilder<Bvh, BinCount>;
 
