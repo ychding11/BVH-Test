@@ -9,6 +9,10 @@
 - [x] a single queue task scheduler. 
 - [x] imgui based UI
 
+## Reference 
+
+- [On fast Construction of SAH-based Bounding Volume Hierarchies](http://www.sci.utah.edu/~wald/Publications/2007/ParallelBVHBuild/fastbuild.pdf)
+
 ## Credits 
 
 - [imgui](https://github.com/ocornut/imgui)
