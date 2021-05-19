@@ -151,14 +151,14 @@ public:
         auto center_to_bin = bbox.diagonal().inverse() * Scalar(bin_count);
         auto bin_offset    = -bbox.min * center_to_bin;
 
-        //< [=] capture by copy
+        //< [=] : capture by copy
         auto compute_bin_index = [=] (const Vector3<Scalar>& center, int axis)
         {
             auto bin_index = fast_multiply_add(center[axis], center_to_bin[axis], bin_offset[axis]);
             return std::min(bin_count - 1, size_t(std::max(Scalar(0), bin_index)));
         };
 
-        // Setup bins
+        // Setup bins with empty bb
         for (int axis = 0; axis < 3; ++axis)
         {
             for (auto& bin : bins_per_axis[axis]) //< fix-sized array
@@ -180,6 +180,7 @@ public:
             }
         }
 
+        // Determine best split axis
         for (int axis = 0; axis < 3; ++axis)
             best_splits[axis] = find_split(axis);
 
