@@ -75,7 +75,8 @@ class BinnedSahBuildTask : public TopDownBuildTask
 
     using TopDownBuildTask::WorkItem;
 
-    struct Bin {
+    struct Bin
+    {
         BoundingBox<Scalar> bbox;
         size_t primitive_count;
         Scalar right_cost;
@@ -122,16 +123,19 @@ public:
         : builder(builder), bboxes(bboxes), centers(centers)
     {}
 
-    std::optional<std::pair<WorkItem, WorkItem>> build(const WorkItem& item) {
+    std::optional<std::pair<WorkItem, WorkItem>> build(const WorkItem& item)
+    {
         auto& bvh  = builder.bvh;
         auto& node = bvh.nodes[item.node_index];
 
-        auto make_leaf = [] (typename Bvh::Node& node, size_t begin, size_t end) {
+        auto make_leaf = [] (typename Bvh::Node& node, size_t begin, size_t end)
+        {
             node.first_child_or_primitive = begin;
             node.primitive_count          = end - begin;
         };
 
-        if (item.work_size() <= 1 || item.depth >= builder.max_depth) {
+        if (item.work_size() <= 1 || item.depth >= builder.max_depth)
+        {
             make_leaf(node, item.begin, item.end);
             return std::nullopt;
         }
@@ -143,23 +147,30 @@ public:
         auto bbox = node.bounding_box_proxy().to_bounding_box();
         auto center_to_bin = bbox.diagonal().inverse() * Scalar(bin_count);
         auto bin_offset    = -bbox.min * center_to_bin;
-        auto compute_bin_index = [=] (const Vector3<Scalar>& center, int axis) {
+
+        //< [=] capture by copy
+        auto compute_bin_index = [=] (const Vector3<Scalar>& center, int axis)
+        {
             auto bin_index = fast_multiply_add(center[axis], center_to_bin[axis], bin_offset[axis]);
             return std::min(bin_count - 1, size_t(std::max(Scalar(0), bin_index)));
         };
 
         // Setup bins
-        for (int axis = 0; axis < 3; ++axis) {
-            for (auto& bin : bins_per_axis[axis]) {
+        for (int axis = 0; axis < 3; ++axis)
+        {
+            for (auto& bin : bins_per_axis[axis]) //< fix-sized array
+            {
                 bin.bbox = BoundingBox<Scalar>::empty();
                 bin.primitive_count = 0;
             }
         }
 
         // Fill bins with primitives
-        for (size_t i = item.begin; i < item.end; ++i) {
+        for (size_t i = item.begin; i < item.end; ++i)
+        {
             auto primitive_index = bvh.primitive_indices[i];
-            for (int axis = 0; axis < 3; ++axis) {
+            for (int axis = 0; axis < 3; ++axis)
+            {
                 Bin& bin = bins_per_axis[axis][compute_bin_index(centers[primitive_index], axis)];
                 bin.primitive_count++;
                 bin.bbox.extend(bboxes[primitive_index]);
