@@ -12,11 +12,13 @@ namespace bvh {
 
 /// Base class for ray-node intersection algorithms. Does ray octant classification.
 template <typename Bvh, typename Derived>
-struct NodeIntersector {
+struct NodeIntersector
+{
     using Scalar = typename Bvh::ScalarType;
 
     std::array<int, 3> octant;
 
+    //< std::signbit, Determines if the given floating point number arg is negative.
     NodeIntersector(const Ray<Scalar>& ray)
         : octant {
             std::signbit(ray.direction[0]),
@@ -27,12 +29,14 @@ struct NodeIntersector {
 
     template <bool IsMin>
     bvh_always_inline
-    Scalar intersect_axis(int axis, Scalar p, const Ray<Scalar>& ray) const {
+    Scalar intersect_axis(int axis, Scalar p, const Ray<Scalar>& ray) const
+    {
         return static_cast<const Derived*>(this)->template intersect_axis<IsMin>(axis, p, ray);
     }
 
     bvh_always_inline
-    std::pair<Scalar, Scalar> intersect(const typename Bvh::Node& node, const Ray<Scalar>& ray) const {
+    std::pair<Scalar, Scalar> intersect(const typename Bvh::Node& node, const Ray<Scalar>& ray) const
+    {
         Vector3<Scalar> entry, exit;
         entry[0] = intersect_axis<true >(0, node.bounds[0 * 2 +     octant[0]], ray);
         entry[1] = intersect_axis<true >(1, node.bounds[1 * 2 +     octant[1]], ray);
@@ -69,9 +73,11 @@ struct RobustNodeIntersector : public NodeIntersector<Bvh, RobustNodeIntersector
             add_ulp_magnitude(inverse_direction[2], 2));
     }
 
+    //< It is a derived class. The function must have an implementation
     template <bool IsMin>
     bvh_always_inline
-    Scalar intersect_axis(int axis, Scalar p, const Ray<Scalar>& ray) const {
+    Scalar intersect_axis(int axis, Scalar p, const Ray<Scalar>& ray) const
+    {
         return (p - ray.origin[axis]) * (IsMin ? inverse_direction[axis] : padded_inverse_direction[axis]);
     }
 
@@ -94,9 +100,11 @@ struct FastNodeIntersector : public NodeIntersector<Bvh, FastNodeIntersector<Bvh
         scaled_origin     = -ray.origin * inverse_direction;
     }
 
+    //< It is a derived class. The function must have an implementation
     template <bool>
     bvh_always_inline
-    Scalar intersect_axis(int axis, Scalar p, const Ray<Scalar>&) const {
+    Scalar intersect_axis(int axis, Scalar p, const Ray<Scalar>&) const
+    {
         return fast_multiply_add(p, inverse_direction[axis], scaled_origin[axis]);
     }
 
