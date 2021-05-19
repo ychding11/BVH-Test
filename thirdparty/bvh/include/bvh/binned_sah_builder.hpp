@@ -79,7 +79,7 @@ class BinnedSahBuildTask : public TopDownBuildTask
     {
         BoundingBox<Scalar> bbox;
         size_t primitive_count;
-        Scalar right_cost;
+        Scalar right_cost; //< cost from right sweep, faciliate cost calculate
     };
 
     static constexpr size_t bin_count = BinCount;
@@ -89,13 +89,15 @@ class BinnedSahBuildTask : public TopDownBuildTask
     const BoundingBox<Scalar>* bboxes;
     const Vector3<Scalar>* centers;
 
-    std::pair<Scalar, size_t> find_split(int axis) {
+    std::pair<Scalar, size_t> find_split(int axis)
+    {
         auto& bins = bins_per_axis[axis];
 
         // Right sweep to compute partial SAH
         auto   current_bbox  = BoundingBox<Scalar>::empty();
         size_t current_count = 0;
-        for (size_t i = bin_count - 1; i > 0; --i) {
+        for (size_t i = bin_count - 1; i > 0; --i)
+        {
             current_bbox.extend(bins[i].bbox);
             current_count += bins[i].primitive_count;
             bins[i].right_cost = current_bbox.half_area() * current_count;
@@ -106,7 +108,8 @@ class BinnedSahBuildTask : public TopDownBuildTask
         current_count = 0;
 
         auto best_split = std::pair<Scalar, size_t>(std::numeric_limits<Scalar>::max(), bin_count);
-        for (size_t i = 0; i < bin_count - 1; ++i) {
+        for (size_t i = 0; i < bin_count - 1; ++i)
+        {
             current_bbox.extend(bins[i].bbox);
             current_count += bins[i].primitive_count;
             auto cost = current_bbox.half_area() * current_count + bins[i + 1].right_cost;
