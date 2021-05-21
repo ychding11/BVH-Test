@@ -18,6 +18,7 @@ namespace bvh {
 template <typename Scalar>
 struct Bvh
 {
+
     using IndexType  = typename SizedIntegerType<sizeof(Scalar) * CHAR_BIT>::Unsigned;
     using ScalarType = Scalar;
 
@@ -25,7 +26,7 @@ struct Bvh
     // single precision and 64 bytes in double precision.
     struct Node
     {
-        Scalar bounds[6];
+        Scalar bounds[6]; //< x plane, y plane, z plane
         IndexType primitive_count;
         IndexType first_child_or_primitive;
 
