@@ -18,7 +18,10 @@ namespace bvh {
 template <typename Scalar>
 struct Bvh
 {
+    //< Is BVH a Complete binary tree ?
+    //< Is BVH a Full binary tree ?
 
+    // A nice static solution(resolved at compile time)
     using IndexType  = typename SizedIntegerType<sizeof(Scalar) * CHAR_BIT>::Unsigned;
     using ScalarType = Scalar;
 
