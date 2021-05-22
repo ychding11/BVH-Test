@@ -24,6 +24,8 @@
 #include "Renderer.h"
 #include "IconsFontAwesome4.h"
 
+#include "profiler.h"
+
 //#pragma warning(push)
 #pragma warning(disable : 4244) // conversion from 'int' to 'float', possible loss of data
 //#pragma warning(pop)
@@ -510,6 +512,7 @@ void main(int argc, char** argv)
         }
     }
 
+    utility::CPUProfiler::begin();
     if (batchMode)
     {
         Log("Batch Mode");
@@ -520,4 +523,5 @@ void main(int argc, char** argv)
         RenderSetting gSettings;
         GUIModeMain(gSettings);
     }
+    utility::CPUProfiler::end();
 }

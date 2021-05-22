@@ -1,5 +1,5 @@
 
-#include "profiler.hpp"
+#include "profiler.h"
 
 namespace utility
 {
