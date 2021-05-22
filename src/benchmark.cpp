@@ -33,6 +33,7 @@ using Bvh         = bvh::Bvh<Scalar>;
 #include "obj.hpp"
 #include "camera.h"
 #include "setting.h"
+#include "profiler.h"
 
 template <typename F>
 void profile(const char* task, F f, size_t runs = 1)
@@ -399,6 +400,7 @@ int EntryPointMain(int argc, char** argv)
     {
         builder = [] (Bvh& bvh, const Triangle*, const BoundingBox& global_bbox, const BoundingBox* bboxes, const Vector3* centers, size_t primitive_count)
         {
+            PROFILER_MARKER(binned_sah_build);
             static constexpr size_t bin_count = 16; // how to set a efficiency value ?
             bvh::BinnedSahBuilder<Bvh, bin_count> builder(bvh);
             builder.build(global_bbox, bboxes, centers, primitive_count);
