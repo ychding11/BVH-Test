@@ -46,7 +46,7 @@ public:
         assert(primitive_count > 0);
 
         // Allocate buffers
-        bvh.nodes = std::make_unique<typename Bvh::Node[]>(2 * primitive_count + 1);
+        bvh.nodes = std::make_unique<typename Bvh::Node[]>(2 * primitive_count + 1); //< the count is more than actually required for binned solution ?
         bvh.primitive_indices = std::make_unique<size_t[]>(primitive_count);
 
         bvh.node_count = 1;
@@ -89,6 +89,7 @@ class BinnedSahBuildTask : public TopDownBuildTask
     const BoundingBox<Scalar>* bboxes;
     const Vector3<Scalar>* centers;
 
+    //< cost <--> cut point
     std::pair<Scalar, size_t> find_split(int axis)
     {
         auto& bins = bins_per_axis[axis];

@@ -7,9 +7,11 @@
 namespace bvh {
 
 /// Base class for top-down build tasks.
-class TopDownBuildTask {
+class TopDownBuildTask
+{
 protected:
-    struct WorkItem {
+    struct WorkItem
+    {
         size_t node_index;
         size_t begin;
         size_t end;
@@ -25,7 +27,8 @@ protected:
 };
 
 /// Base class for top-down BVH builders.
-class TopDownBuilder {
+class TopDownBuilder
+{
 public:
     /// Threshold (number of primitives) under which the builder
     /// doesn't spawn any more OpenMP tasks.
@@ -44,27 +47,33 @@ protected:
     ~TopDownBuilder() {}
 
     template <typename BuildTask, typename... Args>
-    void run_task(BuildTask& task, Args&&... args) {
+    void run_task(BuildTask& task, Args&&... args)
+    {
         using WorkItem = typename BuildTask::WorkItemType;
         std::stack<WorkItem> stack;
         stack.emplace(std::forward<Args&&>(args)...);
-        while (!stack.empty()) {
+        while (!stack.empty())
+        {
             auto work_item = stack.top();
             assert(work_item.depth <= max_depth);
             stack.pop();
 
             auto more_work = task.build(work_item);
-            if (more_work) {
+            if (more_work)
+            {
                 if (more_work->first.work_size() > more_work->second.work_size())
                     std::swap(more_work->first, more_work->second);
 
                 stack.push(more_work->second);
                 auto first_item = more_work->first;
-                if (first_item.work_size() > task_spawn_threshold) {
+                if (first_item.work_size() > task_spawn_threshold)
+                {
                     BuildTask new_task(task);
                     #pragma omp task firstprivate(new_task, first_item)
                     { run_task(new_task, first_item); }
-                } else {
+                }
+                else
+                {
                     stack.push(first_item);
                 }
             }
