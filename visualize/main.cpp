@@ -409,7 +409,7 @@ void GUIModeMain(RenderSetting &setting)
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &displayOption.showSplitWindow);
-                    ImGui::BulletText("%s", utility::CPUProfiler::result().c_str());
+                    ImGui::BulletText("%s", utility::CPUProfiler::profilerData().c_str());
             ImGui::End();
 
             ImGui::Begin(mainWindowName, &displayOption.showSplitWindow);

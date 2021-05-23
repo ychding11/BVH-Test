@@ -175,6 +175,16 @@ namespace utility
     public:
         static void begin() { ProfilerData.clear(); }
 
+        static std::string profilerData()
+        {
+            std::ostringstream ss;
+            for (auto it = ProfilerData.begin(); it != ProfilerData.end(); ++it)
+            {
+                ss << it->second.str() << std::endl;
+            }
+            return ss.str();
+        }
+
         static std::string result()
         {
             std::ostringstream ss;
