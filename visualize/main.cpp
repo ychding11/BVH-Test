@@ -71,11 +71,13 @@ struct DisplayOption
     bool flipVertical;
     bool showSplitWindow;
     bool fitToWindow;
+    bool showProfilerData;
     TaskHandle completeTaskHandle;
     DisplayOption()
         : flipVertical(false)
         , showSplitWindow(false)
         , fitToWindow(true)
+        , showProfilerData(false)
         , completeTaskHandle(Invalid_Task_Handle)
     { }
 };
@@ -257,9 +259,7 @@ static void drawMenuBar(RenderSetting &setting, DisplayOption & displayOption)
         }
         if (ImGui::BeginMenu(ICON_FA_WINDOWS " Settings"))
         {
-            /*if (ImGui::Combo("Scene", &settings.testIndex, "bvh\0noise\0"))
-            {
-            }*/
+            ImGui::Checkbox("profiler data",  &displayOption.showProfilerData);
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -409,7 +409,8 @@ void GUIModeMain(RenderSetting &setting)
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &displayOption.showSplitWindow);
-                    ImGui::BulletText("%s", utility::CPUProfiler::profilerData().c_str());
+                    if (displayOption.showProfilerData)
+                        ImGui::BulletText("%s", utility::CPUProfiler::profilerData().c_str());
             ImGui::End();
 
             ImGui::Begin(mainWindowName, &displayOption.showSplitWindow);
