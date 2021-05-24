@@ -25,6 +25,7 @@ std::string BvhBuilderTypeStr(BVHBuilderType type);
 
 struct RenderSetting
 {
+    // the input of current setting
     int  onlyUseForIndentification;
     int  width;
     int  height;
@@ -35,11 +36,14 @@ struct RenderSetting
 
     // the output of current setting
     Scalar *data;
+    std::string profilerData;
 
     std::string str() const;
 
+    // only assign input part
     RenderSetting& operator =(const RenderSetting &setting);
 
+    // only compare input part
     bool operator ==(const RenderSetting &setting);
 
     RenderSetting(bool a = true);
