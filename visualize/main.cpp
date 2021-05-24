@@ -409,8 +409,6 @@ void GUIModeMain(RenderSetting &setting)
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &displayOption.showSplitWindow);
-                //if (displayOption.showProfilerData)
-                //    ImGui::BulletText("%s", utility::CPUProfiler::profilerData().c_str());
 
                 // fetch profiler data from currently picked completed task
                 if (displayOption.showProfilerData && !g_CompletedTasks.empty() && displayOption.completeTaskHandle != Invalid_Task_Handle)
