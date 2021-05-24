@@ -409,13 +409,15 @@ void GUIModeMain(RenderSetting &setting)
             ImGui::End();
 
             ImGui::Begin(profileWindowName, &displayOption.showSplitWindow);
-                if (displayOption.showProfilerData)
-                    ImGui::BulletText("%s", utility::CPUProfiler::profilerData().c_str());
+                //if (displayOption.showProfilerData)
+                //    ImGui::BulletText("%s", utility::CPUProfiler::profilerData().c_str());
 
                 // fetch profiler data from currently picked completed task
                 if (displayOption.showProfilerData && !g_CompletedTasks.empty() && displayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
-
+                    void *data = g_CompletedTasks[displayOption.completeTaskHandle];
+                    auto &temp = *(reinterpret_cast<RenderSetting*>(data));
+                    ImGui::BulletText("%s", temp.profilerData.c_str());
                 }
             ImGui::End();
 
@@ -469,6 +471,8 @@ void GUIModeMain(RenderSetting &setting)
                 if (result)
                 {
                     // task is done, generate profiler data here
+                    auto &temp = *(reinterpret_cast<RenderSetting*>(result));
+                    temp.profilerData = utility::CPUProfiler::profilerData();
 
                     auto ret = g_CompletedTasks.emplace(activeTaskHandle, result);
                     if (!ret.second)
