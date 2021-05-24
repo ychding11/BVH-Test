@@ -175,6 +175,7 @@ namespace utility
     public:
         static void begin() { ProfilerData.clear(); }
 
+        //< accessed in main thread, need lock protection
         static std::string profilerData()
         {
             std::ostringstream ss;
