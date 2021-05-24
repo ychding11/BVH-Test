@@ -415,7 +415,7 @@ void GUIModeMain(RenderSetting &setting)
                 {
                     void *data = g_CompletedTasks[displayOption.completeTaskHandle];
                     auto &temp = *(reinterpret_cast<RenderSetting*>(data));
-                    ImGui::BulletText("%s", temp.profilerData.c_str());
+                    ImGui::Text("%s", temp.profilerData.c_str());
                 }
             ImGui::End();
 

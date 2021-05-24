@@ -182,6 +182,7 @@ namespace utility
             {
                 ss << it->second.str() << std::endl;
             }
+            ProfilerData.clear();
             return ss.str();
         }
 
