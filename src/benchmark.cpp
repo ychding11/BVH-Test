@@ -701,6 +701,7 @@ void Rendering(void *userData)
     ss.str("");
 
     profile("BVH construction", [&] {
+        PROFILER_MARKER(rendering);
         auto [bboxes, centers] = bvh::compute_bounding_boxes_and_centers(triangles.data(), triangles.size());
         auto global_bbox = bvh::compute_bounding_boxes_union(bboxes.get(), triangles.size());
         Log("bb center : {}", global_bbox.center());

@@ -77,7 +77,7 @@ struct DisplayOption
         : flipVertical(false)
         , showSplitWindow(false)
         , fitToWindow(true)
-        , showProfilerData(false)
+        , showProfilerData(true)
         , completeTaskHandle(Invalid_Task_Handle)
     { }
 };
@@ -454,7 +454,6 @@ void GUIModeMain(RenderSetting &setting)
                         size.x *= scale;
                         size.y *= scale;
                         ImGui::Image((ImTextureID)waitingTexture, size);
-                        //ImGui::Text("Rendiring");
                     }
                     else
                     {
