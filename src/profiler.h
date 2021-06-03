@@ -1,6 +1,7 @@
 #ifndef PROFILER_H_
 #define PROFILER_H_
 
+#include <cassert>
 #include <numeric>
 #include <chrono>
 #include <string>
@@ -167,23 +168,26 @@ namespace utility
         double avgTime = 0.0;
     };
 
+    typedef std::unordered_map< std::string, std::vector<ProfilerEntry> > ProfilerDataType;
     class CPUProfiler
     {
     private:
-        static std::unordered_map<std::string, ProfilerEntry> ProfilerData;
+        //static std::unordered_map<std::string, ProfilerEntry> ProfilerData;
+        static ProfilerDataType ProfilerData;
 
     public:
         static void begin() { ProfilerData.clear(); }
 
         //< accessed in main thread, need lock protection
-        static std::string profilerData()
+        static std::string profilerData(int index)
         {
             std::ostringstream ss;
             for (auto it = ProfilerData.begin(); it != ProfilerData.end(); ++it)
             {
-                ss << it->second.str() << std::endl;
+                auto sample = it->second.begin();
+                assert((sample + index) != it->second.end());
+                ss << (sample + index)->str() << std::endl;
             }
-            ProfilerData.clear();
             return ss.str();
         }
 
@@ -193,7 +197,11 @@ namespace utility
             ss << "\n-------------------------- Profiler Summary ----------------------------\n";
             for (auto it = ProfilerData.begin(); it != ProfilerData.end(); ++it)
             {
-                ss << it->second.str() << std::endl;
+                ss << it->first << std::endl;
+                for (auto sample = it->second.begin(); sample != it->second.end(); ++sample )
+                {
+                    ss << sample->str() << std::endl;
+                }
             }
             return ss.str();
         }
@@ -219,15 +227,9 @@ namespace utility
         {
             double deta = _stopWatch.read();
             auto ret = ProfilerData.find(_name);
-            if (ret == ProfilerData.end())
-            {
-                ProfilerEntry entry = {_name, deta, 0.0};
-                ProfilerData[_name] = entry;
-            }
-            else
-            {
-                ProfilerData[_name].samples.push_back(deta);
-            }
+
+            ProfilerEntry entry = {_name, deta, 0.0};
+            ProfilerData[_name].emplace_back(entry);
         }
     };
 

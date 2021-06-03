@@ -469,7 +469,7 @@ void GUIModeMain(RenderSetting &setting)
                 {
                     // task is done, generate profiler data here
                     auto &temp = *(reinterpret_cast<RenderSetting*>(result));
-                    temp.profilerData = utility::CPUProfiler::profilerData();
+                    temp.profilerData = utility::CPUProfiler::profilerData((int)activeTaskHandle);
 
                     auto ret = g_CompletedTasks.emplace(activeTaskHandle, result);
                     if (!ret.second)
