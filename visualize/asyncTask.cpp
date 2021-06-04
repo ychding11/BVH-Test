@@ -21,7 +21,8 @@
         m_group->free = true;
         m_group->ref = 0;
 
-        m_workers.resize(std::thread::hardware_concurrency() <= 1 ? 1 : std::thread::hardware_concurrency() - 1);
+        //m_workers.resize(std::thread::hardware_concurrency() <= 1 ? 1 : std::thread::hardware_concurrency() - 1);
+        m_workers.resize(1);
         for (uint32_t i = 0; i < m_workers.size(); i++)
         {
             m_workers[i] = new Worker();

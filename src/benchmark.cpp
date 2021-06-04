@@ -51,7 +51,10 @@ void profile(const char* task, F f, size_t runs = 1)
 
     std::sort(timings.begin(), timings.end());
     if (timings.size() == 1)
-        std::cout << task << " took " << timings.front() << "ms" << std::endl;
+    {
+        //std::cout << task << " took " << timings.front() << "ms" << std::endl;
+        Log("{} took {} ms", task, timings.front());
+    }
     else
     {
         std::cout
@@ -666,7 +669,7 @@ void Rendering(void *userData)
     auto triangles = obj::load_from_file(input_file);
     if (triangles.size() == 0)
     {
-        Err("The given scene is empty or cannot be loaded");
+        Err("The scene is empty or cannot be loaded");
         return ;
     }
 
@@ -697,11 +700,11 @@ void Rendering(void *userData)
         ss << " + permute";
     ss << ")...";
 
-    Log(ss.str());
+    //Log(ss.str());
     ss.str("");
 
     profile("BVH construction", [&] {
-        PROFILER_MARKER(rendering);
+        PROFILER_MARKER(bvh_construction);
         auto [bboxes, centers] = bvh::compute_bounding_boxes_and_centers(triangles.data(), triangles.size());
         auto global_bbox = bvh::compute_bounding_boxes_union(bboxes.get(), triangles.size());
         Log("bb center : {}", global_bbox.center());
@@ -734,16 +737,14 @@ void Rendering(void *userData)
     bvh::HierarchyRefitter refitter(bvh);
     refitter.refit([] (Bvh::Node&) {});
 
-    ss << "BVH depth of " << compute_bvh_depth(bvh) << ", "
-       << bvh.node_count << " node(s), "
-       << reference_count << " reference(s)";
+    //ss << "BVH depth of " << compute_bvh_depth(bvh) << ", " << bvh.node_count << " node(s), " << reference_count << " reference(s)";
 
-    Log(ss.str());
-    ss.str("");
+    Log("BVH : depth = {}, nodes = {}, references = {}", compute_bvh_depth(bvh), bvh.node_count, reference_count);
 
     Log("Rendering image ({}x{})", width, height);
 
     profile("Rendering", [&] {
+        PROFILER_MARKER(rendering);
         if (permute)
         {
             if (collect_statistics)
