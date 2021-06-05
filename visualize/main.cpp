@@ -468,7 +468,7 @@ void GUIModeMain(RenderSetting &setting)
                 if (result)
                 {
                     // task is done, generate profiler data here
-                    Task *task = TaskScheduler::GetScheduler()->QueryTask(handle);
+                    Task *task = TaskScheduler::GetScheduler()->QueryTask(activeTaskHandle);
                     auto &temp = *(reinterpret_cast<RenderSetting*>(result));
                     temp.profilerData = task->profilerData;
 

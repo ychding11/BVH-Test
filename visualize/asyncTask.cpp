@@ -83,7 +83,7 @@
                 group->ref--;
                 task->profilerData = utility::CPUProfiler::result();
                 task->status = TaskStatus::Completed;
-                Log("\n {} \n",task->profilerData);
+                Log("\n{}",task->profilerData);
                 Log("task completed : handle={}",task->handle);
             }
         }

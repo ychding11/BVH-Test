@@ -27,9 +27,9 @@
     {
         Invalid = -1,
         Created = 0,
-        Scheduled,
-        Running,
-        Completed,
+        Scheduled = 1,
+        Running = 2,
+        Completed = 3,
         Count
     };
 
