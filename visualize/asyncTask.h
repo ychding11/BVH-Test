@@ -48,11 +48,15 @@
 
         //< refine required
         Task()
+            : func(nullptr)
+            , userData(nullptr)
+            , status(TaskStatus::Invalid)
+            , handle(s_count++)
         {
-            func = nullptr;
-            userData = nullptr;
-            status = TaskStatus::Invalid;
-            handle = s_count++;
+            //func = nullptr;
+            //userData = nullptr;
+            //status = TaskStatus::Invalid;
+            //handle = s_count++;
         }
 
     private:
@@ -128,16 +132,12 @@ inline bool TaskDone(TaskHandle handle)
     return TaskScheduler::GetScheduler()->QueryTaskStatus(handle) == TaskStatus::Completed;
 }
 
-//< refine code path required
 inline void* FetchRenderTaskData(TaskHandle handle)
 {
     void *data = TaskScheduler::GetScheduler()->QueryTaskData(handle);
     if (data == nullptr)
     {
         Err("task {} output is corrupted.", handle);
-        return nullptr;
     }
-    
-    Log("task {} data is got.", handle);
     return data;;
 }

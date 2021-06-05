@@ -57,7 +57,6 @@ inline TaskHandle StartRenderingTask(RenderSetting &setting)
     task->status = TaskStatus::Created;
 
     TaskScheduler::GetScheduler()->Schedule(task);
-    Log("schedule a task: handle={}",task->handle);
     return task->handle;
 }
 
@@ -383,7 +382,7 @@ void GUIModeMain(RenderSetting &setting)
             {
                 activeTaskHandle = handle;
                 pendingRenderTaskQueue.push(handle);
-                Log("pending a new task : {}", handle);
+                Log("[Main Thread]: enque waiting task : handle={}", handle);
             }
 
             ImGui::Begin(statusWindowName, &displayOption.showSplitWindow);
@@ -476,17 +475,17 @@ void GUIModeMain(RenderSetting &setting)
                     auto ret = g_CompletedTasks.emplace(activeTaskHandle, result);
                     if (!ret.second)
                     {
-                        Err("insert completed task {} fails.", activeTaskHandle);
+                        Err("[Main Thread]: enque completed task : handle={} fails.", activeTaskHandle);
                     }
                     else
-                        Log("insert completed task {} ok.", activeTaskHandle);
+                        Log("[Main Thread]: enque completed task : handle={}.", activeTaskHandle);
                 }
 
                 if (!pendingRenderTaskQueue.empty())
                 {
                     activeTaskHandle = pendingRenderTaskQueue.front();
                     pendingRenderTaskQueue.pop();
-                    Log("deque a new task : {}", activeTaskHandle);
+                    Log("[Main Thread]: deque a waiting task : handle={}", activeTaskHandle);
                 }
             }
         }
