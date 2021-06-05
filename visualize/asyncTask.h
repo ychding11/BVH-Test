@@ -39,13 +39,14 @@
 
     struct Task
     {
-
         TaskHandle handle;
         std::atomic<TaskStatus> status;
 
         void(*func)(void *taskUserData);
         void *userData; // Passed to func as taskUserData.
+        std::string profilerData;
 
+        //< refine required
         Task()
         {
             func = nullptr;
@@ -64,22 +65,31 @@
 
         static TaskScheduler* GetScheduler();
 
+    public:
         TaskScheduler();        
 
         ~TaskScheduler();
 
+        void Schedule(Task *task);
+
         void* QueryTaskData(TaskHandle handle);
 
-        TaskStatus QueryTaskStatus(TaskHandle handle);
+        Task* QueryTask(TaskHandle handle);
 
-        void Schedule(Task *task);
+        TaskStatus QueryTaskStatus(TaskHandle handle);
 
     private:
 
         struct Spinlock
         {
-            void lock() { while (m_lock.test_and_set(std::memory_order_acquire)) {} }
-            void unlock() { m_lock.clear(std::memory_order_release); }
+            void lock()
+            {
+                while (m_lock.test_and_set(std::memory_order_acquire)) {}
+            }
+            void unlock()
+            {
+                m_lock.clear(std::memory_order_release);
+            }
 
         private:
             std::atomic_flag m_lock = ATOMIC_FLAG_INIT;
@@ -118,6 +128,7 @@ inline bool TaskDone(TaskHandle handle)
     return TaskScheduler::GetScheduler()->QueryTaskStatus(handle) == TaskStatus::Completed;
 }
 
+//< refine code path required
 inline void* FetchRenderTaskData(TaskHandle handle)
 {
     void *data = TaskScheduler::GetScheduler()->QueryTaskData(handle);

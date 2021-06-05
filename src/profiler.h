@@ -205,6 +205,7 @@ namespace utility
                     ss << sample->str() << std::endl;
                 }
             }
+            ProfilerData.clear();
             return ss.str();
         }
 

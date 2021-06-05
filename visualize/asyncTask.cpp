@@ -1,4 +1,5 @@
 #include "asyncTask.h"
+#include "profiler.h"
 
 //{
 
@@ -81,11 +82,25 @@
                 task->func(task->userData);
                 task->status = TaskStatus::Completed;
                 group->ref--;
-                Log("complete a task: handle={}",task->handle);
+                Log("task completed : handle={}",task->handle);
+                task->profilerData = utility::CPUProfiler::result();
             }
         }
     }
 
+    Task* TaskScheduler::QueryTask(TaskHandle handle)
+    {
+        Task *task = nullptr;
+        m_group->queueLock.lock();
+        for (uint32_t i = 0; i < m_group->queueHead; ++i)
+        {
+            task = m_group->queue[i];
+            if (task->handle == handle)
+                break;
+        }
+        m_group->queueLock.unlock();
+        return task;
+    }
     void* TaskScheduler::QueryTaskData(TaskHandle handle)
     {
         Task *task = nullptr;
@@ -126,6 +141,8 @@
         group.queue.push_back(task);
         group.queueLock.unlock();
         group.ref++;
+
+        Log("task scheduled : handle={}",task->handle);
 
         // Wake up a worker to run this task.
         for (uint32_t i = 0; i < m_workers.size(); i++)

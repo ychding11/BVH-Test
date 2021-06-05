@@ -377,12 +377,13 @@ void GUIModeMain(RenderSetting &setting)
                 }
             ImGui::End();
 
+            //< It just try to schedule a task. A better name requred.
             TaskHandle handle = StartRenderingTask(setting);
             if (handle != Invalid_Task_Handle)
             {
                 activeTaskHandle = handle;
                 pendingRenderTaskQueue.push(handle);
-                Log("enque a new task : {}", handle);
+                Log("pending a new task : {}", handle);
             }
 
             ImGui::Begin(statusWindowName, &displayOption.showSplitWindow);
@@ -468,8 +469,9 @@ void GUIModeMain(RenderSetting &setting)
                 if (result)
                 {
                     // task is done, generate profiler data here
+                    Task *task = TaskScheduler::GetScheduler()->QueryTask(handle);
                     auto &temp = *(reinterpret_cast<RenderSetting*>(result));
-                    temp.profilerData = utility::CPUProfiler::profilerData((int)activeTaskHandle);
+                    temp.profilerData = task->profilerData;
 
                     auto ret = g_CompletedTasks.emplace(activeTaskHandle, result);
                     if (!ret.second)
