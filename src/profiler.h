@@ -196,10 +196,8 @@ namespace utility
         static std::string result()
         {
             std::ostringstream ss;
-            ss << "\n-------------------------- Profiler Summary ----------------------------\n";
             for (auto it = ProfilerData.begin(); it != ProfilerData.end(); ++it)
             {
-                ss << it->first << std::endl;
                 for (auto sample = it->second.begin(); sample != it->second.end(); ++sample )
                 {
                     ss << sample->str() << std::endl;

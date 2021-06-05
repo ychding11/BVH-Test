@@ -80,10 +80,11 @@
                 if (!task) break;
                 task->status = TaskStatus::Running;
                 task->func(task->userData);
-                task->status = TaskStatus::Completed;
                 group->ref--;
-                Log("task completed : handle={}",task->handle);
                 task->profilerData = utility::CPUProfiler::result();
+                task->status = TaskStatus::Completed;
+                Log("\n {} \n",task->profilerData);
+                Log("task completed : handle={}",task->handle);
             }
         }
     }
