@@ -53,10 +53,6 @@
             , status(TaskStatus::Invalid)
             , handle(s_count++)
         {
-            //func = nullptr;
-            //userData = nullptr;
-            //status = TaskStatus::Invalid;
-            //handle = s_count++;
         }
 
     private:

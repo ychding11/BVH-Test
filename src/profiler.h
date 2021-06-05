@@ -231,7 +231,7 @@ namespace utility
 
             ProfilerEntry entry = {_name, deta, 0.0};
             ProfilerData[_name].emplace_back(entry);
-            Log("insert profiler data for entry {}, {}", _name, ProfilerData[_name].size());
+            //Log("insert profiler data for entry {}, {}", _name, ProfilerData[_name].size());
         }
     };
 
