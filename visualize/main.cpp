@@ -60,7 +60,11 @@ inline TaskHandle StartRenderingTask(RenderSetting &setting)
     return task->handle;
 }
 
-
+//< CompletedTaskMap record map { task handle <--> task pointer }
+//< previous design record map { task handle <--> task data pointer }, it is a bad idea in practice.
+//< In my design, task is scheduled serially. It always requires to query info of a task which is not
+//< beloged to task data. The operation requires lock. So record task pointer directly can void this 
+//< lock operation.
 typedef std::map<TaskHandle, void*> CompletedTaskMap;
 CompletedTaskMap g_CompletedTasks;
 
@@ -362,7 +366,7 @@ void GUIModeMain(RenderSetting &setting)
         {
             //static int bvhBuilderName;
             ImGui::Begin(testOptionsWindowName, &displayOption.showSplitWindow);
-                ImGui::Checkbox("Statistic",  &setting.statistic);
+                ImGui::Checkbox("statistic",  &setting.statistic);
                 ImGui::SliderFloat("vertical fov", &setting.camera.fov, 30.0f, 80.f);
 
                 ImGui::Separator();
@@ -374,6 +378,8 @@ void GUIModeMain(RenderSetting &setting)
                     ImGui::RadioButton("locally_ordered_clustering", &setting.bvhBuilderType, Locally_Ordered_Clustering);
                     ImGui::RadioButton("linear", &setting.bvhBuilderType, Linear);
                 }
+                ImGui::Separator();
+                ImGui::Button("new task");
             ImGui::End();
 
             //< It just try to schedule a task. A better name requred.

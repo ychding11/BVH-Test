@@ -183,7 +183,7 @@ void render(
 
     size_t traversal_steps = 0, intersections = 0;
 
-    Log("{}", camera);
+    // Log("{}", camera);
 
     #pragma omp parallel for collapse(2) reduction(+: traversal_steps, intersections)
     for(size_t i = 0; i < width; ++i)
