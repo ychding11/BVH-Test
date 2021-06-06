@@ -59,6 +59,9 @@
         static TaskHandle s_count;
     };
 
+    //< It is called from Main thread to schedule a user task running on worker thread.
+    //< In order to simplify design, only one worker thread is supported. So that tasks
+    //< are enqued & executed serially. Maybe extended in future for other application.
     class TaskScheduler
     {
     public:
@@ -121,6 +124,11 @@
         static void workerThread(TaskScheduler *scheduler, Worker *worker, uint32_t threadIndex);
     };
 //}
+
+
+//< Following APIs should be removed. They all involves lock operation.
+//< It should provide only one API to access Task* , all other infomation 
+//< related to Task shall all be accessed through pointer Task* .
 
 inline bool TaskDone(TaskHandle handle)
 {
