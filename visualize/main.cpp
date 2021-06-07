@@ -65,8 +65,8 @@ inline TaskHandle StartRenderingTask(RenderSetting &setting)
 //< In my design, task is scheduled serially. It always requires to query info of a task which is not
 //< beloged to task data. The operation requires lock. So record task pointer directly can void this 
 //< lock operation.
-typedef std::map<TaskHandle, void*> CompletedTaskMap;
-CompletedTaskMap g_CompletedTasks;
+typedef std::map<TaskHandle, Task*> CompletedTaskMap;
+static CompletedTaskMap g_CompletedTasks;
 
 // options has no relation with rendering
 struct DisplayOption
@@ -408,8 +408,8 @@ void GUIModeMain(RenderSetting &setting)
                 ImGui::Separator();
                 if (!g_CompletedTasks.empty() && displayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
-                    void *data = g_CompletedTasks[displayOption.completeTaskHandle];
-                    auto &temp = *(reinterpret_cast<RenderSetting*>(data));
+                    Task *task = g_CompletedTasks[displayOption.completeTaskHandle];
+                    auto &temp = *(reinterpret_cast<RenderSetting*>(task->userData));
                     ImGui::BulletText("%s", temp.str().c_str());
                 }
             ImGui::End();
@@ -419,17 +419,16 @@ void GUIModeMain(RenderSetting &setting)
                 // fetch profiler data from currently picked completed task
                 if (displayOption.showProfilerData && !g_CompletedTasks.empty() && displayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
-                    void *data = g_CompletedTasks[displayOption.completeTaskHandle];
-                    auto &temp = *(reinterpret_cast<RenderSetting*>(data));
-                    ImGui::Text("%s", temp.profilerData.c_str());
+                    Task *task = g_CompletedTasks[displayOption.completeTaskHandle];
+                    ImGui::Text("%s", task->profilerData.c_str());
                 }
             ImGui::End();
 
             ImGui::Begin(mainWindowName, &displayOption.showSplitWindow);
                 if (!g_CompletedTasks.empty() && displayOption.completeTaskHandle != Invalid_Task_Handle)
                 {
-                    void *data = g_CompletedTasks[displayOption.completeTaskHandle];
-                    auto &temp = *(reinterpret_cast<RenderSetting*>(data));
+                    Task *task = g_CompletedTasks[displayOption.completeTaskHandle];
+                    auto &temp = *(reinterpret_cast<RenderSetting*>(task->userData));
                     intptr_t renderedTexture = quadRender.Update(temp.data, (sizeof(float) * width * height * 3));
                     ImVec2 uv0(0, 0);
                     ImVec2 uv1(1, 1);
@@ -470,15 +469,15 @@ void GUIModeMain(RenderSetting &setting)
 
             if (g_CompletedTasks.find(activeTaskHandle) == g_CompletedTasks.end() && TaskDone(activeTaskHandle))
             {
-                void *result = FetchRenderTaskData(activeTaskHandle);
-                if (result)
+                //void *result = FetchRenderTaskData(activeTaskHandle);
+                //if (result)
                 {
                     // task is done, generate profiler data here
                     Task *task = TaskScheduler::GetScheduler()->QueryTask(activeTaskHandle);
-                    auto &temp = *(reinterpret_cast<RenderSetting*>(result));
-                    temp.profilerData = task->profilerData;
+                    //auto &temp = *(reinterpret_cast<RenderSetting*>(result));
+                    //temp.profilerData = task->profilerData;
 
-                    auto ret = g_CompletedTasks.emplace(activeTaskHandle, result);
+                    auto ret = g_CompletedTasks.emplace(activeTaskHandle, task);
                     if (!ret.second)
                     {
                         Err("[Main Thread]: enque completed task : handle={} fails.", activeTaskHandle);
