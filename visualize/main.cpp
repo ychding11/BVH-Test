@@ -350,6 +350,8 @@ void GUIModeMain(RenderSetting &setting)
     int width_, height_;
     intptr_t waitingTexture = quadRender.LoadTexture(BACKGROUND_IMAGE, width_, height_);
 
+    //< Since it always sequentially schedule task. Pending Queue can be removed.
+    //< It can be designed to previous task finished, following task begins.
     std::queue<TaskHandle> pendingRenderTaskQueue;
     TaskHandle activeTaskHandle = Invalid_Task_Handle;
 
