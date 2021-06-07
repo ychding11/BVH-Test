@@ -467,16 +467,12 @@ void GUIModeMain(RenderSetting &setting)
                 }
             ImGui::End();
 
+            //< query newly scheduled task is done ?
             if (g_CompletedTasks.find(activeTaskHandle) == g_CompletedTasks.end() && TaskDone(activeTaskHandle))
             {
-                //void *result = FetchRenderTaskData(activeTaskHandle);
-                //if (result)
                 {
                     // task is done, generate profiler data here
                     Task *task = TaskScheduler::GetScheduler()->QueryTask(activeTaskHandle);
-                    //auto &temp = *(reinterpret_cast<RenderSetting*>(result));
-                    //temp.profilerData = task->profilerData;
-
                     auto ret = g_CompletedTasks.emplace(activeTaskHandle, task);
                     if (!ret.second)
                     {
