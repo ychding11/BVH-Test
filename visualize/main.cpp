@@ -381,21 +381,25 @@ void GUIModeMain(RenderSetting &setting)
                     ImGui::RadioButton("linear", &setting.bvhBuilderType, Linear);
                 }
                 ImGui::Separator();
-                ImGui::Button("new task");
+                bool newTaskCheckable = !(activeTaskHandle == Invalid_Task_Handle); 
+                if (ImGui::Checkbox("new task", &newTaskCheckable))
+                {
+                    //< It just try to schedule a task. A better name requred.
+                    TaskHandle handle = StartRenderingTask(setting);
+                    if (handle != Invalid_Task_Handle)
+                    {
+                        activeTaskHandle = handle;
+                        pendingRenderTaskQueue.push(handle);
+                        Log("[Main Thread]: enque waiting task : handle={}", handle);
+                    }
+
+                }
             ImGui::End();
 
-            //< It just try to schedule a task. A better name requred.
-            TaskHandle handle = StartRenderingTask(setting);
-            if (handle != Invalid_Task_Handle)
-            {
-                activeTaskHandle = handle;
-                pendingRenderTaskQueue.push(handle);
-                Log("[Main Thread]: enque waiting task : handle={}", handle);
-            }
 
             ImGui::Begin(statusWindowName, &displayOption.showSplitWindow);
                 ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
-                ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
+                //ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
                 ImGui::BulletText("completed rendering task count: %d", g_CompletedTasks.size());
                 ImGui::Separator();
                 if (ImGui::CollapsingHeader("complete_task_list"))
@@ -484,12 +488,13 @@ void GUIModeMain(RenderSetting &setting)
                         Log("[Main Thread]: enque completed task : handle={}.", activeTaskHandle);
                 }
 
-                if (!pendingRenderTaskQueue.empty())
-                {
-                    activeTaskHandle = pendingRenderTaskQueue.front();
-                    pendingRenderTaskQueue.pop();
-                    Log("[Main Thread]: deque a waiting task : handle={}", activeTaskHandle);
-                }
+                activeTaskHandle = Invalid_Task_Handle;
+                //if (!pendingRenderTaskQueue.empty())
+                //{
+                //    activeTaskHandle = pendingRenderTaskQueue.front();
+                //    pendingRenderTaskQueue.pop();
+                //    Log("[Main Thread]: deque a waiting task : handle={}", activeTaskHandle);
+                //}
             }
         }
 
