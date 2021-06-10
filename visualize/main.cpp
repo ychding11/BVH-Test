@@ -352,7 +352,6 @@ void GUIModeMain(RenderSetting &setting)
 
     //< Since it always sequentially schedule task. Pending Queue can be removed.
     //< It can be designed to previous task finished, following task begins.
-    std::queue<TaskHandle> pendingRenderTaskQueue;
     TaskHandle activeTaskHandle = Invalid_Task_Handle;
 
     DisplayOption displayOption;
@@ -389,7 +388,6 @@ void GUIModeMain(RenderSetting &setting)
                     if (handle != Invalid_Task_Handle)
                     {
                         activeTaskHandle = handle;
-                        pendingRenderTaskQueue.push(handle);
                         Log("[Main Thread]: enque waiting task : handle={}", handle);
                     }
 
@@ -399,7 +397,6 @@ void GUIModeMain(RenderSetting &setting)
 
             ImGui::Begin(statusWindowName, &displayOption.showSplitWindow);
                 ImGui::BulletText("fps %.3f ms/frame (%.1f FPS)", 33.33f, 1000.0f / 33.33f);
-                //ImGui::BulletText("pending rendering task count: %d",pendingRenderTaskQueue.size());
                 ImGui::BulletText("completed rendering task count: %d", g_CompletedTasks.size());
                 ImGui::Separator();
                 if (ImGui::CollapsingHeader("complete_task_list"))
@@ -489,12 +486,6 @@ void GUIModeMain(RenderSetting &setting)
                 }
 
                 activeTaskHandle = Invalid_Task_Handle;
-                //if (!pendingRenderTaskQueue.empty())
-                //{
-                //    activeTaskHandle = pendingRenderTaskQueue.front();
-                //    pendingRenderTaskQueue.pop();
-                //    Log("[Main Thread]: deque a waiting task : handle={}", activeTaskHandle);
-                //}
             }
         }
 
