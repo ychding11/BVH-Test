@@ -383,14 +383,14 @@ void GUIModeMain(RenderSetting &setting)
                 bool newTaskCheckable = !(activeTaskHandle == Invalid_Task_Handle); 
                 if (ImGui::Checkbox("new task", &newTaskCheckable))
                 {
-                    //< It just try to schedule a task. A better name requred.
-                    TaskHandle handle = StartRenderingTask(setting);
+                    TaskHandle handle = Invalid_Task_Handle;
+                    if (activeTaskHandle == Invalid_Task_Handle)
+                        handle = StartRenderingTask(setting);
                     if (handle != Invalid_Task_Handle)
                     {
                         activeTaskHandle = handle;
                         Log("[Main Thread]: enque waiting task : handle={}", handle);
                     }
-
                 }
             ImGui::End();
 
