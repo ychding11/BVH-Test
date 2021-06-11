@@ -381,7 +381,7 @@ void GUIModeMain(RenderSetting &setting)
                 }
                 ImGui::Separator();
                 bool newTaskCheckable = !(activeTaskHandle == Invalid_Task_Handle); 
-                if (ImGui::Checkbox("new task", &newTaskCheckable))
+                if (ImGui::Checkbox("new task", &newTaskCheckable)) //< checkbox should be disabled when previous task NOT completed.
                 {
                     TaskHandle handle = Invalid_Task_Handle;
                     if (activeTaskHandle == Invalid_Task_Handle)
