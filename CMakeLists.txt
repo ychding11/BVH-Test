@@ -1,13 +1,14 @@
 cmake_minimum_required (VERSION 3.8)
 project (BVH-Lab)
 
-set(CMAKE_CXX_STANDARD 17)
 
 SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) 
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING "Configuration types" FORCE)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+
+set(CMAKE_CXX_STANDARD 17)
 
 option(ENABLE_HIDECONSOLE_BUILD "Enable to hide console on Windows" OFF)
 
@@ -56,9 +57,6 @@ set(GLFW_LIBS glfw3.lib)
 link_directories( ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glfw/lib-vc2015 )
 
 find_package(OpenGL)
-
-#######################################################################################
-
 
 #######################################################################################
 
