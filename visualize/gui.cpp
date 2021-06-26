@@ -2,27 +2,10 @@
 //< 
 //< 
 
-//#include <cstdio>
-//#include <vector>
-//#include <queue> 
-//#include <map>
-//#include <cstdlib>
-//#include <string>
-//#include <iostream>
-//#include <sstream>
-//#include <time.h>
-//#include <math.h>
-
-// third-party libraries
-//#include <GL/glew.h>
 #include <GLFW/glfw3.h>    
-//#include <glm/glm.hpp>
-//#include <glm/gtc/type_ptr.hpp>
 
 #include "gui.h"
 
-//#include "setting.h"
-//#include "Renderer.h"
 //#include "IconsFontAwesome4.h"
 
 
